@@ -15,7 +15,7 @@ function DriverDetails(){
     if (!driver) {
     return <h1>Loading...</h1>}
     return(
-        <div>
+        <div className="page">
             <h1> {driver.givenName} {driver.familyName}</h1>
             <p>Nationality: {driver.nationality}</p>
             <p>Date of Birth: {driver.dateOfBirth}</p>

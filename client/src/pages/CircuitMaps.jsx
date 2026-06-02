@@ -9,7 +9,7 @@ function CircuitMaps(){
         .then((data)=>{setCircuit(data)})
     },[])
     return(
-        <div>
+        <div className="page">
             <h1>Circuit Maps</h1>
             <input
             type="text"

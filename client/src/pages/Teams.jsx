@@ -9,7 +9,7 @@ function Teams(){
         .then((data)=>{setTeams(data)})
     },[])
     return(
-        <div>
+        <div className="page">
             <h1>Teams</h1>
             <input
             type="text"

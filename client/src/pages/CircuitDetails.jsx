@@ -15,7 +15,7 @@ function CircuitDetails(){
     if (!circuit) {
     return <h1>Loading...</h1>}
     return(
-        <div>
+        <div className="page">
             <h1> {circuit.circuitName}</h1>
             <p>Location: {circuit.Location.locality}, {circuit.Location.country}</p>
             <p>Latitube: {circuit.Location.lat}</p>

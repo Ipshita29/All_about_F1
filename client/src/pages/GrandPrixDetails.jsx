@@ -2,10 +2,10 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 function GrandPrixDetails() {
-    const { id } = useParams();
+    const { year,id } = useParams();
     const [race, setRace] = useState(null);
     useEffect(() => {
-        fetch("http://localhost:3000/grandprixdashboard")
+        fetch(`http://localhost:3000/grandprixdashboard/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 const selected = data.find(
@@ -17,7 +17,7 @@ function GrandPrixDetails() {
         return <h1>Loading...</h1>;
     }
     return (
-        <div>
+        <div className="page">
             <h1>{race.raceName}</h1>
             <p>Date: {race.date}</p>
             <p>Circuit: {race.Circuit.circuitName}</p>

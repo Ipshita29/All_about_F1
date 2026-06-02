@@ -9,7 +9,7 @@ function Drivers(){
         .then((data)=>{setDrivers(data)})
     },[])
     return(
-        <div>
+        <div className="page">
             <h1>Drivers</h1>
             <input
             type="text"

@@ -16,7 +16,8 @@ function TeamDetails(){
         return (<p>Loading...</p>)
     }
 
-    return(<div>
+    return(
+        <div className="page">
             <h1>{team.name}</h1>
             <p>Nationality: {team.nationality}</p>
             <p>URL:<a href={team.url} target="_blank">{team.name}'s Wikipedia Profile</a></p>

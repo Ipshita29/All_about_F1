@@ -1,6 +1,7 @@
 const getGrandprix = async (req, res) => {
+    const {year}=req.params;
     try {
-        const response = await fetch("https://api.jolpi.ca/ergast/f1/2026.json")
+        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}.json`)
         const data = await response.json();
 
         res.json(
