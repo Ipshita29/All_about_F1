@@ -3,6 +3,7 @@ import { useState } from "react";
 function Preferences() {
 
     const [favoriteTeam, setFavoriteTeam] = useState("");
+    const [favoriteDriver,setFavoriteDriver] = useState("");
 
     const savePreference = async () => {
 
@@ -17,7 +18,8 @@ function Preferences() {
                     "Authorization": token
                 },
                 body: JSON.stringify({
-                    favoriteTeam
+                    favoriteTeam,
+                    favoriteDriver
                 })
             }
         );
@@ -47,6 +49,39 @@ function Preferences() {
                 <option value="Red Bull">Red Bull</option>
                 <option value="McLaren">McLaren</option>
                 <option value="Aston Martin">Aston Martin</option>
+
+            </select>
+
+            <br /><br />
+
+            <h1>Favorite Driver</h1>
+
+            <select
+                value={favoriteDriver}
+                onChange={(e)=>setFavoriteDriver(e.target.value)}
+            >
+
+                <option value="">Select Driver</option>
+
+                <option value="Max Verstappen">
+                    Max Verstappen
+                </option>
+
+                <option value="Lewis Hamilton">
+                    Lewis Hamilton
+                </option>
+
+                <option value="Charles Leclerc">
+                    Charles Leclerc
+                </option>
+
+                <option value="Lando Norris">
+                    Lando Norris
+                </option>
+
+                <option value="George Russell">
+                    George Russell
+                </option>
 
             </select>
 

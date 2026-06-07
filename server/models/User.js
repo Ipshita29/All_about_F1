@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
     favoriteTeam: {
         type: String,
         default: ""
+    },
+    favoriteDriver: {
+        type:String,
+        default:""
     }
 
 });

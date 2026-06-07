@@ -12,6 +12,8 @@ import TeamDetails from "./pages/TeamDetails"
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Preferences from "./pages/Preferences";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
 
@@ -32,7 +34,8 @@ function App() {
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/preferences" element={<Preferences />}/>
+        <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   )

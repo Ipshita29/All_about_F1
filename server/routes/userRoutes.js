@@ -1,11 +1,7 @@
 const router = require("express").Router();
 const authMiddleware = require("../middleware/authMiddleware");
-const {savePreferences} = require("../controllers/userController");
+const {savePreferences,getProfile} = require("../controllers/userController");
 
-router.put(
-    "/preferences",
-    authMiddleware,
-    savePreferences
-);
-
+router.put("/preferences",authMiddleware,savePreferences)
+router.get("/profile",authMiddleware,getProfile)
 module.exports = router;

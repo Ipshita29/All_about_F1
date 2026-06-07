@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 function LandingPage() {
     const [race,setRace]=useState(null)
+    const [user,setUser]=useState(null)
     useEffect(()=>{
         fetch("http://localhost:3000/grandprixdashboard/2026")
         .then((res)=>res.json())
@@ -13,11 +14,30 @@ function LandingPage() {
             setRace(nextRace)
         })
     },[])
+    useEffect(()=>{
+        const token = localStorage.getItem("token");
+        if(!token){
+            return
+        }
+        fetch("http://localhost:3000/user/profile",
+                    {headers:{Authorization: token}}
+                )
+                .then((res)=>res.json())
+                .then((data)=>setUser(data));
+
+        },[])
 
     if (!race) {
     return <h1>Loading...</h1>}
     return (
         <div className="page">
+            {user && (
+            <div className="card">
+                <h2>Welcome back {user.name}</h2>
+                <p>Favorite Team: {user.favoriteTeam}</p>
+                <p>Favorite Driver: {user.favoriteDriver}</p>
+            </div>
+            )}
             <h1>All About Formula One</h1>
             <p>Explore Formula One Drivers, Teams, Circuits, Grand Prix schedules and race information.</p>
 
