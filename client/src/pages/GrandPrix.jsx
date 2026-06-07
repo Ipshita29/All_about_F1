@@ -26,7 +26,7 @@ function GrandPrix(){
             </select>
             <input
             type="text"
-            placeholder="Search Driver"
+            placeholder="Search grand prix ..."
             value={search}
             onChange={(e)=>setSearch(e.target.value)}/>
             {[...grandprix]

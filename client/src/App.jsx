@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import Preferences from "./pages/Preferences";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DriverComparison from "./pages/DriverComparison";
 import "./App.css";
 
 
@@ -25,7 +26,7 @@ function App() {
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>
         <Route path="/drivers" element={<Drivers/>}/>
-        <Route path="/drivers/:id" element={<DriverDetails/>}/>
+        <Route path="/drivers/:year/:id" element={<DriverDetails/>}/>
         <Route path="/teams" element={<Teams />} />
         <Route path="/teams/:id" element={<TeamDetails/>}/>
         <Route path="/circuitmaps" element={<CircuitMaps />} />
@@ -36,6 +37,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/compare-drivers" element={<DriverComparison />} />
       </Routes>
     </BrowserRouter>
   )
