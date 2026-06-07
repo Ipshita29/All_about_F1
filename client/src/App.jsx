@@ -9,6 +9,9 @@ import GrandPrixDetails from "./pages/GrandPrixDetails"
 import LandingPage from "./pages/LandingPage"
 import Teams from "./pages/Teams"
 import TeamDetails from "./pages/TeamDetails"
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Preferences from "./pages/Preferences";
 import "./App.css";
 
 
@@ -27,6 +30,9 @@ function App() {
         <Route path="/circuitmaps/:id" element={<CircuitDetails/>}/>
         <Route path="/grandprixdashboard" element={<GrandPrix/>}/>
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/preferences" element={<Preferences />}/>
       </Routes>
     </BrowserRouter>
   )

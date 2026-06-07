@@ -6,17 +6,17 @@
 }
 
 body{
-    background-color:#111111;
-    color:white;
+    background-color:#f6f1f1;
+    color:rgb(0, 0, 0);
 }
 
 a{
     text-decoration:none;
-    color:white;
+    color:rgb(0, 0, 0);
 }
 
 nav{
-    background-color:#e10600;
+    background-color:#ed3630;
     padding:15px;
     display:flex;
     gap:20px;
@@ -26,21 +26,18 @@ nav a{
     font-weight:bold;
 }
 
-nav a:hover{
-    color:#000;
-}
 
 div{
     padding:10px;
 }
 
 h1{
-    color:#e10600;
+    color:#ed3630;
     margin-bottom:15px;
 }
 
 h2{
-    color:#e10600;
+    color:#ed3630;
     margin-top:20px;
     margin-bottom:10px;
 }
@@ -69,31 +66,8 @@ li{
     margin-bottom:8px;
 }
 
-.card{
-    background:#1c1c1c;
-    border-left:4px solid #e10600;
-    padding:15px;
-    margin:10px 0;
-    border-radius:8px;
-}
-
-.card:hover{
-    transform:translateY(-2px);
-}
-
-button{
-    background:#e10600;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-button:hover{
-    opacity:0.9;
-}
 .page{
     max-width:1000px;
     margin:auto;
 }
+
