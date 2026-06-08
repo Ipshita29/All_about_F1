@@ -87,3 +87,7 @@ td{
 th{
     background:#e10600;
 }
+.circuit-map {
+  width: 500px;
+  height: auto;
+}
