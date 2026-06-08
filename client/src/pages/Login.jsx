@@ -1,16 +1,12 @@
 import { useState } from "react";
 
 function Login() {
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
     const handleLogin = async () => {
-
-        const response = await fetch(
-            "http://localhost:3000/auth/login",
-            {
-                method: "POST",
+        const response = await fetch("http://localhost:3000/auth/login",
+            {method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
