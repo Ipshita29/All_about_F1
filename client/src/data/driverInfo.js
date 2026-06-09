@@ -489,7 +489,7 @@ const driverInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  "Alex Albon": {
+  "Alexander Albon": {
     nickname: "Albon / The Thai Dragon",
     description:
       "Alex Albon is a popular, technically excellent, and remarkably resilient British-Thai driver who has navigated one of the most turbulent career paths in recent Formula 1 history. Promoted to Red Bull's senior team in 2019 mid-season, performing well before being dropped for Sergio Pérez, then returning as Williams' undisputed team leader from 2022 and producing performances that rank among the finest seen in an uncompetitive car in recent memory. Albon is universally liked in the paddock, technically precise, and has rebuilt his Formula 1 career with quiet determination.",

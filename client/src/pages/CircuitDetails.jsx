@@ -1,10 +1,15 @@
 import {useParams} from "react-router-dom";
 import {useState,useEffect} from "react";
 import { circuitInfo } from "../data/circuitInfo";
+import KnowMoreModal from "../components/KnowMoreModal";
+import { knowMoreInfo } from "../data/knowMoreInfo";
+import KnowMoreTerm from "../components/KnowMoreTerm";
 
 function CircuitDetails(){
     const {id}=useParams()
     const [circuit,setCircuit]=useState(null)
+    const [selectedTerm, setSelectedTerm] = useState(null)
+
     useEffect(()=>{
         fetch("http://localhost:3000/circuitmaps")
         .then((res)=>res.json())
@@ -38,7 +43,16 @@ function CircuitDetails(){
             <p>Length: {extraInfo?.length}</p>
             <p>Laps: {extraInfo?.laps}</p>
             <p>Turns: {extraInfo?.turns}</p>
-            <p>DRS Zones: {extraInfo?.drsZones}</p>
+            <p>
+                <KnowMoreTerm
+                term="drs"
+                setSelectedTerm={setSelectedTerm}
+                knowMoreInfo={knowMoreInfo}
+                >
+                DRS
+                </KnowMoreTerm>
+                : {extraInfo?.drsZones}
+            </p>
             <p>Location: {circuit.Location.locality}, {circuit.Location.country}</p>
             <p>Latitube: {circuit.Location.lat}</p>
             <p>Longitude: {circuit.Location.long}</p>
@@ -75,6 +89,10 @@ function CircuitDetails(){
                 <li key={index}>{fact}</li>
             ))}
             </ul>
+            <KnowMoreModal
+                info={selectedTerm}
+                onClose={() => setSelectedTerm(null)}
+                />
 
         </div>
     )

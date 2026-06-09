@@ -1,5 +1,5 @@
 const teamInfo = {
-  "Red Bull Racing": {
+  red_bull: {
     founded: 2005,
     headquarters: "Milton Keynes, Oxfordshire, United Kingdom",
     teamPrincipal: "Christian Horner",
@@ -54,7 +54,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  Ferrari: {
+  ferrari: {
     founded: 1950,
     headquarters: "Maranello, Emilia-Romagna, Italy",
     teamPrincipal: "Frédéric Vasseur",
@@ -113,7 +113,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  Mercedes: {
+  mercedes: {
     founded: 1954,
     headquarters: "Brackley, Northamptonshire, United Kingdom",
     teamPrincipal: "Toto Wolff",
@@ -169,7 +169,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  McLaren: {
+  mclaren: {
     founded: 1966,
     headquarters: "Woking, Surrey, United Kingdom",
     teamPrincipal: "Andrea Stella",
@@ -226,7 +226,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  "Aston Martin": {
+  aston_martin: {
     founded: 2018,
     headquarters: "Silverstone, Northamptonshire, United Kingdom",
     teamPrincipal: "Andy Cowell",
@@ -282,7 +282,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  Alpine: {
+  alpine: {
     founded: 2021,
     headquarters: "Enstone, Oxfordshire, United Kingdom (factory); Viry-Châtillon, France (engine)",
     teamPrincipal: "Oliver Oakes",
@@ -338,7 +338,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  Williams: {
+  williams: {
     founded: 1977,
     headquarters: "Grove, Oxfordshire, United Kingdom",
     teamPrincipal: "James Vowles",
@@ -396,7 +396,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  "Haas F1 Team": {
+  haas: {
     founded: 2016,
     headquarters: "Kannapolis, North Carolina, USA (owner); Banbury, Oxfordshire, UK (operations)",
     teamPrincipal: "Ayao Komatsu",
@@ -451,7 +451,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  "Kick Sauber": {
+  sauber: {
     founded: 1993,
     headquarters: "Hinwil, Zurich, Switzerland",
     teamPrincipal: "Alessandro Alunni Bravi",
@@ -506,7 +506,7 @@ const teamInfo = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────────
-  "Racing Bulls": {
+  rb: {
     founded: 2006,
     headquarters: "Faenza, Emilia-Romagna, Italy",
     teamPrincipal: "Laurent Mekies",
@@ -557,7 +557,133 @@ const teamInfo = {
       instagram: "@racingbullsf1",
       twitter: "@RacingBullsF1"
     }
+  },
+  audi: {
+  founded: 2026,
+  headquarters: "Ingolstadt, Bavaria, Germany / Hinwil, Zurich, Switzerland",
+  teamPrincipal: "Jonathan Wheatley",
+  championships: 0,
+  history:
+    "Audi enters Formula 1 in 2026 as a full works manufacturer, becoming the first new German factory team since Mercedes returned in 2010. The project is built upon the existing Sauber operation in Hinwil, Switzerland, which Audi gradually acquired before rebranding it as Audi F1 Team. Audi is developing its own Formula 1 power unit at Neuburg an der Donau, Germany, under the sport's new 2026 engine regulations. The company has an extensive motorsport heritage through rallying, endurance racing, Le Mans domination, and Dakar Rally success, making Formula 1 the final major motorsport category to receive a full Audi factory effort.",
+
+  famousDrivers: [
+    "Nico Hülkenberg — Experienced German driver helping lead Audi's first seasons",
+    "Mattia Binotto — Key leadership figure overseeing Audi's F1 transition",
+    "Peter Sauber — Founder of the organisation Audi acquired to enter Formula 1",
+    "Tom Kristensen — Audi motorsport legend associated with the brand's racing success",
+    "Allan McNish — Former Audi endurance racing star and brand ambassador"
+  ],
+
+  achievements: [
+    "Successful entry into Formula 1 as a full works manufacturer in 2026",
+    "One of the few teams building both chassis and power unit in-house",
+    "Inherited Sauber's decades of Formula 1 operational experience",
+    "Massive investment in facilities, personnel, and technology",
+    "Audi's first participation in Formula 1 World Championship competition"
+  ],
+
+  engineSupplier: "Audi",
+
+  strategyStyle:
+    "Engineering-driven and analytical. Audi's approach is expected to reflect its endurance-racing heritage, focusing on efficiency, preparation, and long-term development rather than aggressive short-term gambles.",
+
+  strengths: [
+    "Backed by one of the world's largest automotive manufacturers",
+    "State-of-the-art power unit facility in Germany",
+    "Established Sauber infrastructure in Switzerland",
+    "Strong motorsport expertise from Le Mans, WRC, and Dakar programmes"
+  ],
+
+  weaknesses: [
+    "No prior Formula 1 experience as a manufacturer",
+    "Building a competitive power unit from scratch",
+    "High expectations create significant pressure",
+    "Long development timeline before reaching front-running pace"
+  ],
+
+  funFacts: [
+    "Audi won the 24 Hours of Le Mans 13 times before entering Formula 1.",
+    "The company pioneered diesel-powered endurance racing success with the R10 TDI.",
+    "Audi's F1 power unit is developed in Neuburg, Germany, rather than at the Swiss race factory.",
+    "The Audi rings logo has never previously appeared as a Formula 1 constructor.",
+    "Audi chose to enter Formula 1 largely because of the sustainable fuel-focused 2026 regulations."
+  ],
+
+  teamColors: {
+    primary: "#D5001C",
+    secondary: "#000000",
+    accent: "#FFFFFF"
+  },
+
+  socials: {
+    website: "https://www.audi-mediacenter.com",
+    instagram: "@audisport",
+    twitter: "@audisport"
   }
+},
+cadillac: {
+  founded: 2026,
+  headquarters: "Fishers, Indiana, USA / Silverstone, England",
+  teamPrincipal: "Graeme Lowdon",
+  championships: 0,
+  history:
+    "Cadillac Formula 1 Team joins the championship in 2026 as the newest American entry on the grid. The project is operated by TWG Motorsports in partnership with General Motors and Cadillac, marking the return of a major American manufacturer to Formula 1. The team was originally conceived as the Andretti Formula 1 project before evolving into the Cadillac-backed entry approved by Formula One Management and the FIA. Initially using customer power units, Cadillac intends to develop into a full works manufacturer in the future. The team represents one of Formula 1's most ambitious expansion efforts as the sport's popularity continues to grow in North America.",
+
+  famousDrivers: [
+    "No Formula 1 race drivers have yet become historically associated with Cadillac F1",
+    "Mario Andretti — Strong ambassador and supporter of the project",
+    "Michael Andretti — Original driving force behind the team's creation",
+    "Graeme Lowdon — Experienced motorsport executive leading operations",
+    "Future American talent is expected to play an important role in the team's identity"
+  ],
+
+  achievements: [
+    "Successfully secured entry onto the Formula 1 grid for 2026",
+    "First Cadillac-branded Formula 1 team in history",
+    "Major expansion of American manufacturer presence in Formula 1",
+    "Backed by General Motors, one of the world's largest car companies",
+    "Established facilities across both North America and Europe"
+  ],
+
+  engineSupplier: "Ferrari (initially)",
+
+  strategyStyle:
+    "Aggressive growth-focused strategy. As a new entrant, Cadillac is expected to prioritize rapid learning, infrastructure expansion, and long-term competitiveness rather than immediate race-winning ambitions.",
+
+  strengths: [
+    "Financial backing from General Motors and TWG Motorsports",
+    "Strong American commercial appeal",
+    "Modern facilities designed specifically for Formula 1",
+    "Ability to recruit talent from across the motorsport industry"
+  ],
+
+  weaknesses: [
+    "Brand-new Formula 1 organisation with no racing history",
+    "Limited operational experience compared to established teams",
+    "Building technical departments from scratch",
+    "Likely to face early performance challenges"
+  ],
+
+  funFacts: [
+    "Cadillac becomes the first American luxury automotive brand to field a Formula 1 team.",
+    "The project traces its origins to Andretti Global's unsuccessful initial F1 bid.",
+    "The team will operate from both the United States and the United Kingdom.",
+    "General Motors sees Formula 1 as a key platform for global brand growth.",
+    "Cadillac's entry means Formula 1 will feature three American-based teams or brands on the grid."
+  ],
+
+  teamColors: {
+    primary: "#003B7A",
+    secondary: "#FFFFFF",
+    accent: "#D4AF37"
+  },
+
+  socials: {
+    website: "https://www.cadillac.com",
+    instagram: "@cadillac",
+    twitter: "@Cadillac"
+  }
+}
 
 };
 
