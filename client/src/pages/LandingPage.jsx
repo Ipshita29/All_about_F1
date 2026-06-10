@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function LandingPage() {
     const [race, setRace] = useState(null);
@@ -22,6 +23,29 @@ function LandingPage() {
             .then((data) => setUser(data));
     }, []);
 
+    const driverIdMap = {
+        "Charles Leclerc": "leclerc",
+        "Lewis Hamilton": "hamilton",
+        "George Russell": "russell",
+        "Kimi Antonelli": "antonelli",
+        "Max Verstappen": "max_verstappen",
+        "Yuki Tsunoda": "tsunoda",
+        "Lando Norris": "norris",
+        "Oscar Piastri": "piastri",
+        "Fernando Alonso": "alonso",
+        "Lance Stroll": "stroll",
+        "Pierre Gasly": "gasly",
+        "Franco Colapinto": "colapinto",
+        "Esteban Ocon": "ocon",
+        "Oliver Bearman": "bearman",
+        "Liam Lawson": "lawson",
+        "Isack Hadjar": "hadjar",
+        "Carlos Sainz": "sainz",
+        "Alexander Albon": "albon",
+        "Nico Hulkenberg": "hulkenberg",
+        "Gabriel Bortoleto": "bortoleto",
+    };
+
     const features = [
         { title: "Drivers", desc: "Career stats and driver profiles" },
         { title: "Teams", desc: "Constructor history and standings" },
@@ -29,7 +53,15 @@ function LandingPage() {
         { title: "Grand Prix", desc: "Race schedules from 2020 to 2026" },
     ];
 
+
     if (!race) return <div className="loading">Loading...</div>;
+    const raceDate = new Date(race.date);
+    const today = new Date();
+
+    const daysRemaining = Math.ceil(
+        (raceDate - today) /
+        (1000 * 60 * 60 * 24)
+    );
 
     return (
         <div className="page landing-page">
@@ -39,6 +71,7 @@ function LandingPage() {
             </div>
 
             {user && (
+                <div>
                 <div className="welcome-banner">
                     <h2>Welcome back, {user.name}</h2>
                     <div className="welcome-details">
@@ -46,13 +79,45 @@ function LandingPage() {
                         <span className="detail-chip">Driver: {user.favoriteDriver}</span>
                     </div>
                 </div>
+                <section className="landing-section">
+                        <h2 className="section-label">
+                            Your Favorites
+                        </h2>
+
+                        <div className="explore-grid">
+
+                            <Link
+                                to={`/teams/2026/${user.favoriteTeam.toLowerCase().replace(" ", "_")}`}
+                            >
+                                <div className="feature-card">
+                                    <h3>Favorite Team</h3>
+                                    <p>{user.favoriteTeam}</p>
+                                </div>
+                            </Link>
+
+                            <Link
+                                to={`/drivers/2026/${driverIdMap[user.favoriteDriver] ?? user.favoriteDriver.toLowerCase().replaceAll(" ", "_")}`}
+                            >
+                                <div className="feature-card">
+                                    <h3>Favorite Driver</h3>
+                                    <p>{user.favoriteDriver}</p>
+                                </div>
+                            </Link>
+
+                        </div>
+                    </section>
+                </div>
             )}
+            
 
             <section className="landing-section">
                 <h2 className="section-label">Upcoming Grand Prix</h2>
                 <div className="race-card">
                     <div className="race-card-flag"></div>
                     <div className="race-card-body">
+                        <p className="countdown">
+                            {daysRemaining} Days Remaining
+                        </p>
                         <div className="race-name">{race.raceName}</div>
                         <div className="race-meta">
                             <span>
