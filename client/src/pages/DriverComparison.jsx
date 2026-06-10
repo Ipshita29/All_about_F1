@@ -37,6 +37,8 @@ function DriverComparison() {
 
         },[year]);
 
+    console.log(drivers);
+
     return (
         <div className="page">
             <h1>Driver Comparison</h1>

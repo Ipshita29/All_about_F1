@@ -27,36 +27,59 @@ function DriverDetails(){
     },[year,id]);
 
     if (!driver || !standing) {
-    return <h1>Loading...</h1>}
+        return <div className="loading">Loading...</div>
+    }
     const age = new Date().getFullYear() - new Date(driver.dateOfBirth).getFullYear();
     const extraInfo = driverInfo[`${driver.givenName} ${driver.familyName}`];
     return(
-        <div className="page">
+        <div className="page detail-page">
             <h1>{driver.givenName} {driver.familyName}</h1>
             {extraInfo?.nickname && <p>"{extraInfo.nickname}"</p>}
-            <p>URL: <a href={driver.url} target="_blank">{driver.familyName}'s Wikipedia Profile</a></p>
+            <p><a href={driver.url} target="_blank">{driver.familyName}'s Wikipedia Profile</a></p>
 
             <h2>About</h2>
             <p>{extraInfo?.description}</p>
 
             <h2>Driver Info</h2>
             <p>Code: {driver.code}</p>
-            <p>Number: {driver.permanentNumber}</p>
+            <p>Number: #{driver.permanentNumber}</p>
             <p>Nationality: {driver.nationality}</p>
             <p>Date of Birth: {driver.dateOfBirth}</p>
             <p>Age: {age}</p>
             <p>Debut: {extraInfo?.debut}</p>
 
             <h2>{year} Season</h2>
-            <p>Championship Position: {standing.position}</p>
-            <p>Points: {standing.points}</p>
-            <p>Wins: {standing.wins}</p>
+            <div className="stat-row">
+                <div className="stat-box">
+                    <span className="stat-value">{standing.position}</span>
+                    <span className="stat-label">Position</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{standing.points}</span>
+                    <span className="stat-label">Points</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{standing.wins}</span>
+                    <span className="stat-label">Wins</span>
+                </div>
+            </div>
             <p>Current Team: {standing.Constructors[0].name}</p>
 
             <h2>Career Stats</h2>
-            <p>World Championships: {extraInfo?.championships}</p>
-            <p>Race Wins: {extraInfo?.raceWins}</p>
-            <p>Podiums: {extraInfo?.podiums}</p>
+            <div className="stat-row">
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.championships ?? '—'}</span>
+                    <span className="stat-label">Championships</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.raceWins ?? '—'}</span>
+                    <span className="stat-label">Race Wins</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.podiums ?? '—'}</span>
+                    <span className="stat-label">Podiums</span>
+                </div>
+            </div>
             <p>Pole Positions: {extraInfo?.polePositions}</p>
             <p>Best Season: {extraInfo?.bestSeason}</p>
 

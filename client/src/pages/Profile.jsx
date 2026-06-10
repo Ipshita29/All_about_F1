@@ -11,16 +11,30 @@ function Profile(){
 
     },[])
     if(!user){
-        return(<h1>Loading...</h1>)
+        return(<div className="loading">Loading...</div>)
     }
-    return(<div className="page">
-            <div className="card">
+    return(
+        <div className="page">
+            <div className="profile-card">
                 <h1>Profile</h1>
-                <p>Name: {user.name}</p>
-                <p>Email: {user.email}</p>
-                <p>Favorite Team: {user.favoriteTeam}</p>
-                <p>Favorite Driver: {user.favoriteDriver}</p>
+                <div className="profile-row">
+                    <span className="profile-label">Name</span>
+                    <span className="profile-value">{user.name}</span>
+                </div>
+                <div className="profile-row">
+                    <span className="profile-label">Email</span>
+                    <span className="profile-value">{user.email}</span>
+                </div>
+                <div className="profile-row">
+                    <span className="profile-label">Favorite Team</span>
+                    <span className="profile-value">{user.favoriteTeam}</span>
+                </div>
+                <div className="profile-row">
+                    <span className="profile-label">Favorite Driver</span>
+                    <span className="profile-value">{user.favoriteDriver}</span>
+                </div>
             </div>
-            </div>)
+        </div>
+    )
 }
 export default Profile;

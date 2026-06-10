@@ -14,16 +14,18 @@ function GrandPrixDetails() {
             });
     }, [id]);
     if (!race) {
-        return <h1>Loading...</h1>;
+        return <div className="loading">Loading...</div>;
     }
     return (
-        <div className="page">
+        <div className="page detail-page">
             <h1>{race.raceName}</h1>
-            <p>Date: {race.date}</p>
+            <p><a href={race.url} target="_blank" rel="noreferrer">{race.raceName} Wikipedia Page</a></p>
+
+            <h2>Race Info</h2>
+            <p>Date: {new Date(race.date).toLocaleDateString("en-GB", {day:"numeric", month:"long", year:"numeric"})}</p>
             <p>Circuit: {race.Circuit.circuitName}</p>
             <p>Locality: {race.Circuit.Location.locality}</p>
             <p>Country: {race.Circuit.Location.country}</p>
-            <p>URL:<a href={race.url} target="_blank" rel="noreferrer">{race.raceName} Wikipedia Page</a></p>
         </div>
     );
 }

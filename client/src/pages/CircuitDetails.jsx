@@ -19,53 +19,51 @@ function CircuitDetails(){
         })
     },[id])
     if (!circuit) {
-    return <h1>Loading...</h1>}
+        return <div className="loading">Loading...</div>
+    }
     const extraInfo = circuitInfo[id];
     return(
-        <div className="page">
-            <h1> {circuit.circuitName}</h1>
+        <div className="page detail-page">
+            <h1>{circuit.circuitName}</h1>
             <p>{extraInfo?.summary}</p>
-            <p>URL:<a href={circuit.url} target="_blank">{circuit.circuitName}'s Wikipedia Profile</a></p>
+            <p><a href={circuit.url} target="_blank">{circuit.circuitName}'s Wikipedia Profile</a></p>
 
             <h2>Circuit Layout</h2>
-
             {extraInfo?.mapImage && (
-            <img
-                className="circuit-map"
-                src={extraInfo.mapImage}
-                alt={`${circuit.circuitName} Layout`}
-            />
+                <img
+                    className="circuit-map"
+                    src={extraInfo.mapImage}
+                    alt={`${circuit.circuitName} Layout`}
+                />
             )}
 
             <h2>Track Information</h2>
-
+            <div className="stat-row">
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.laps ?? '—'}</span>
+                    <span className="stat-label">Laps</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.turns ?? '—'}</span>
+                    <span className="stat-label">Turns</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{extraInfo?.drsZones ?? '—'}</span>
+                    <span className="stat-label">DRS Zones</span>
+                </div>
+            </div>
             <p>Track Type: {extraInfo?.trackType}</p>
             <p>Length: {extraInfo?.length}</p>
-            <p>Laps: {extraInfo?.laps}</p>
-            <p>Turns: {extraInfo?.turns}</p>
             <p>
-                <KnowMoreTerm
-                term="drs"
-                setSelectedTerm={setSelectedTerm}
-                knowMoreInfo={knowMoreInfo}
-                >
-                DRS
-                </KnowMoreTerm>
-                : {extraInfo?.drsZones}
+                <KnowMoreTerm term="drs" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>DRS</KnowMoreTerm>
+                {" Zones: "}{extraInfo?.drsZones}
             </p>
             <p>Location: {circuit.Location.locality}, {circuit.Location.country}</p>
-            <p>Latitube: {circuit.Location.lat}</p>
+            <p>Latitude: {circuit.Location.lat}</p>
             <p>Longitude: {circuit.Location.long}</p>
 
             <h2>Lap Record</h2>
-            <p>
-            {extraInfo?.lapRecord}
-            {" - "}
-            {extraInfo?.lapRecordHolder}
-            {" ("}
-            {extraInfo?.lapRecordYear}
-            {")"}
-            </p>
+            <p>{extraInfo?.lapRecord} — {extraInfo?.lapRecordHolder} ({extraInfo?.lapRecordYear})</p>
 
             <h2>Difficulty</h2>
             <p>{extraInfo?.difficulty}</p>
@@ -78,8 +76,7 @@ function CircuitDetails(){
             <h2>Key Corners</h2>
             <ul>{extraInfo?.keyCorners?.map((corner,index)=>(
                 <li key={index}>{corner}</li>
-            ))}
-            </ul>
+            ))}</ul>
 
             <h2>History</h2>
             <p>{extraInfo?.history}</p>
@@ -87,13 +84,12 @@ function CircuitDetails(){
             <h2>Fun Facts</h2>
             <ul>{extraInfo?.funFacts?.map((fact,index)=>(
                 <li key={index}>{fact}</li>
-            ))}
-            </ul>
+            ))}</ul>
+
             <KnowMoreModal
                 info={selectedTerm}
                 onClose={() => setSelectedTerm(null)}
-                />
-
+            />
         </div>
     )
 }

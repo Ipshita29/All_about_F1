@@ -13,13 +13,9 @@ function Preferences() {
                     "Content-Type": "application/json",
                     "Authorization": token
                 },
-                body: JSON.stringify({
-                    favoriteTeam,
-                    favoriteDriver
-                })
+                body: JSON.stringify({favoriteTeam,favoriteDriver})
             }
-        );
-
+        )
         const data = await response.json();
         console.log(data);
         alert("Preference Saved");

@@ -27,35 +27,24 @@ function Login() {
     }
 
     return (
-
-        <div className="page">
-
-            <h1>Login</h1>
-
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e)=>setEmail(e.target.value)}
-            />
-
-            <br />
-
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e)=>setPassword(e.target.value)}
-            />
-
-            <br />
-
-            <button onClick={handleLogin}>
-                Login
-            </button>
-
+        <div className="auth-page">
+            <div className="auth-card">
+                <h1>Login</h1>
+                <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e)=>setEmail(e.target.value)}
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                />
+                <button onClick={handleLogin}>Login</button>
+            </div>
         </div>
-
     )
 
 }

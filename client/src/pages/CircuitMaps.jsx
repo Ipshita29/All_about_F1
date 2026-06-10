@@ -11,19 +11,23 @@ function CircuitMaps(){
     return(
         <div className="page">
             <h1>Circuit Maps</h1>
-            <input
-            type="text"
-            placeholder="Search Circuit"
-            value={search}
-            onChange={(e)=>setSearch(e.target.value)}/>
-            {circuit
-            .filter((ele)=>`${ele.circuitId}`.toLowerCase().includes(search.toLowerCase()))
-            .map((ele,index)=>{
-                return <Link to={`/circuitmaps/${ele.circuitId}`} key={index}>
-                    <h3>{ele.circuitName}</h3>
-                    <p>{ele.Location.country}</p>
-                </Link>
-            })}
+            <div className="page-controls">
+                <input
+                    type="text"
+                    placeholder="Search circuit..."
+                    value={search}
+                    onChange={(e)=>setSearch(e.target.value)}/>
+            </div>
+            <div className="list-grid">
+                {circuit
+                .filter((ele)=>`${ele.circuitId}`.toLowerCase().includes(search.toLowerCase()))
+                .map((ele,index)=>(
+                    <Link to={`/circuitmaps/${ele.circuitId}`} key={index} className="list-card">
+                        <h3>{ele.circuitName}</h3>
+                        <p>{ele.Location.country}</p>
+                    </Link>
+                ))}
+            </div>
         </div>
     )
 }

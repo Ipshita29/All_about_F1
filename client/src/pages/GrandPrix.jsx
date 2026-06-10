@@ -12,34 +12,35 @@ function GrandPrix(){
     return(
         <div className="page">
             <h1>Grand Prix Schedule</h1>
-            <select
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-            >
-                <option value="2020">2020</option>
-                <option value="2021">2021</option>
-                <option value="2022">2022</option>
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-            </select>
-            <input
-            type="text"
-            placeholder="Search grand prix ..."
-            value={search}
-            onChange={(e)=>setSearch(e.target.value)}/>
-            {[...grandprix]
-            .reverse()
-            .filter((ele)=>`${ele.raceName} ${ele.Circuit.Location.country}`.toLowerCase().includes(search.toLowerCase()))
-            .map((ele,index)=>{
-                return <Link to={`/grandprixdashboard/${year}/${ele.round}`} key={index}>
-                    <h3>{ele.raceName}</h3>
-                    <p>{ele.Circuit.circuitName}</p>
-                    <p>{ele.date}</p>
-                    <p>{ele.Circuit.Location.country}</p>
-                </Link>
-            })}
+            <div className="page-controls">
+                <select value={year} onChange={(e) => setYear(e.target.value)}>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+                <input
+                    type="text"
+                    placeholder="Search grand prix..."
+                    value={search}
+                    onChange={(e)=>setSearch(e.target.value)}/>
+            </div>
+            <div className="list-grid">
+                {[...grandprix]
+                .reverse()
+                .filter((ele)=>`${ele.raceName} ${ele.Circuit.Location.country}`.toLowerCase().includes(search.toLowerCase()))
+                .map((ele,index)=>(
+                    <Link to={`/grandprixdashboard/${year}/${ele.round}`} key={index} className="list-card">
+                        <h3>{ele.raceName}</h3>
+                        <p>{ele.Circuit.circuitName}</p>
+                        <p>{ele.Circuit.Location.country}</p>
+                        <p className="list-date">{ele.date}</p>
+                    </Link>
+                ))}
+            </div>
         </div>
     )
 }

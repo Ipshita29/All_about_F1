@@ -25,15 +25,14 @@ function TeamDetails(){
         })
     },[year,id]);
     if(!team || !standing){
-        return (<p>Loading...</p>)
+        return (<div className="loading">Loading...</div>)
     }
-    console.log("Team Name:", team.name);
-    console.log("Constructor ID:", team.constructorId);
+
     const extraInfo = teamInfo[team.constructorId];
     return(
-        <div className="page">
+        <div className="page detail-page">
             <h1>{team.name}</h1>
-            <p>URL: <a href={team.url} target="_blank">{team.name}'s Wikipedia Profile</a></p>
+            <p><a href={team.url} target="_blank">{team.name}'s Wikipedia Profile</a></p>
 
             <h2>History</h2>
             <p>{extraInfo?.history}</p>
@@ -46,9 +45,20 @@ function TeamDetails(){
             <p>Engine Supplier: {extraInfo?.engineSupplier}</p>
 
             <h2>{year} Season</h2>
-            <p>Championship Position: {standing.position}</p>
-            <p>Points: {standing.points}</p>
-            <p>Wins: {standing.wins}</p>
+            <div className="stat-row">
+                <div className="stat-box">
+                    <span className="stat-value">{standing.position}</span>
+                    <span className="stat-label">Position</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{standing.points}</span>
+                    <span className="stat-label">Points</span>
+                </div>
+                <div className="stat-box">
+                    <span className="stat-value">{standing.wins}</span>
+                    <span className="stat-label">Wins</span>
+                </div>
+            </div>
 
             <h2>Championships</h2>
             <p>Total Championships: {extraInfo?.championships}</p>
@@ -84,41 +94,17 @@ function TeamDetails(){
             <h2>Social Links</h2>
             <p>Instagram: {extraInfo?.socials?.instagram}</p>
             <p>Twitter: {extraInfo?.socials?.twitter}</p>
-
-            <a
-            href={extraInfo?.socials?.website}
-            target="_blank"
-            rel="noreferrer"
-            >
-            Official Website
+            <a href={extraInfo?.socials?.website} target="_blank" rel="noreferrer">
+                Official Website
             </a>
+
             <h2>Team Colors</h2>
-
             <div className="team-colors">
-            <div
-                className="color-box"
-                style={{
-                backgroundColor:
-                    extraInfo?.teamColors?.primary
-                }}
-            ></div>
-
-            <div
-                className="color-box"
-                style={{
-                backgroundColor:
-                    extraInfo?.teamColors?.secondary
-                }}
-            ></div>
-
-            <div
-                className="color-box"
-                style={{
-                backgroundColor:
-                    extraInfo?.teamColors?.accent
-                }}
-            ></div>
+                <div className="color-box" style={{backgroundColor: extraInfo?.teamColors?.primary}}></div>
+                <div className="color-box" style={{backgroundColor: extraInfo?.teamColors?.secondary}}></div>
+                <div className="color-box" style={{backgroundColor: extraInfo?.teamColors?.accent}}></div>
             </div>
-        </div>)
+        </div>
+    )
 }
 export default TeamDetails;
