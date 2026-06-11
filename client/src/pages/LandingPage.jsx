@@ -98,6 +98,7 @@ function LandingPage() {
                     </div>
                 </div>
             )}
+            <img src="../../public/images/ferrari.png" alt="Formula 1" className="hero-image"/>
             <section className="landing-section">
                 <h2 className="section-label">Live Race Center</h2>
                 <div className="live-race-card">
