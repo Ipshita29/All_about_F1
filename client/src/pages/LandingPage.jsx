@@ -69,6 +69,61 @@ function LandingPage() {
                 <h1>All About <span className="hero-accent">Formula One</span></h1>
                 <p className="hero-sub">Your ultimate F1 hub — drivers, teams, circuits, and race history</p>
             </div>
+            <section className="landing-section">
+                <h2 className="section-label">
+                    Live Race Center
+                </h2>
+
+                <div className="live-race-card">
+
+                    <div className="live-header">
+                        <span className="live-dot"></span>
+                        <span>LIVE RACE CENTER</span>
+                    </div>
+
+                    <h3>No Active Session</h3>
+
+                    <p>
+                        There is currently no Formula 1 session in progress.
+                    </p>
+
+                    <div className="live-placeholder-grid">
+
+                        <div className="live-stat">
+                            <span className="live-label">
+                                Current Lap
+                            </span>
+                            <span className="live-value">
+                                --
+                            </span>
+                        </div>
+
+                        <div className="live-stat">
+                            <span className="live-label">
+                                Leader
+                            </span>
+                            <span className="live-value">
+                                --
+                            </span>
+                        </div>
+
+                        <div className="live-stat">
+                            <span className="live-label">
+                                Fastest Lap
+                            </span>
+                            <span className="live-value">
+                                --
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <button>
+                        View Grand Prix Dashboard
+                    </button>
+
+                </div>
+            </section>
 
             {user && (
                 <div>

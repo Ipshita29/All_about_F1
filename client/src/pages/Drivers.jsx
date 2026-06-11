@@ -4,6 +4,15 @@ function Drivers(){
     const [drivers,setDrivers]=useState([])
     const [search,setSearch]= useState("")
     const [year, setYear] = useState("2026")
+
+    {/*to filter out test/reserver driver,we only want f1 driver*/}
+    const mainDrivers = drivers.filter(
+        driver =>
+            driver.permanentNumber &&
+            driver.code &&
+            driver.nationality
+        )
+        
     useEffect(()=>{
         fetch(`http://localhost:3000/drivers/${year}`)
         .then((res)=>res.json())
@@ -27,13 +36,13 @@ function Drivers(){
                     placeholder="Search by name..."
                     value={search}
                     onChange={(e)=>setSearch(e.target.value)}/>
-                <p>{drivers.length} drivers</p>
+                <p>{mainDrivers.length} drivers</p>
                 <Link to="/compare-drivers">
                     <button>Compare Drivers</button>
                 </Link>
             </div>
             <div className="list-grid">
-                {drivers
+                {mainDrivers
                 .filter((ele)=>`${ele.givenName} ${ele.familyName}`.toLowerCase().includes(search.toLowerCase()))
                 .map((ele,index)=>(
                     <Link to={`/drivers/${year}/${ele.driverId}`} key={index} className="list-card">

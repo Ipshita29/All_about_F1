@@ -769,3 +769,81 @@ tr:nth-child(even) td {
     margin-bottom: 8px;
     color: #374151;
 }
+.live-race-card{
+    background:#fff;
+    border-radius:8px;
+    padding:24px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    border-left:5px solid #E10600;
+}
+
+.live-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.8rem;
+    font-weight:700;
+    letter-spacing:0.1em;
+    color:#E10600;
+    margin-bottom:15px;
+}
+
+.live-dot{
+    width:10px;
+    height:10px;
+    background:#E10600;
+    border-radius:50%;
+}
+
+.live-race-card h3{
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:1.5rem;
+    margin-bottom:10px;
+}
+
+.live-placeholder-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    margin:20px 0;
+}
+
+.live-stat{
+    background:#f8f8f8;
+    border-radius:6px;
+    padding:15px;
+    text-align:center;
+}
+
+.live-label{
+    display:block;
+    font-size:0.7rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#888;
+    margin-bottom:5px;
+}
+
+.live-value{
+    font-size:1.3rem;
+    font-weight:700;
+    color:#15151E;
+}
+.highlight-card{
+    background:white;
+    border-radius:16px;
+    padding:20px;
+    margin:20px 0;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    text-align:center;
+}
+
+.highlight-card h3{
+    margin-bottom:10px;
+    font-size:1.4rem;
+}
+
+.highlight-card p{
+    margin:5px 0;
+    color:#666;
+}

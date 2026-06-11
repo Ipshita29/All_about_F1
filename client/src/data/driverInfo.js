@@ -795,7 +795,118 @@ const driverInfo = {
       instagram: "@isackhadjar",
       twitter: "@IsackHadjar"
     }
+  },
+  "Valtteri Bottas": {
+  nickname: "The Flying Finn",
+  description:
+    "Valtteri Bottas is a Finnish Formula 1 driver known for his speed, consistency, and role as one of the most reliable teammates in modern F1. A ten-time Grand Prix winner, Bottas spent five seasons alongside Lewis Hamilton at Mercedes, helping the team secure multiple Constructors' Championships. After leading Alfa Romeo's transition into the Audi project, Bottas returned to the grid in 2026 with Cadillac F1, bringing invaluable experience to the American team's debut campaign.",
+  drivingStyle:
+    "Exceptionally smooth and precise. Bottas is renowned for his qualifying pace and ability to maximize performance over a single lap. His technical feedback and calm approach make him highly respected among engineers.",
+  championships: 0,
+  raceWins: 10,
+  podiums: 67,
+  polePositions: 20,
+  debut: "2013 Australian Grand Prix (Williams)",
+  bestSeason: "2019 — 4 race wins and championship runner-up",
+  careerHighlights: [
+    "10 Formula 1 Grand Prix victories",
+    "Five-time Constructors' Champion with Mercedes",
+    "Multiple championship runner-up finishes",
+    "Played a key role in Mercedes' dominant era",
+    "Joined Cadillac F1 as an experienced leader for their debut season"
+  ],
+  famousRaces: [
+    "2017 Russian Grand Prix — First Formula 1 victory",
+    "2019 Australian Grand Prix — Dominant season-opening win"
+  ],
+  funFacts: [
+    "Bottas is an accomplished cyclist and regularly competes in endurance events.",
+    "His beard and mullet became iconic among Formula 1 fans.",
+    "He is one of the most experienced drivers on the 2026 grid.",
+    "Bottas has competed in rallying and gravel racing outside Formula 1.",
+    "He is widely respected for his positive attitude and professionalism."
+  ],
+  quote:
+    "Never give up. Keep pushing, keep believing.",
+  socials: {
+    instagram: "@valtteribottas",
+    twitter: "@ValtteriBottas"
   }
+},
+
+"Franco Colapinto": {
+  nickname: "The Argentine Sensation",
+  description:
+    "Franco Colapinto is an Argentine racing driver who became the first Argentine Formula 1 driver in more than two decades when he debuted during the 2024 season. Known for his fearless racing style and natural speed, Colapinto impressed immediately and earned a full-time Formula 1 opportunity. His arrival reignited interest in Formula 1 across Argentina and Latin America.",
+  drivingStyle:
+    "Aggressive but intelligent. Colapinto is confident in wheel-to-wheel battles and excels at adapting quickly to changing race conditions. He combines raw speed with a strong racing instinct.",
+  championships: 0,
+  raceWins: 0,
+  podiums: 0,
+  polePositions: 0,
+  debut: "2024 Italian Grand Prix (Williams)",
+  bestSeason: "2025 — First full Formula 1 season",
+  careerHighlights: [
+    "First Argentine Formula 1 driver since Gastón Mazzacane",
+    "Formula 3 race winner",
+    "Multiple Formula 2 podium finishes",
+    "Scored points shortly after his Formula 1 debut",
+    "Helped revive Argentine interest in Formula 1"
+  ],
+  famousRaces: [
+    "2024 Azerbaijan Grand Prix — Scored points in only his second Formula 1 start"
+  ],
+  funFacts: [
+    "Argentina has produced five Formula 1 World Champions, including Juan Manuel Fangio.",
+    "Colapinto became a national sporting sensation after reaching Formula 1.",
+    "He began karting at a young age in Buenos Aires.",
+    "His social media following grew dramatically after his F1 debut.",
+    "Many Argentine fans view him as the country's next great motorsport star."
+  ],
+  quote:
+    "Dream big, work hard, and never stop believing.",
+  socials: {
+    instagram: "@francolapinto",
+    twitter: "@FranColapinto"
+  }
+},
+
+"Arvid Lindblad": {
+  nickname: "The Next Red Bull Star",
+  description:
+    "Arvid Lindblad is a British-Swedish racing driver and one of the most highly rated talents to emerge from the Red Bull Junior Team. Known for his exceptional speed in karting and junior single-seaters, Lindblad rapidly climbed the motorsport ladder and entered Formula 1 as one of the youngest drivers on the grid. His maturity and racecraft have drawn comparisons to several Red Bull graduates before him.",
+  drivingStyle:
+    "Naturally aggressive but highly controlled. Lindblad is particularly strong in overtaking situations and demonstrates confidence under pressure. He combines raw speed with impressive race management skills.",
+  championships: 0,
+  raceWins: 0,
+  podiums: 0,
+  polePositions: 0,
+  debut: "2026 Australian Grand Prix (Red Bull Racing)",
+  bestSeason: "2026 — Rookie Formula 1 season",
+  careerHighlights: [
+    "One of the youngest Red Bull Junior Team prospects ever promoted",
+    "Multiple Formula Regional victories",
+    "Formula 3 race winner",
+    "Recognized as one of motorsport's brightest young talents",
+    "Graduated through the Red Bull development pathway"
+  ],
+  famousRaces: [
+    "2024 Formula 3 Silverstone — Home victory showcasing elite potential"
+  ],
+  funFacts: [
+    "Lindblad has both British and Swedish heritage.",
+    "He was considered a future Formula 1 prospect from an unusually young age.",
+    "His karting career included victories against many future F1 rivals.",
+    "Red Bull has invested heavily in his development since his early teens.",
+    "He is known for his calm demeanor despite his aggressive driving style."
+  ],
+  quote:
+    "Pressure is a privilege when you're chasing your dream.",
+  socials: {
+    instagram: "@arvidlindblad",
+    twitter: "@ArvidLindblad"
+  }
+}
 
 };
 
