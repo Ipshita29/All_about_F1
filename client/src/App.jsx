@@ -9,8 +9,7 @@ import GrandPrixDetails from "./pages/GrandPrixDetails"
 import LandingPage from "./pages/LandingPage"
 import Teams from "./pages/Teams"
 import TeamDetails from "./pages/TeamDetails"
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import AuthPage from "./pages/AuthPage";
 import Preferences from "./pages/Preferences";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,11 +32,10 @@ function App() {
         <Route path="/circuitmaps/:id" element={<CircuitDetails/>}/>
         <Route path="/grandprixdashboard" element={<GrandPrix/>}/>
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/compare-drivers" element={<DriverComparison />} />
+        <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
   )

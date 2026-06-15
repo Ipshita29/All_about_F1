@@ -36,6 +36,7 @@ function Preferences() {
         const data = await response.json();
         console.log(data);
         setMessage("Preferences Saved Successfully");
+        setTimeout(() => { window.location.href = "/"; }, 800);
 
     }
 

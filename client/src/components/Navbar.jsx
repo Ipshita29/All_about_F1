@@ -4,7 +4,7 @@ function Navbar(){
     const handleLogout=()=>{
         localStorage.removeItem("token")
         alert("Logged out successfully")
-        window.location.href="/login"
+        window.location.href="/auth"
     }
     return(
         <nav>
@@ -21,8 +21,7 @@ function Navbar(){
                 </button>
             ) : (
                 <>
-                    <Link to="/login">Login</Link>
-                    <Link to="/signup">Signup</Link>
+                    <Link to="/auth">Auth</Link>
                 </>
             )}
         </nav>
