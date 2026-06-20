@@ -21,7 +21,7 @@ function LandingPage() {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) return;
-        fetch("http://localhost:3000/user/profile", { headers: { Authorization: token } })
+        fetch("http://localhost:3000/user/profile", { headers: { Authorization: `Bearer ${token}` } })
             .then((res) => res.json())
             .then((data) => setUser(data));
     }, []);
@@ -89,7 +89,7 @@ function LandingPage() {
                 <h1>All About <span className="hero-accent">Formula One</span></h1>
                 <p className="hero-sub">Your ultimate F1 hub — drivers, teams, circuits, and race history</p>
             </div>
-            {user && (
+            {user?.favoriteTeam && user?.favoriteDriver &&(
                 <div className="welcome-banner">
                     <h2>Welcome back, {user.name}</h2>
                     <div className="welcome-details">

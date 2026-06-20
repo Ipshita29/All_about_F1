@@ -1,15 +1,27 @@
 import {useState,useEffect} from "react";
 function Profile(){
     const [user,setUser] = useState(null);
-    useEffect(()=>{
-        const token = localStorage.getItem("token")
-        fetch("http://localhost:3000/user/profile",{
-            headers:{Authorization:token}
-        })
-        .then((res)=>res.json())
-        .then((data)=>setUser(data))
+    useEffect(() => {
+    const token = localStorage.getItem("token");
 
-    },[])
+    console.log("TOKEN:", token);
+
+    if (!token) return;
+
+    fetch("http://localhost:3000/user/profile", {
+        headers: {
+        Authorization: `Bearer ${token}`,
+        },
+    })
+        .then((res) => {
+        console.log("STATUS:", res.status);
+        return res.json();
+        })
+        .then((data) => {
+        console.log("PROFILE DATA:", data);
+        setUser(data);
+        });
+    }, []);
     if(!user){
         return(<div className="loading">Loading...</div>)
     }

@@ -11,7 +11,7 @@ function Preferences() {
 
             fetch("http://localhost:3000/user/profile", {
                 headers: {
-                    Authorization: token
+                    Authorization: `Bearer ${token}`
                 }
             })
             .then((res) => res.json())
@@ -28,7 +28,7 @@ function Preferences() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": token
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({favoriteTeam,favoriteDriver})
             }

@@ -5,7 +5,9 @@ const User = require("../models/User")
 const signup = async (req,res)=>{
     try{
         const {name,email,password}=req.body;
-        const hashedpass = await bcrypt.hash(password,10)
+        if (!name || !email || !password){
+            return res.status(400).json({message:"Name, email, and password are required"})
+        }
         const existingUser = await User.findOne({
             email
         })
@@ -14,10 +16,17 @@ const signup = async (req,res)=>{
                 message:"User Already exists"
             })
         }
+        const hashedpass = await bcrypt.hash(password,10)
         const user = await User.create({
             name,email,password:hashedpass
         })
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
         return res.status(201).json({
+            token,
             id:user._id,
             name:user.name,
             email:user.email
