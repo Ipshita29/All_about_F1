@@ -10,7 +10,11 @@ function GrandPrixDetails() {
 
   useEffect(() => {
     fetch(`http://localhost:3000/grandprixdashboard/${year}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if(!res.ok){
+          return []
+        }
+          return res.json()})
       .then((data) => {
         const selected = data.find((ele) => ele.round === id);
         setRace(selected);
@@ -18,18 +22,30 @@ function GrandPrixDetails() {
   }, [year, id]);
   useEffect(() => {
     fetch(`http://localhost:3000/grandprixdashboard/results/${year}/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {return []}
+        return res.json()})
       .then((data) => setResults(data));
   }, [year, id]);
   useEffect(() => {
     fetch(`http://localhost:3000/grandprixdashboard/qualifying/${year}/${id}`)
-      .then((res) => res.json())
-      .then((data) => setQualifying(data));
+      .then((res) => {
+        if (!res.ok){
+          return []
+        }
+        return res.json()})
+      .then((data) => {
+        setQualifying(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setQualifying([]));
   }, [year, id]);
 
   if (!race) {
     return <div className="loading">Loading...</div>;
   }
+  const raceDate = new Date(race.date)
+  const today = new Date()
+  const raceNotStarted = raceDate>today
   const biggestGainer =
     results.length > 0
       ? results.reduce((best, current) => {
@@ -43,7 +59,9 @@ function GrandPrixDetails() {
   const positionsGained = biggestGainer
     ? Number(biggestGainer.grid) - Number(biggestGainer.position)
     : 0;
-  const fastestLap = results.find((result) => result.FastestLap) || null;
+  const fastestLap =Array.isArray(results)
+    ? results.find((result) => result.FastestLap) || null
+    : null;
   const teamPerformance = {};
 
   results.forEach((result) => {
@@ -102,19 +120,33 @@ function GrandPrixDetails() {
       <p>Qualifying: {race.Qualifying?.date || "N/A"}</p>
       <p>Sprint: {race.Sprint?.date || "N/A"}</p>
 
-      <h2>Podium</h2>
+      {raceNotStarted && (
+        <div className="info-card">
+          <h2>Race Status</h2>
+          <p>This race has not taken place yet.</p>
+          <p>
+            Race results, qualifying results,
+            fastest lap, podium finishers and
+            race statistics will be available
+            after the race weekend.
+          </p>
+        </div>
+      )}
+      {!raceNotStarted && (
+        <>
+          <h2>Podium</h2>
       {results.length > 0 && (
         <>
           <p>
-            🥇 {results[0]?.Driver.givenName} {results[0]?.Driver.familyName}
+            {results[0]?.Driver.givenName} {results[0]?.Driver.familyName}
           </p>
 
           <p>
-            🥈 {results[1]?.Driver.givenName} {results[1]?.Driver.familyName}
+            {results[1]?.Driver.givenName} {results[1]?.Driver.familyName}
           </p>
 
           <p>
-            🥉 {results[2]?.Driver.givenName} {results[2]?.Driver.familyName}
+            {results[2]?.Driver.givenName} {results[2]?.Driver.familyName}
           </p>
         </>
       )}
@@ -245,6 +277,8 @@ function GrandPrixDetails() {
 
           <p>+{positionsGained} positions</p>
         </div>
+      )}
+        </>
       )}
       {circuitData && (
         <section className="circuit-overview">
