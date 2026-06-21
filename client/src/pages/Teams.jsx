@@ -1,15 +1,23 @@
-import {useState,useEffect} from "react";
-import {Link} from "react-router-dom";
-function Teams(){
-    const [teams,setTeams]=useState([])
-    const [search,setSearch]= useState("")
-    const [year, setYear] = useState("2026")
-    useEffect(()=>{
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import teamInfo from "../data/teamInfo";
+
+function Teams() {
+    const [teams, setTeams] = useState([]);
+    const [search, setSearch] = useState("");
+    const [year, setYear] = useState("2026");
+
+    useEffect(() => {
         fetch(`http://localhost:3000/teams/${year}`)
-        .then((res)=>res.json())
-        .then((data)=>{setTeams(data)})
-    },[year])
-    return(
+            .then((res) => res.json())
+            .then((data) => setTeams(data));
+    }, [year]);
+
+    const filtered = teams.filter((t) =>
+        t.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
         <div className="page">
             <h1>Teams</h1>
             <div className="page-controls">
@@ -26,19 +34,36 @@ function Teams(){
                     type="text"
                     placeholder="Search team..."
                     value={search}
-                    onChange={(e)=>setSearch(e.target.value)}/>
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <p>{filtered.length} team{filtered.length !== 1 ? "s" : ""}</p>
             </div>
+
             <div className="list-grid">
-                {teams
-                .filter((ele)=>`${ele.name}`.toLowerCase().includes(search.toLowerCase()))
-                .map((ele,index)=>(
-                    <Link to={`/teams/${year}/${ele.constructorId}`} key={index} className="list-card">
-                        <h3>{ele.name}</h3>
-                        <p>{ele.nationality}</p>
-                    </Link>
-                ))}
+                {filtered.map((t) => {
+                    const info = teamInfo[t.constructorId];
+                    const teamColor = info?.teamColors?.primary;
+                    return (
+                        <Link
+                            to={`/teams/${year}/${t.constructorId}`}
+                            key={t.constructorId}
+                            className="list-card"
+                            style={{ borderLeftColor: teamColor || "#E10600" }}
+                        >
+                            <h3>{t.name}</h3>
+                            <p>{t.nationality}</p>
+                            {info?.engineSupplier && (
+                                <p>{info.engineSupplier} Power Unit</p>
+                            )}
+                            {info?.teamPrincipal && (
+                                <p className="list-date">TP: {info.teamPrincipal}</p>
+                            )}
+                        </Link>
+                    );
+                })}
             </div>
         </div>
-    )
+    );
 }
+
 export default Teams;

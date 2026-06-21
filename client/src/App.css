@@ -384,6 +384,36 @@ a.list-card:hover,
     font-size: 1rem;
 }
 
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #E10600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', 'Arial Black', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin: 0 auto 16px;
+    flex-shrink: 0;
+}
+
+.profile-picks {
+    max-width: 480px;
+    margin: 28px auto 0;
+}
+
+.profile-picks .section-label {
+    margin-bottom: 14px;
+}
+
+.profile-picks .stat-row {
+    grid-template-columns: 1fr 1fr;
+}
+
 .profile-card {
     background: #fff;
     border-radius: 8px;
@@ -467,6 +497,178 @@ tr:nth-child(even) td {
     height: auto;
     border-radius: 6px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+a.list-card.circuit-card,
+.list-card.circuit-card {
+    padding: 0;
+    border-left: none;
+    border-top: 3px solid #E10600;
+    overflow: hidden;
+}
+
+.circuit-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.circuit-card-img {
+    height: 140px;
+    background: #f4f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #efefef;
+}
+
+.circuit-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+}
+
+.circuit-card-placeholder {
+    background: #15151E;
+    border-bottom: none;
+}
+
+.circuit-card-placeholder span {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: rgba(225, 6, 0, 0.2);
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.05em;
+}
+
+.circuit-card-body {
+    padding: 13px 16px 15px;
+}
+
+.circuit-card-body h3 {
+    margin-bottom: 3px;
+    text-transform: none;
+    font-size: 0.92rem;
+    line-height: 1.3;
+}
+
+.circuit-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    min-height: 22px;
+}
+
+.circuit-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.circuit-since {
+    font-size: 0.74rem;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.gp-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.gp-round {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #bbb;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.gp-badges {
+    display: flex;
+    gap: 5px;
+}
+
+.gp-badge {
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.gp-badge-sprint   { background: #f3e8fd; color: #7c3aed; }
+.gp-badge-done     { background: #f0f0f4; color: #999; }
+.gp-badge-upcoming { background: #dcfce7; color: #15803d; }
+
+.driver-list-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.driver-list-header h3 {
+    margin-bottom: 0;
+}
+
+.driver-list-pos {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.detail-info-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: baseline;
+}
+
+.detail-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.detail-info-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #aaa;
+    font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif;
+    min-width: 130px;
+    flex-shrink: 0;
+}
+
+.detail-info-value {
+    font-size: 0.9rem;
+    color: #15151E;
+}
+
+.detail-quote {
+    border-left: 3px solid #E10600;
+    padding: 12px 18px;
+    background: #fff;
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    max-width: 700px;
+}
+
+.detail-quote p {
+    margin: 0;
+    line-height: 1.6;
 }
 
 .modal-overlay {
@@ -747,9 +949,16 @@ tr:nth-child(even) td {
     transition: transform 0.15s, box-shadow 0.15s;
 }
 
+a.feature-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .feature-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
 }
 
 .feature-number {

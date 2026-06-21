@@ -72,16 +72,16 @@ function LandingPage() {
         "Gabriel Bortoleto": "bortoleto",
     }
     const features = [
-        { title: "Drivers", desc: "Career stats and driver profiles" },
-        { title: "Teams", desc: "Constructor history and standings" },
-        { title: "Circuits", desc: "Track maps from around the world" },
-        { title: "Grand Prix", desc: "Race schedules from 2020 to 2026" },
+        { title: "Drivers", desc: "Career stats and driver profiles", path: "/drivers" },
+        { title: "Teams", desc: "Constructor history and standings", path: "/teams" },
+        { title: "Circuits", desc: "Track maps from around the world", path: "/circuits" },
+        { title: "Grand Prix", desc: "Race schedules from 2020 to 2026", path: "/grandprixdashboard" },
     ]
 
     if (!race) return <div className="loading">Loading...</div>;
-    const raceDate = new Date(race.date);
+    const raceDate = new Date(race.date + "T00:00:00");
     const today = new Date();
-    const daysRemaining = Math.ceil((raceDate - today) /(1000 * 60 * 60 * 24));
+    const daysRemaining = Math.ceil((raceDate - today) / (1000 * 60 * 60 * 24));
 
     return (
         <div className="page landing-page">
@@ -155,7 +155,7 @@ function LandingPage() {
                 <div className="standings-columns">
                     <div>
                         <h2 className="section-label">Driver Championship</h2>
-                        {driverStandings.slice(0, 3).map((driver) => (
+                        {driverStandings.slice(0, 5).map((driver) => (
                             <div key={driver.Driver.driverId} className={`standing-card rank-${driver.position}`}>
                                 <span className="standing-pos">{driver.position}</span>
                                 <div className="standing-info">
@@ -169,7 +169,7 @@ function LandingPage() {
                     </div>
                     <div>
                         <h2 className="section-label">Constructor Championship</h2>
-                        {constructorStandings.slice(0, 3).map((team) => (
+                        {constructorStandings.slice(0, 5).map((team) => (
                             <div key={team.Constructor.constructorId} className={`standing-card rank-${team.position}`}>
                                 <span className="standing-pos">{team.position}</span>
                                 <div className="standing-info">
@@ -180,13 +180,20 @@ function LandingPage() {
                         ))}
                     </div>
                 </div>
+                <Link to="/drivers" style={{ display: "block", marginTop: 14, fontSize: "0.78rem", color: "#E10600", fontWeight: 700, textAlign: "right" }}>
+                    View Full Standings →
+                </Link>
             </section>
             <section className="landing-section">
                 <h2 className="section-label">Upcoming Grand Prix</h2>
                 <div className="race-card">
                     <div className="race-card-flag"></div>
                     <div className="race-card-body">
-                        <p className="countdown">{daysRemaining} Days Remaining</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                            <span className="gp-round">Round {race.round}</span>
+                            {race.Sprint && <span className="gp-badge gp-badge-sprint">Sprint Weekend</span>}
+                        </div>
+                        <p className="countdown">{daysRemaining} Day{daysRemaining !== 1 ? "s" : ""} Remaining</p>
                         <div className="race-name">{race.raceName}</div>
                         <div className="race-meta">
                             <span>
@@ -199,13 +206,19 @@ function LandingPage() {
                             </span>
                             <span>
                                 <strong>Date</strong>
-                                {new Date(race.date).toLocaleDateString("en-GB", {
+                                {raceDate.toLocaleDateString("en-GB", {
                                     day: "numeric",
                                     month: "long",
                                     year: "numeric",
                                 })}
                             </span>
                         </div>
+                        <Link
+                            to="/grandprixdashboard"
+                            style={{ display: "inline-block", marginTop: 14, fontSize: "0.78rem", color: "#E10600", fontWeight: 700 }}
+                        >
+                            View Full Schedule →
+                        </Link>
                     </div>
                 </div>
             </section>
@@ -214,11 +227,11 @@ function LandingPage() {
                 <h2 className="section-label">Explore</h2>
                 <div className="explore-grid">
                     {features.map((item, i) => (
-                        <div className="feature-card" key={i}>
+                        <Link to={item.path} className="feature-card" key={i}>
                             <span className="feature-number">0{i + 1}</span>
                             <h3>{item.title}</h3>
                             <p>{item.desc}</p>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             </section>

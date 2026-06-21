@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import driverInfo from "../data/driverInfo";
+import KnowMoreModal from "../components/KnowMoreModal";
+import { knowMoreInfo } from "../data/knowMoreInfo";
+import KnowMoreTerm from "../components/KnowMoreTerm";
 
 function getWinner(val1, val2, lowerIsBetter = false) {
     const n1 = parseFloat(val1);
@@ -15,6 +18,7 @@ function DriverComparison() {
     const [driver2, setDriver2] = useState("");
     const [year, setYear] = useState("2026");
     const [standings, setStandings] = useState([]);
+    const [selectedTerm, setSelectedTerm] = useState(null);
 
     const d1 = drivers.find((d) => d.driverId === driver1);
     const d2 = drivers.find((d) => d.driverId === driver2);
@@ -108,13 +112,17 @@ function DriverComparison() {
 
                         <div className="compare-row">
                             <div className={cls("left", s1?.position, s2?.position, true)}>{s1?.position ?? "—"}</div>
-                            <div className="compare-label">Championship Position</div>
+                            <div className="compare-label">
+                                <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship Position</KnowMoreTerm>
+                            </div>
                             <div className={cls("right", s1?.position, s2?.position, true)}>{s2?.position ?? "—"}</div>
                         </div>
 
                         <div className="compare-row">
                             <div className={cls("left", s1?.points, s2?.points)}>{s1?.points ?? "—"}</div>
-                            <div className="compare-label">Points</div>
+                            <div className="compare-label">
+                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                            </div>
                             <div className={cls("right", s1?.points, s2?.points)}>{s2?.points ?? "—"}</div>
                         </div>
 
@@ -137,7 +145,9 @@ function DriverComparison() {
 
                         <div className="compare-row">
                             <div className={cls("left", info1?.championships, info2?.championships)}>{info1?.championships ?? "—"}</div>
-                            <div className="compare-label">Championships</div>
+                            <div className="compare-label">
+                                <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
+                            </div>
                             <div className={cls("right", info1?.championships, info2?.championships)}>{info2?.championships ?? "—"}</div>
                         </div>
 
@@ -149,13 +159,17 @@ function DriverComparison() {
 
                         <div className="compare-row">
                             <div className={cls("left", info1?.podiums, info2?.podiums)}>{info1?.podiums ?? "—"}</div>
-                            <div className="compare-label">Podiums</div>
+                            <div className="compare-label">
+                                <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
+                            </div>
                             <div className={cls("right", info1?.podiums, info2?.podiums)}>{info2?.podiums ?? "—"}</div>
                         </div>
 
                         <div className="compare-row">
                             <div className={cls("left", info1?.polePositions, info2?.polePositions)}>{info1?.polePositions ?? "—"}</div>
-                            <div className="compare-label">Pole Positions</div>
+                            <div className="compare-label">
+                                <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
+                            </div>
                             <div className={cls("right", info1?.polePositions, info2?.polePositions)}>{info2?.polePositions ?? "—"}</div>
                         </div>
                     </div>
@@ -214,6 +228,8 @@ function DriverComparison() {
 
                 </div>
             )}
+
+            <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>
     );
 }

@@ -1,16 +1,24 @@
-import {useState,useEffect} from "react";
-import {Link} from "react-router-dom"
-function Drivers(){
-    const [drivers,setDrivers]=useState([])
-    const [search,setSearch]= useState("")
-    const [year, setYear] = useState("2026")
-        
-    useEffect(()=>{
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+
+function Drivers() {
+    const [drivers, setDrivers] = useState([]);
+    const [search, setSearch] = useState("");
+    const [year, setYear] = useState("2026");
+
+    useEffect(() => {
         fetch(`http://localhost:3000/drivers/standings/${year}`)
-        .then((res)=>res.json())
-        .then((data)=>{setDrivers(data)})
-    },[year])
-    return(
+            .then((res) => res.json())
+            .then((data) => setDrivers(data));
+    }, [year]);
+
+    const filtered = drivers.filter((d) =>
+        `${d.Driver.givenName} ${d.Driver.familyName}`
+            .toLowerCase()
+            .includes(search.toLowerCase())
+    );
+
+    return (
         <div className="page">
             <h1>Drivers</h1>
             <div className="page-controls">
@@ -27,25 +35,38 @@ function Drivers(){
                     type="text"
                     placeholder="Search by name..."
                     value={search}
-                    onChange={(e)=>setSearch(e.target.value)}/>
-                <p>{drivers.length} drivers</p>
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <p>{filtered.length} drivers</p>
                 <Link to="/compare-drivers">
                     <button>Compare Drivers</button>
                 </Link>
             </div>
+
             <div className="list-grid">
-                {drivers
-                .filter((ele)=>`${ele.Driver.givenName} ${ele.Driver.familyName}`.toLowerCase().includes(search.toLowerCase()))
-                .map((ele,index)=>(
-                    <Link to={`/drivers/${year}/${ele.Driver.driverId}`} key={ele.Driver.driverId} className="list-card">
-                        <h3>{ele.Driver.givenName} {ele.Driver.familyName}</h3>
-                        <p>{ele.Driver.nationality}</p>
-                        <p>Position: {ele.position}</p>
-                        <p>{ele.points} pts</p>
+                {filtered.map((d) => (
+                    <Link
+                        to={`/drivers/${year}/${d.Driver.driverId}`}
+                        key={d.Driver.driverId}
+                        className="list-card"
+                    >
+                        <div className="driver-list-header">
+                            <span
+                                className="driver-list-pos"
+                                style={{ color: Number(d.position) <= 3 ? "#E10600" : "#ccc" }}
+                            >
+                                P{d.position}
+                            </span>
+                            <h3>{d.Driver.givenName} {d.Driver.familyName}</h3>
+                        </div>
+                        <p>{d.Constructors[0].name}</p>
+                        <p>{d.Driver.nationality}</p>
+                        <p className="list-date">{d.points} pts · {d.wins} win{d.wins !== "1" ? "s" : ""}</p>
                     </Link>
                 ))}
             </div>
         </div>
-    )
+    );
 }
+
 export default Drivers;
