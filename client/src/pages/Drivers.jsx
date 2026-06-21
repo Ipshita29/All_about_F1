@@ -4,17 +4,9 @@ function Drivers(){
     const [drivers,setDrivers]=useState([])
     const [search,setSearch]= useState("")
     const [year, setYear] = useState("2026")
-
-    {/*to filter out test/reserver driver,we only want f1 driver*/}
-    const mainDrivers = drivers.filter(
-        driver =>
-            driver.permanentNumber &&
-            driver.code &&
-            driver.nationality
-        )
         
     useEffect(()=>{
-        fetch(`http://localhost:3000/drivers/${year}`)
+        fetch(`http://localhost:3000/drivers/standings/${year}`)
         .then((res)=>res.json())
         .then((data)=>{setDrivers(data)})
     },[year])
@@ -36,18 +28,20 @@ function Drivers(){
                     placeholder="Search by name..."
                     value={search}
                     onChange={(e)=>setSearch(e.target.value)}/>
-                <p>{mainDrivers.length} drivers</p>
+                <p>{drivers.length} drivers</p>
                 <Link to="/compare-drivers">
                     <button>Compare Drivers</button>
                 </Link>
             </div>
             <div className="list-grid">
-                {mainDrivers
-                .filter((ele)=>`${ele.givenName} ${ele.familyName}`.toLowerCase().includes(search.toLowerCase()))
+                {drivers
+                .filter((ele)=>`${ele.Driver.givenName} ${ele.Driver.familyName}`.toLowerCase().includes(search.toLowerCase()))
                 .map((ele,index)=>(
-                    <Link to={`/drivers/${year}/${ele.driverId}`} key={index} className="list-card">
-                        <h3>{ele.givenName} {ele.familyName}</h3>
-                        <p>#{ele.permanentNumber} · {ele.nationality}</p>
+                    <Link to={`/drivers/${year}/${ele.Driver.driverId}`} key={ele.Driver.driverId} className="list-card">
+                        <h3>{ele.Driver.givenName} {ele.Driver.familyName}</h3>
+                        <p>{ele.Driver.nationality}</p>
+                        <p>Position: {ele.position}</p>
+                        <p>{ele.points} pts</p>
                     </Link>
                 ))}
             </div>

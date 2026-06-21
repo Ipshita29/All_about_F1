@@ -1,7 +1,7 @@
 const getDrivers=async(req,res)=>{
     const { year } = req.params;
     try{
-        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/drivers.json`)
+        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/drivers.json?limit=100`)
         const data = await response.json()
         res.json(
             data.MRData.DriverTable.Drivers
@@ -15,7 +15,7 @@ const getDrivers=async(req,res)=>{
 const getDriverStandings = async(req,res)=>{
     const { year } = req.params;
     try{
-        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/driverstandings.json`)
+        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/driverstandings.json?limit=100`)
         const data = await response.json();
         res.json(
             data.MRData.StandingsTable.StandingsLists[0].DriverStandings
