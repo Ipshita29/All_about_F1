@@ -14,6 +14,7 @@ import Preferences from "./pages/Preferences";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DriverComparison from "./pages/DriverComparison";
+import TeamComparison from "./pages/TeamComparison";
 import "./App.css";
 
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/compare-drivers" element={<DriverComparison />} />
+        <Route path="/compare-teams" element={<TeamComparison />} />
         <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>

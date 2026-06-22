@@ -1,5 +1,4 @@
 export const circuitInfo = {
-
   albert_park: {
     summary:
       "Albert Park is a semi-permanent street circuit carved around a beautiful lake in Melbourne, Australia. Unlike purpose-built racetracks, the roads used here are public roads for most of the year, giving the circuit a raw, bumpy character that rewards commitment. It is famous for being the traditional season-opener of the Formula 1 calendar, meaning every year the world gets its first competitive look at the new cars on this very track. The circuit blends high-speed sections through tree-lined avenues with tight chicanes that demand precision, making it a true all-round test of both driver and machine.",

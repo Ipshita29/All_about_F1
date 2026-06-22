@@ -37,6 +37,9 @@ function Teams() {
                     onChange={(e) => setSearch(e.target.value)}
                 />
                 <p>{filtered.length} team{filtered.length !== 1 ? "s" : ""}</p>
+                <Link to="/compare-teams">
+                    <button>Compare Teams</button>
+                </Link>
             </div>
 
             <div className="list-grid">
