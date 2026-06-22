@@ -72,7 +72,7 @@ function AuthPage() {
         />
         <div className="auth-image-overlay">
           <div>
-            <div className="auth-logo-mark">F1</div>
+            <img src="/main/main.png" alt="Formula 1" className="auth-overlay-logo" />
             <p className="auth-tagline">
               {isLogin
                 ? "Welcome back. The race awaits."
@@ -88,8 +88,7 @@ function AuthPage() {
 
           {/* Brand */}
           <div className="auth-brand-row">
-            <span className="auth-brand-bar" />
-            <span className="auth-brand-name">All About F1</span>
+            <img src="/main/main.png" alt="Formula 1" className="auth-f1-logo" />
           </div>
 
           <h1 className="auth-heading">

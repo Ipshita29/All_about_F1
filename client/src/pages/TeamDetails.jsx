@@ -38,7 +38,16 @@ function TeamDetails() {
 
     return (
         <div className="page detail-page">
-            <h1>{team.name}</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
+                {extraInfo?.logo && (
+                    <img
+                        src={extraInfo.logo}
+                        alt={`${team.name} logo`}
+                        style={{ height: 64, objectFit: "contain" }}
+                    />
+                )}
+                <h1 style={{ margin: 0 }}>{team.name}</h1>
+            </div>
             {teamColor && (
                 <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                     {extraInfo.teamColors.primary && (

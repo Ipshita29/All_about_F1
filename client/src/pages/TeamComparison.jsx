@@ -100,6 +100,9 @@ function TeamComparison() {
                     {/* Team Header Panels */}
                     <div className="team-compare-panels">
                         <div className="team-compare-panel" style={{ borderTop: `5px solid ${color1}` }}>
+                            {info1?.logo && (
+                                <img src={info1.logo} alt={`${t1.name} logo`} style={{ height: 52, objectFit: "contain", marginBottom: 8 }} />
+                            )}
                             <h2 style={{ color: color1 }}>{t1.name}</h2>
                             <p>{t1.nationality}</p>
                             {info1?.founded && <p>Est. {info1.founded}</p>}
@@ -115,6 +118,9 @@ function TeamComparison() {
                         </div>
 
                         <div className="team-compare-panel" style={{ borderTop: `5px solid ${color2}` }}>
+                            {info2?.logo && (
+                                <img src={info2.logo} alt={`${t2.name} logo`} style={{ height: 52, objectFit: "contain", marginBottom: 8 }} />
+                            )}
                             <h2 style={{ color: color2 }}>{t2.name}</h2>
                             <p>{t2.nationality}</p>
                             {info2?.founded && <p>Est. {info2.founded}</p>}

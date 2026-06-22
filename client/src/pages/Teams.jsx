@@ -51,8 +51,15 @@ function Teams() {
                             to={`/teams/${year}/${t.constructorId}`}
                             key={t.constructorId}
                             className="list-card"
-                            style={{ borderLeftColor: teamColor || "#E10600" }}
+                            style={{ borderTopColor: teamColor || "#E10600" }}
                         >
+                            {info?.logo && (
+                                <img
+                                    src={info.logo}
+                                    alt={`${t.name} logo`}
+                                    style={{ height: 40, objectFit: "contain", marginBottom: 8 }}
+                                />
+                            )}
                             <h3>{t.name}</h3>
                             <p>{t.nationality}</p>
                             {info?.engineSupplier && (

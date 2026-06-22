@@ -112,6 +112,7 @@ function LandingPage() {
     if (loading) {
         return (
             <div className="landing-loading">
+                <img src="/main/main.png" alt="Formula 1" className="loading-f1-logo" />
                 <div className="loading-spinner-ring"></div>
                 <span>Loading F1 Data...</span>
             </div>
@@ -125,6 +126,7 @@ function LandingPage() {
 
             {/* ── Hero ── */}
             <div className="landing-hero">
+                <img src="/main/main.png" alt="Formula 1" className="hero-f1-logo" />
                 <div className="hero-content">
                     <div className="hero-season-chip">2026 Season</div>
                     <h1>All About <span className="hero-accent">Formula One</span></h1>

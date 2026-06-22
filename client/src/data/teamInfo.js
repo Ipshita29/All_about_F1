@@ -1,5 +1,6 @@
 const teamInfo = {
   red_bull: {
+    logo: "/logos/red_bull_racing.png",
     founded: 2005,
     headquarters: "Milton Keynes, Oxfordshire, United Kingdom",
     teamPrincipal: "Christian Horner",
@@ -55,6 +56,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   ferrari: {
+    logo: "/logos/ferrari.png",
     founded: 1950,
     headquarters: "Maranello, Emilia-Romagna, Italy",
     teamPrincipal: "Frédéric Vasseur",
@@ -114,6 +116,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   mercedes: {
+    logo: "/logos/mercedes.png",
     founded: 1954,
     headquarters: "Brackley, Northamptonshire, United Kingdom",
     teamPrincipal: "Toto Wolff",
@@ -170,6 +173,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   mclaren: {
+    logo: "/logos/mclaren.jpg",
     founded: 1966,
     headquarters: "Woking, Surrey, United Kingdom",
     teamPrincipal: "Andrea Stella",
@@ -227,6 +231,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   aston_martin: {
+    logo: "/logos/aston_martin.png",
     founded: 2018,
     headquarters: "Silverstone, Northamptonshire, United Kingdom",
     teamPrincipal: "Andy Cowell",
@@ -283,6 +288,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   alpine: {
+    logo: "/logos/alpine.png",
     founded: 2021,
     headquarters: "Enstone, Oxfordshire, United Kingdom (factory); Viry-Châtillon, France (engine)",
     teamPrincipal: "Oliver Oakes",
@@ -339,6 +345,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   williams: {
+    logo: "/logos/williams.png",
     founded: 1977,
     headquarters: "Grove, Oxfordshire, United Kingdom",
     teamPrincipal: "James Vowles",
@@ -397,6 +404,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   haas: {
+    logo: "/logos/haas.png",
     founded: 2016,
     headquarters: "Kannapolis, North Carolina, USA (owner); Banbury, Oxfordshire, UK (operations)",
     teamPrincipal: "Ayao Komatsu",
@@ -452,6 +460,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   sauber: {
+    logo: "/logos/sauber.png",
     founded: 1993,
     headquarters: "Hinwil, Zurich, Switzerland",
     teamPrincipal: "Alessandro Alunni Bravi",
@@ -507,6 +516,7 @@ const teamInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   rb: {
+    logo: "/logos/racing_bulls.png",
     founded: 2006,
     headquarters: "Faenza, Emilia-Romagna, Italy",
     teamPrincipal: "Laurent Mekies",
@@ -559,6 +569,7 @@ const teamInfo = {
     }
   },
   audi: {
+  logo: "/logos/audi.png",
   founded: 2026,
   headquarters: "Ingolstadt, Bavaria, Germany / Hinwil, Zurich, Switzerland",
   teamPrincipal: "Jonathan Wheatley",
@@ -622,6 +633,7 @@ const teamInfo = {
   }
 },
 cadillac: {
+  logo: "/logos/cadillac.png",
   founded: 2026,
   headquarters: "Fishers, Indiana, USA / Silverstone, England",
   teamPrincipal: "Graeme Lowdon",
