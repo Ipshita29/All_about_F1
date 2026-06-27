@@ -920,6 +920,7 @@ a.list-card.circuit-card,
 .gp-badge-sprint   { background: #f3e8fd; color: #7c3aed; }
 .gp-badge-done     { background: #f0f0f4; color: #999; }
 .gp-badge-upcoming { background: #dcfce7; color: #15803d; }
+.gp-badge-session  { background: #fff0f0; color: #E10600; }
 
 .driver-list-header {
     display: flex;
@@ -949,6 +950,28 @@ a.list-card.circuit-card,
 
 .detail-info-row:last-child {
     margin-bottom: 0;
+}
+
+.next-session-highlight {
+    background: #fff8f0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin: 0 -8px 10px;
+    border-left: 3px solid #E10600;
+}
+
+.next-session-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #E10600;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
 }
 
 .detail-info-label {
@@ -1480,7 +1503,15 @@ a.list-card.circuit-card,
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #555;
-    margin-bottom: 14px;
+    margin-bottom: 4px;
+    padding: 0;
+}
+
+.countdown-session-time {
+    font-size: 0.72rem;
+    color: #E10600;
+    font-weight: 600;
+    margin-bottom: 12px;
     padding: 0;
 }
 

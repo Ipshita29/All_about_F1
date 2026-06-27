@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { formatSessionTime } from "../utils/timeUtils";
 import {
     Users, Wrench, Map, Flag,
     Trophy, Radio, ArrowRight, ChevronRight,
@@ -36,6 +37,34 @@ const features = [
     { title: "Grand Prix",desc: "Race schedules from 2020 to 2026",        path: "/grandprixdashboard",Icon: Flag,   sub: "7 seasons" },
 ];
 
+function findNextSession(races) {
+    const now = new Date();
+    const sessionDefs = [
+        { key: "FirstPractice", label: "Practice 1" },
+        { key: "SecondPractice", label: "Practice 2" },
+        { key: "ThirdPractice", label: "Practice 3" },
+        { key: "Sprint", label: "Sprint" },
+        { key: "Qualifying", label: "Qualifying" },
+    ];
+    for (const race of races) {
+        const candidates = [];
+        for (const { key, label } of sessionDefs) {
+            const s = race[key];
+            if (!s?.date || !s?.time) continue;
+            const t = new Date(`${s.date}T${s.time}`);
+            if (t > now) candidates.push({ label, date: s.date, time: s.time, sessionTime: t, race });
+        }
+        if (race.date) {
+            const t = race.time ? new Date(`${race.date}T${race.time}`) : new Date(race.date + "T00:00:00");
+            if (t > now) candidates.push({ label: "Race", date: race.date, time: race.time || null, sessionTime: t, race });
+        }
+        if (candidates.length > 0) {
+            return candidates.sort((a, b) => a.sessionTime - b.sessionTime)[0];
+        }
+    }
+    return null;
+}
+
 const podiumConfig = [
     { pos: "1", cls: "podium-first",  label: "P1" },
     { pos: "2", cls: "podium-second", label: "P2" },
@@ -44,6 +73,7 @@ const podiumConfig = [
 
 function LandingPage() {
     const [race, setRace] = useState(null);
+    const [nextSession, setNextSession] = useState(null);
     const [user, setUser] = useState(null);
     const [driverStandings, setDriverStandings] = useState([]);
     const [constructorStandings, setConstructorStandings] = useState([]);
@@ -55,9 +85,9 @@ function LandingPage() {
         fetch("http://localhost:3000/grandprixdashboard/2026")
             .then((res) => res.json())
             .then((data) => {
-                const today = new Date();
-                const nextRace = data.find((r) => new Date(r.date) > today);
-                setRace(nextRace);
+                const session = findNextSession(data);
+                setNextSession(session);
+                setRace(session?.race || null);
                 setLoading(false);
             });
     }, []);
@@ -89,8 +119,8 @@ function LandingPage() {
     }, []);
 
     useEffect(() => {
-        if (!race) return;
-        const target = new Date(race.date + "T00:00:00");
+        if (!nextSession) return;
+        const target = nextSession.sessionTime;
         const tick = () => {
             const diff = target - new Date();
             if (diff <= 0) return;
@@ -104,7 +134,7 @@ function LandingPage() {
         tick();
         const id = setInterval(tick, 1000);
         return () => clearInterval(id);
-    }, [race]);
+    }, [nextSession]);
 
     const maxDriverPts = Number(driverStandings[0]?.points) || 1;
     const maxTeamPts   = Number(constructorStandings[0]?.points) || 1;
@@ -227,10 +257,10 @@ function LandingPage() {
                 </section>
             )}
 
-            {/* ── Next Race ── */}
-            {race && (
+            {/* ── Next Session ── */}
+            {race && nextSession && (
                 <section className="landing-section">
-                    <h2 className="section-label">Next Race</h2>
+                    <h2 className="section-label">Next Session</h2>
                     <div className="next-race-card">
                         <div className="next-race-left">
                             <div className="next-race-icon-box">
@@ -240,7 +270,7 @@ function LandingPage() {
                                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, padding: 0 }}>
                                     <span className="gp-round">Round {race.round}</span>
                                     {race.Sprint && <span className="gp-badge gp-badge-sprint">Sprint Weekend</span>}
-                                    <span className="gp-badge gp-badge-upcoming">Upcoming</span>
+                                    <span className="gp-badge gp-badge-session">{nextSession.label}</span>
                                 </div>
                                 <div className="race-name">{race.raceName}</div>
                                 <div className="race-meta">
@@ -253,7 +283,7 @@ function LandingPage() {
                                         {race.Circuit.Location.country}
                                     </span>
                                     <span>
-                                        <strong><Calendar size={10} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />Date</strong>
+                                        <strong><Calendar size={10} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />Race Date</strong>
                                         {raceDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                                     </span>
                                 </div>
@@ -263,7 +293,8 @@ function LandingPage() {
                             </div>
                         </div>
                         <div className="countdown-block">
-                            <div className="countdown-label">Race starts in</div>
+                            <div className="countdown-label">{nextSession.label} starts in</div>
+                            <div className="countdown-session-time">{formatSessionTime(nextSession.date, nextSession.time)}</div>
                             <div className="countdown-grid">
                                 {[
                                     { num: countdown.days,    lbl: "Days" },

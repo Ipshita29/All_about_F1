@@ -4,6 +4,7 @@ import { circuitInfo } from "../data/circuitInfo";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
+import { formatSessionTime } from "../utils/timeUtils";
 
 function formatDate(dateStr) {
     if (!dateStr) return "—";
@@ -45,14 +46,32 @@ function GrandPrixDetails() {
 
     if (!race) return <div className="loading">Loading...</div>;
 
+    const now = new Date();
     const raceDate = new Date(race.date + "T00:00:00");
-    const raceNotStarted = raceDate > new Date();
+    const raceNotStarted = raceDate > now;
 
     const formattedDate = raceDate.toLocaleDateString("en-GB", {
         day: "numeric",
         month: "long",
         year: "numeric",
     });
+
+    const nextSessionKey = (() => {
+        const checks = [
+            [race.FirstPractice, "fp1"],
+            [race.SecondPractice, "fp2"],
+            [race.ThirdPractice, "fp3"],
+            [race.Sprint, "sprint"],
+            [race.Qualifying, "qualifying"],
+            [{ date: race.date, time: race.time }, "race"],
+        ];
+        for (const [s, key] of checks) {
+            if (!s?.date) continue;
+            const t = s.time ? new Date(`${s.date}T${s.time}`) : new Date(s.date + "T00:00:00");
+            if (t > now) return key;
+        }
+        return null;
+    })();
 
     const fastestLap = results.find((r) => r.FastestLap?.rank === "1") || null;
 
@@ -121,48 +140,56 @@ function GrandPrixDetails() {
             <h2>Weekend Schedule</h2>
             <div className="info-card" style={{ padding: "16px 20px" }}>
                 {race.FirstPractice && (
-                    <div className="detail-info-row">
+                    <div className={`detail-info-row${nextSessionKey === "fp1" ? " next-session-highlight" : ""}`}>
                         <span className="detail-info-label">
                             <KnowMoreTerm term="fp1" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Practice 1</KnowMoreTerm>
+                            {nextSessionKey === "fp1" && <span className="next-session-badge">Next</span>}
                         </span>
-                        <span className="detail-info-value">{formatDate(race.FirstPractice.date)}</span>
+                        <span className="detail-info-value">{formatSessionTime(race.FirstPractice.date, race.FirstPractice.time)}</span>
                     </div>
                 )}
                 {race.SecondPractice && (
-                    <div className="detail-info-row">
+                    <div className={`detail-info-row${nextSessionKey === "fp2" ? " next-session-highlight" : ""}`}>
                         <span className="detail-info-label">
                             <KnowMoreTerm term="fp2" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Practice 2</KnowMoreTerm>
+                            {nextSessionKey === "fp2" && <span className="next-session-badge">Next</span>}
                         </span>
-                        <span className="detail-info-value">{formatDate(race.SecondPractice.date)}</span>
+                        <span className="detail-info-value">{formatSessionTime(race.SecondPractice.date, race.SecondPractice.time)}</span>
                     </div>
                 )}
                 {race.ThirdPractice && (
-                    <div className="detail-info-row">
+                    <div className={`detail-info-row${nextSessionKey === "fp3" ? " next-session-highlight" : ""}`}>
                         <span className="detail-info-label">
                             <KnowMoreTerm term="fp3" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Practice 3</KnowMoreTerm>
+                            {nextSessionKey === "fp3" && <span className="next-session-badge">Next</span>}
                         </span>
-                        <span className="detail-info-value">{formatDate(race.ThirdPractice.date)}</span>
+                        <span className="detail-info-value">{formatSessionTime(race.ThirdPractice.date, race.ThirdPractice.time)}</span>
                     </div>
                 )}
                 {race.Sprint && (
-                    <div className="detail-info-row">
+                    <div className={`detail-info-row${nextSessionKey === "sprint" ? " next-session-highlight" : ""}`}>
                         <span className="detail-info-label">
                             <KnowMoreTerm term="sprint" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Sprint</KnowMoreTerm>
+                            {nextSessionKey === "sprint" && <span className="next-session-badge">Next</span>}
                         </span>
-                        <span className="detail-info-value">{formatDate(race.Sprint.date)}</span>
+                        <span className="detail-info-value">{formatSessionTime(race.Sprint.date, race.Sprint.time)}</span>
                     </div>
                 )}
                 {race.Qualifying && (
-                    <div className="detail-info-row">
+                    <div className={`detail-info-row${nextSessionKey === "qualifying" ? " next-session-highlight" : ""}`}>
                         <span className="detail-info-label">
                             <KnowMoreTerm term="qualifying" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Qualifying</KnowMoreTerm>
+                            {nextSessionKey === "qualifying" && <span className="next-session-badge">Next</span>}
                         </span>
-                        <span className="detail-info-value">{formatDate(race.Qualifying.date)}</span>
+                        <span className="detail-info-value">{formatSessionTime(race.Qualifying.date, race.Qualifying.time)}</span>
                     </div>
                 )}
-                <div className="detail-info-row" style={{ borderTop: "1px solid #f0f0f0", paddingTop: 10, marginTop: 4 }}>
-                    <span className="detail-info-label" style={{ color: "#E10600" }}>Race</span>
-                    <span className="detail-info-value" style={{ fontWeight: 600 }}>{formattedDate}</span>
+                <div className={`detail-info-row${nextSessionKey === "race" ? " next-session-highlight" : ""}`} style={{ borderTop: "1px solid #f0f0f0", paddingTop: 10, marginTop: 4 }}>
+                    <span className="detail-info-label" style={{ color: "#E10600" }}>
+                        Race
+                        {nextSessionKey === "race" && <span className="next-session-badge">Next</span>}
+                    </span>
+                    <span className="detail-info-value" style={{ fontWeight: 600 }}>{formatSessionTime(race.date, race.time) !== "TBA" ? formatSessionTime(race.date, race.time) : formattedDate}</span>
                 </div>
             </div>
 
