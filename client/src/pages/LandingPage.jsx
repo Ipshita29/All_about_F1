@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatSessionTime } from "../utils/timeUtils";
+import Ferrari3D from "../components/Ferrari3D";
 import {
     Users, Wrench, Map, Flag,
     Trophy, Radio, ArrowRight, ChevronRight,
@@ -184,12 +185,14 @@ function LandingPage() {
                 </div>
             </div>
 
-            {/* ── Hero Image ── */}
-            <div className="hero-image-wrapper">
-                <img src="../images/ferrari.png" alt="Formula 1 Ferrari" className="hero-image" />
-                <div className="hero-image-overlay">
-                    <span className="hero-image-label">Ferrari SF-25</span>
+            {/* ── Ferrari 3D Showcase ── */}
+            <div className="ferrari-showcase">
+                <div className="ferrari-showcase-labels">
+                    <span className="ferrari-showcase-tag">3D Model</span>
+                    <h2 className="ferrari-showcase-title">Ferrari SF-25<span className="ferrari-showcase-accent"> · Leclerc</span></h2>
+                    <p className="ferrari-showcase-sub">Drag to rotate · Scroll to zoom</p>
                 </div>
+                <Ferrari3D />
             </div>
 
             {/* ── Welcome Banner ── */}
