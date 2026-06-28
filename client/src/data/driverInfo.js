@@ -1,5 +1,6 @@
 const driverInfo = {
   "Max Verstappen": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg",
     nickname: "Mad Max / Super Max",
     description:
       "Max Verstappen is the most dominant Formula 1 driver of his generation and the reigning four-time World Champion. The Dutch-Belgian driver joined Formula 1 at just 17 years old — the youngest in the sport's history — and immediately demonstrated a fearless, instinctive talent that set him apart. After years of raw brilliance with Red Bull, Verstappen matured into a complete, peerless racing driver: devastatingly fast over one lap, supremely intelligent over a race distance, and utterly composed under the most extreme pressure. His four consecutive championship titles from 2021 to 2024 rank him among the greatest drivers in the sport's history.",
@@ -44,6 +45,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Liam Lawson": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg/500px-Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg",
     nickname: "The Kiwi",
     description:
       "Liam Lawson is a composed, technically excellent New Zealand driver who earned his place on the full-time Formula 1 grid through a series of impressive substitute performances for AlphaTauri/RB and a dominant 2023 Formula 2 season. The 22-year-old Kiwi is known for his measured approach, exceptional racecraft, and the ability to perform without errors under intense pressure. Having impressed Red Bull's senior management during his stints as a substitute driver, Lawson was elevated to a full Red Bull Racing seat for 2026, making him the first New Zealander to drive for the senior Red Bull team.",
@@ -84,6 +86,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Charles Leclerc": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg",
     nickname: "Il Predestinato (The Predestined One)",
     description:
       "Charles Leclerc is one of the most gifted pure drivers in Formula 1, a Monegasque talent who shot through the Ferrari junior programme to become one of the most celebrated drivers of his generation. Born in Monaco, racing for Ferrari, and carrying the weight of the tifosi's expectations on his shoulders, Leclerc has shown extraordinary speed — often outqualifying team-mates and rivals who drive theoretically superior machinery — and has developed into a complete, mature racing driver who consistently extracts everything possible from his car. His rivalry with Carlos Sainz, then Lewis Hamilton, within Ferrari has produced some of the most fascinating internal dynamics in modern Formula 1.",
@@ -126,6 +129,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Lewis Hamilton": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg/500px-Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg",
     nickname: "The Greatest of All Time / LH44",
     description:
       "Lewis Hamilton is statistically the greatest Formula 1 driver in the sport's history, holding records for most race wins (103+), most pole positions (104+), most podiums (197+), most championship points, and most races led. The seven-time World Champion from Stevenage, England, joined Ferrari in 2025 in one of the most seismic transfers in Formula 1 history, fulfilling a lifelong dream to drive for the Scuderia. Hamilton redefined what a Formula 1 champion could be — not just on track, where his racecraft, tyre management, and rain-driving ability are considered peerless — but off it, as an outspoken activist for diversity, inclusion, and racial equality who became one of the most influential athletes in the world.",
@@ -171,6 +175,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "George Russell": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg/500px-KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg",
     nickname: "Mr Saturday / GR63",
     description:
       "George Russell is a composed, clinical, and highly intelligent British driver who came through the ranks as perhaps the most complete product of the Mercedes junior programme. After three seasons demonstrating extraordinary skill in an uncompetitive Williams — extracting results that belonged three places up the grid — Russell was promoted to the senior Mercedes team for 2022. He won his first Formula 1 race in his debut season with Mercedes (Brazil 2022), became team leader following Hamilton's departure to Ferrari, and leads Mercedes' project through the major technical regulation change of 2026 as the team attempts to challenge Red Bull and Ferrari for supremacy.",
@@ -211,6 +216,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Andrea Kimi Antonelli": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg/500px-Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg",
     nickname: "Kimi A / The Prodigy",
     description:
       "Andrea Kimi Antonelli is the most hyped young talent in Formula 1 since Max Verstappen, an Italian prodigy from Bologna who was signed by Mercedes at the age of 12 and fast-tracked through junior categories with breathtaking speed. Antonelli won the Formula 2 championship in his debut season before turning 18 and was placed directly into the Mercedes Formula 1 seat vacated by Lewis Hamilton for 2025, making him one of the youngest drivers in the sport's history to start for a front-running team. His surname — a coincidental echo of Kimi Räikkönen — and his extraordinary early-career speed have made him one of the most talked-about young drivers in a generation.",
@@ -250,6 +256,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Lando Norris": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg",
     nickname: "LN4 / The Chosen One",
     description:
       "Lando Norris is one of the most naturally talented and genuinely entertaining drivers on the Formula 1 grid — a fearlessly fast, irreverently funny, and technically excellent British driver who has grown from a beloved fan favourite into a genuine championship contender. Having joined McLaren in 2019 at just 19 years old, Norris grew with the team through difficult years before emerging in 2024 as a title challenger who took his maiden victory in Miami and nearly forced a final-race championship showdown with Verstappen. His 2025 championship campaign and his ongoing McLaren partnership represent one of the most exciting ongoing stories in the sport.",
@@ -290,6 +297,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Oscar Piastri": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg/500px-2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg",
     nickname: "The Iceman of Melbourne",
     description:
       "Oscar Piastri is the most composed and ice-cold young talent to enter Formula 1 in a generation — an Australian driver from Melbourne whose unflappable temperament, clinical race craft, and extraordinary speed have drawn immediate comparisons to the very best in the sport's history. Piastri won three consecutive junior championships (Formula Renault Eurocup 2020, Formula 3 2021, Formula 2 2022) without ever spending a second year in any category — a feat achieved by very few drivers — before his infamous contract dispute between McLaren and Alpine resolved in his favour, giving him his Formula 1 seat. He immediately showed world-class pace.",
@@ -330,6 +338,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Fernando Alonso": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Alonso-68_%2824710447098%29.jpg/500px-Alonso-68_%2824710447098%29.jpg",
     nickname: "El Nano / The Magician",
     description:
       "Fernando Alonso is widely regarded as one of the two or three greatest Formula 1 drivers of all time, a ferociously competitive two-time World Champion from Oviedo, Spain, whose career has spanned four decades of the sport. The first driver to dethrone Michael Schumacher's dominance, Alonso has remained a front-of-grid force through multiple team changes, regulatory upheavals, and the changing faces of the sport with a consistency that borders on the miraculous. At Aston Martin since 2023, the Spaniard has rediscovered race-winning form and continues to rank among the fastest on the grid well into his 40s.",
@@ -373,6 +382,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Lance Stroll": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg/500px-2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg",
     nickname: "The Canadian",
     description:
       "Lance Stroll is a Canadian driver from Montreal whose Formula 1 career has been defined by both genuine talent and the unusual circumstance of his father Lawrence Stroll's purchase of the Racing Point/Aston Martin team, which has sometimes overshadowed his real abilities. Stroll is a capable and sometimes brilliant racing driver — his wet-weather performances in particular have drawn comparisons to the greats — but he races in what is effectively his family's team, a dynamic that has shaped perceptions of his career. At his best, Stroll delivers results that silence his critics; at his worst, he provides ammunition for those who question whether he would be on the grid without his father's billions.",
@@ -413,6 +423,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Pierre Gasly": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png/500px-2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png",
     nickname: "P-Gaz / The Frenchman",
     description:
       "Pierre Gasly is a resilient, emotionally complex French driver whose Formula 1 career has been defined by extraordinary highs and devastating lows in almost equal measure. Promoted prematurely to Red Bull's senior team in 2019, demoted mid-season following poor results, and then catapulted back to the sport's headlines with a miracle victory for AlphaTauri at Monza 2020, Gasly's career arc is one of the most dramatic of his generation. Since joining Alpine in 2023, he has been the undisputed team leader and has produced the consistent, high-level performances that confirm his ability as a genuine front-midfield operator.",
@@ -453,6 +464,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Jack Doohan": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Jack_Doohan_2023.jpg/500px-Jack_Doohan_2023.jpg",
     nickname: "The Son of Thunder",
     description:
       "Jack Doohan is an Australian driver who carries the enormous weight of one of motorsport's most iconic surnames — his father Mick Doohan is a five-time MotoGP World Champion. The younger Doohan earned his Formula 1 seat through the Alpine Academy and a strong Formula 2 campaign, demonstrating that the family talent is genuine rather than nominal. His debut season with Alpine marks the beginning of what the paddock's insiders believe will be a long and successful Formula 1 career, provided the team can give him competitive machinery.",
@@ -490,6 +502,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Alexander Albon": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Alex_Albon_%28cropped%29.jpg/500px-Alex_Albon_%28cropped%29.jpg",
     nickname: "Albon / The Thai Dragon",
     description:
       "Alex Albon is a popular, technically excellent, and remarkably resilient British-Thai driver who has navigated one of the most turbulent career paths in recent Formula 1 history. Promoted to Red Bull's senior team in 2019 mid-season, performing well before being dropped for Sergio Pérez, then returning as Williams' undisputed team leader from 2022 and producing performances that rank among the finest seen in an uncompetitive car in recent memory. Albon is universally liked in the paddock, technically precise, and has rebuilt his Formula 1 career with quiet determination.",
@@ -530,6 +543,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Carlos Sainz": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg/500px-Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg",
     nickname: "Smooth Operator / Chili",
     description:
       "Carlos Sainz Jr. is one of the most complete, consistent, and underrated drivers in Formula 1 — a Spanish champion's son who has consistently outperformed his machinery throughout his career and built a reputation for clinical racecraft, unfailing professionalism, and the ability to win in multiple different car concepts. After six seasons across Toro Rosso, Renault, McLaren, and Ferrari, Sainz moved to Williams for 2025 in a shock transfer that reflected his desire for a team he could build around himself. His sole championship year at Ferrari — 2023 — saw him produce his finest sustained performances, including a landmark home victory at Monza.",
@@ -570,6 +584,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Esteban Ocon": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg/500px-Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg",
     nickname: "Ocon",
     description:
       "Esteban Ocon is a determined French driver from a working-class background in Normandy who fought his way into Formula 1 despite financial difficulties that nearly ended his career before it began. Taken under the wing of the Mercedes programme and later managed by Toto Wolff, Ocon has had a complex F1 journey — a year on the sidelines in 2019 despite being faster than many of his rivals, a return with Renault/Alpine, and a first career win at the extraordinary 2021 Hungarian Grand Prix. He joined Haas for 2025 after his Alpine contract was not renewed.",
@@ -608,6 +623,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Oliver Bearman": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg/500px-2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg",
     nickname: "Ollie Bear",
     description:
       "Oliver Bearman is a young British driver from Chelmsford, Essex, who became a household name in Formula 1 overnight with a stunning debut performance substituting for Carlos Sainz at the 2024 Saudi Arabian Grand Prix, finishing 7th in his first-ever Formula 1 race with less than one hour's notice. The Ferrari and Haas-contracted driver confirmed his seat at Haas from 2025 and immediately showed the composure, technical ability, and natural speed that had made him one of the most touted juniors in the sport. Bearman is widely tipped as a future Grand Prix winner.",
@@ -645,6 +661,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Nico Hülkenberg": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/2019_Formula_One_tests_Barcelona%2C_Hulkenberg_%2840287128313%29.jpg/500px-2019_Formula_One_tests_Barcelona%2C_Hulkenberg_%2840287128313%29.jpg",
     nickname: "The Hulk",
     description:
       "Nico Hülkenberg is a consistent, highly respected German driver who has spent his Formula 1 career as one of the most accomplished non-winners in the sport's history — a driver whose technical excellence, extraordinary durability, and consistent ability to outperform his machinery have never quite produced the machinery capable of rewarding him with a race win. The holder of the record for most Formula 1 starts without a podium (a record he eventually broke), Hülkenberg returned to Formula 1 full-time in 2023 with Haas after multiple substitute appearances and has since led Audi's takeover of the former Sauber team from 2026.",
@@ -685,6 +702,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Gabriel Bortoleto": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Gabriel_Bortoleto_%28cropped%29.jpg/500px-Gabriel_Bortoleto_%28cropped%29.jpg",
     nickname: "Gabi / The Brazilian Prodigy",
     description:
       "Gabriel Bortoleto is a Brazilian driver from São Paulo who became only the third Brazilian to win the Formula 2 championship when he claimed the title in 2024, following in the footsteps of legends including Felipe Massa. Managed by Fernando Alonso, Bortoleto is regarded as the most complete young talent to emerge from South America in over a decade. He was signed by the Kick Sauber/Audi team for 2025 and 2026, beginning his Formula 1 career as the flagship driver of Audi's ambitious project.",
@@ -722,6 +740,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Yuki Tsunoda": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Yuki_Tsunoda_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8096%29.jpg/500px-Yuki_Tsunoda_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8096%29.jpg",
     nickname: "Yuki T / The Samurai",
     description:
       "Yuki Tsunoda is a small but ferociously combative Japanese driver who has become one of the most recognisable personalities in Formula 1 due to his explosive radio messages, aggressive driving style, and rapid development from excitable rookie to seasoned Formula 1 professional. Honda's investment in developing a Japanese championship contender is embodied in Tsunoda, who has grown significantly since his 2021 debut and is now one of the most consistent performers in the midfield with Racing Bulls.",
@@ -762,6 +781,7 @@ const driverInfo = {
 
   // ─────────────────────────────────────────────────────────────────────────────
   "Isack Hadjar": {
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg/500px-Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg",
     nickname: "The Parisian",
     description:
       "Isack Hadjar is a French-Algerian driver from Paris who proved himself one of the most talented juniors in the Red Bull programme through an outstanding Formula 2 career. The 20-year-old is the 2024 Formula 2 runner-up and was selected by Red Bull to partner Yuki Tsunoda at Racing Bulls for the 2026 season. Hadjar brings a combination of natural speed, thoughtful racecraft, and a technical maturity that belies his age, and is already being discussed in the paddock as a potential future Red Bull Racing candidate.",
@@ -797,6 +817,7 @@ const driverInfo = {
     }
   },
   "Valtteri Bottas": {
+  image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7556%29.jpg/500px-Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7556%29.jpg",
   nickname: "The Flying Finn",
   description:
     "Valtteri Bottas is a Finnish Formula 1 driver known for his speed, consistency, and role as one of the most reliable teammates in modern F1. A ten-time Grand Prix winner, Bottas spent five seasons alongside Lewis Hamilton at Mercedes, helping the team secure multiple Constructors' Championships. After leading Alfa Romeo's transition into the Audi project, Bottas returned to the grid in 2026 with Cadillac F1, bringing invaluable experience to the American team's debut campaign.",
@@ -835,6 +856,7 @@ const driverInfo = {
 },
 
 "Franco Colapinto": {
+  image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Franco_Colapinto_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8704%29_%28cropped%29.jpg/500px-Franco_Colapinto_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8704%29_%28cropped%29.jpg",
   nickname: "The Argentine Sensation",
   description:
     "Franco Colapinto is an Argentine racing driver who became the first Argentine Formula 1 driver in more than two decades when he debuted during the 2024 season. Known for his fearless racing style and natural speed, Colapinto impressed immediately and earned a full-time Formula 1 opportunity. His arrival reignited interest in Formula 1 across Argentina and Latin America.",
@@ -872,6 +894,7 @@ const driverInfo = {
 },
 
 "Arvid Lindblad": {
+  image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg/500px-Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg",
   nickname: "The Next Red Bull Star",
   description:
     "Arvid Lindblad is a British-Swedish racing driver and one of the most highly rated talents to emerge from the Red Bull Junior Team. Known for his exceptional speed in karting and junior single-seaters, Lindblad rapidly climbed the motorsport ladder and entered Formula 1 as one of the youngest drivers on the grid. His maturity and racecraft have drawn comparisons to several Red Bull graduates before him.",

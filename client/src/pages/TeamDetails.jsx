@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import teamInfo from "../data/teamInfo";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
@@ -38,15 +39,28 @@ function TeamDetails() {
 
     return (
         <div className="page detail-page">
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
-                {extraInfo?.logo && (
-                    <img
-                        src={extraInfo.logo}
-                        alt={`${team.name} logo`}
-                        style={{ height: 64, objectFit: "contain" }}
-                    />
-                )}
-                <h1 style={{ margin: 0 }}>{team.name}</h1>
+            <div className="team-profile-hero" style={{ "--team-color": teamColor || "#E10600" }}>
+                <div className="team-profile-hero-img-wrap">
+                    <ImagePlaceholder name={team.name} type="team" color={teamColor || "#E10600"} className="entity-placeholder" />
+                    {extraInfo?.image && (
+                        <img
+                            src={extraInfo.image}
+                            alt={`${team.name} car`}
+                            className="team-profile-hero-img"
+                            onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                    )}
+                </div>
+                <div className="team-profile-hero-info">
+                    {extraInfo?.logo && (
+                        <img
+                            src={extraInfo.logo}
+                            alt={`${team.name} logo`}
+                            className="team-profile-logo"
+                        />
+                    )}
+                    <h1>{team.name}</h1>
+                </div>
             </div>
             {teamColor && (
                 <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>

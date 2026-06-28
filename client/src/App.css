@@ -619,55 +619,6 @@ a.list-card:hover,
     color: #444;
 }
 
-/* Auth page styles live in Authpage.css */
-
-.auth-page {
-    min-height: calc(100vh - 63px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f0f0f0;
-    padding: 0;
-}
-
-.auth-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 40px 36px;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    border-top: 4px solid #E10600;
-}
-
-.auth-card h1 {
-    font-family: 'Barlow Condensed', 'Arial Black', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #15151E;
-    margin: 0 0 24px;
-    border: none;
-    padding: 0;
-}
-
-.auth-card input {
-    width: 100%;
-    display: block;
-    margin: 0 0 14px;
-    padding: 10px 14px;
-    border: 1.5px solid #e0e0e0;
-    border-radius: 5px;
-    font-size: 0.95rem;
-}
-
-.auth-card button {
-    width: 100%;
-    padding: 11px;
-    margin-top: 4px;
-    font-size: 1rem;
-}
 
 .profile-card select {
     width: 100%;
@@ -832,6 +783,7 @@ a.list-card.circuit-card,
     justify-content: center;
     overflow: hidden;
     border-bottom: 1px solid #efefef;
+    position: relative;
 }
 
 .circuit-card-img img {
@@ -839,19 +791,6 @@ a.list-card.circuit-card,
     height: 100%;
     object-fit: contain;
     padding: 12px;
-}
-
-.circuit-card-placeholder {
-    background: #e8eaed;
-    border-bottom: none;
-}
-
-.circuit-card-placeholder span {
-    font-size: 3.5rem;
-    font-weight: 800;
-    color: rgba(225, 6, 0, 0.3);
-    font-family: 'Barlow Condensed', sans-serif;
-    letter-spacing: 0.05em;
 }
 
 .circuit-card-body {
@@ -2014,6 +1953,265 @@ a.feature-card,
         padding: 24px 20px;
     }
 }
+/* ── Shared image placeholder ────────────────────────── */
+
+.entity-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.img-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e8eaed 0%, #d6d8dc 100%);
+}
+
+.img-placeholder--driver {
+    background: linear-gradient(135deg, #2a2d3e 0%, #1a1c2a 100%);
+}
+
+.img-placeholder--team {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ph-color, #E10600) 15%, #1a1c2a) 0%, #12141f 100%);
+}
+
+.img-placeholder--circuit {
+    background: linear-gradient(135deg, #1e2030 0%, #12141f 100%);
+}
+
+.ph-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.35;
+}
+
+.ph-icon {
+    width: 36px;
+    height: 36px;
+    color: #fff;
+}
+
+.ph-initials {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
+}
+
+/* ── Driver list cards ───────────────────────────────── */
+
+.driver-list-card {
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+.driver-list-img-wrap {
+    height: 180px;
+    background: #1a1c2a;
+    overflow: hidden;
+    border-bottom: 1px solid #efefef;
+    position: relative;
+}
+
+.driver-list-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.driver-list-card:hover .driver-list-img {
+    transform: scale(1.04);
+}
+
+.driver-list-card .driver-list-header,
+.driver-list-card p,
+.driver-list-card .list-date {
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.driver-list-card .driver-list-header {
+    padding-top: 12px;
+    margin-bottom: 4px;
+}
+
+.driver-list-card p:last-child {
+    padding-bottom: 14px;
+}
+
+/* ── Driver detail hero ──────────────────────────────── */
+
+.driver-profile-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    background: linear-gradient(135deg, #f0f1f4 0%, #e8eaed 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    border-top: 4px solid #E10600;
+    padding: 28px 32px 0 32px;
+}
+
+.driver-profile-hero-info {
+    flex: 1;
+    padding-bottom: 28px;
+}
+
+.driver-profile-hero-info h1 {
+    font-size: 2.3rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 6px;
+}
+
+.driver-nickname {
+    font-style: italic;
+    color: #E10600 !important;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 10px !important;
+}
+
+.driver-profile-img-wrap {
+    width: 220px;
+    height: 280px;
+    flex-shrink: 0;
+    position: relative;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+}
+
+.driver-profile-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+}
+
+/* ── Team list cards ─────────────────────────────────── */
+
+.team-list-card {
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+.team-list-img-wrap {
+    height: 160px;
+    overflow: hidden;
+    border-bottom: 1px solid #efefef;
+    position: relative;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--team-color, #E10600) 12%, #12141f) 0%, #0e1018 100%);
+}
+
+.team-list-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.team-list-card:hover .team-list-img {
+    transform: scale(1.04);
+}
+
+.team-list-logo {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.6));
+    z-index: 2;
+}
+
+.team-list-body {
+    padding: 12px 16px 14px;
+}
+
+.team-list-body h3 {
+    margin-bottom: 4px;
+}
+
+.team-list-body p {
+    margin: 2px 0;
+}
+
+/* ── Team detail hero ────────────────────────────────── */
+
+.team-profile-hero {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    border-top: 4px solid var(--team-color, #E10600);
+    position: relative;
+}
+
+.team-profile-hero-img-wrap {
+    height: 280px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--team-color, #E10600) 12%, #12141f) 0%, #0e1018 100%);
+}
+
+.team-profile-hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.team-profile-hero-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 28px;
+    background: linear-gradient(135deg, #f0f1f4 0%, #e8eaed 100%);
+}
+
+.team-profile-logo {
+    height: 56px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.team-profile-hero-info h1 {
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    font-size: 2.1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
 /* ── Driver Comparison Hero Header ───────────────────── */
 
 .cmp-hero {

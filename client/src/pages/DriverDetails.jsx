@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import driverInfo from "../data/driverInfo";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
@@ -36,13 +37,32 @@ function DriverDetails() {
 
     return (
         <div className="page detail-page">
-            <h1>{driver.givenName} {driver.familyName}</h1>
-            {extraInfo?.nickname && <p>"{extraInfo.nickname}"</p>}
-            <p>
-                <a href={driver.url} target="_blank" rel="noreferrer">
-                    {driver.familyName}'s Wikipedia Profile
-                </a>
-            </p>
+            <div className="driver-profile-hero">
+                <div className="driver-profile-hero-info">
+                    <h1>{driver.givenName} {driver.familyName}</h1>
+                    {extraInfo?.nickname && <p className="driver-nickname">"{extraInfo.nickname}"</p>}
+                    <p>
+                        <a href={driver.url} target="_blank" rel="noreferrer">
+                            {driver.familyName}'s Wikipedia Profile
+                        </a>
+                    </p>
+                </div>
+                <div className="driver-profile-img-wrap">
+                    <ImagePlaceholder
+                        name={`${driver.givenName} ${driver.familyName}`}
+                        type="driver"
+                        className="entity-placeholder"
+                    />
+                    {extraInfo?.image && (
+                        <img
+                            src={extraInfo.image}
+                            alt={`${driver.givenName} ${driver.familyName}`}
+                            className="driver-profile-img"
+                            onError={(e) => { e.target.style.display = "none"; }}
+                        />
+                    )}
+                </div>
+            </div>
 
             {extraInfo?.description && (
                 <>

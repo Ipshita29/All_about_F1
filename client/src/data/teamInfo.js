@@ -1,6 +1,7 @@
 const teamInfo = {
   red_bull: {
     logo: "/logos/red_bull_racing.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/FIA_F1_Austria_2025_Nr._1_Verstappen.jpg/500px-FIA_F1_Austria_2025_Nr._1_Verstappen.jpg",
     founded: 2005,
     headquarters: "Milton Keynes, Oxfordshire, United Kingdom",
     teamPrincipal: "Christian Horner",
@@ -57,6 +58,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   ferrari: {
     logo: "/logos/ferrari.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2025_Japan_GP_-_Ferrari_-_Lewis_Hamilton_-_FP1.jpg/500px-2025_Japan_GP_-_Ferrari_-_Lewis_Hamilton_-_FP1.jpg",
     founded: 1950,
     headquarters: "Maranello, Emilia-Romagna, Italy",
     teamPrincipal: "Frédéric Vasseur",
@@ -117,6 +119,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   mercedes: {
     logo: "/logos/mercedes.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/FIA_F1_Austria_2025_Nr._63_Russell.jpg/500px-FIA_F1_Austria_2025_Nr._63_Russell.jpg",
     founded: 1954,
     headquarters: "Brackley, Northamptonshire, United Kingdom",
     teamPrincipal: "Toto Wolff",
@@ -174,6 +177,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   mclaren: {
     logo: "/logos/mclaren.jpg",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/2025_Japan_GP_-_McLaren_-_Lando_Norris_-_FP1.jpg/500px-2025_Japan_GP_-_McLaren_-_Lando_Norris_-_FP1.jpg",
     founded: 1966,
     headquarters: "Woking, Surrey, United Kingdom",
     teamPrincipal: "Andrea Stella",
@@ -232,6 +236,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   aston_martin: {
     logo: "/logos/aston_martin.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/2025_Japan_GP_-_Aston_Martin_-_Fernando_Alonso_-_FP1.jpg/500px-2025_Japan_GP_-_Aston_Martin_-_Fernando_Alonso_-_FP1.jpg",
     founded: 2018,
     headquarters: "Silverstone, Northamptonshire, United Kingdom",
     teamPrincipal: "Andy Cowell",
@@ -289,6 +294,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   alpine: {
     logo: "/logos/alpine.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/FIA_F1_Austria_2025_Nr._10_Gasly.jpg/500px-FIA_F1_Austria_2025_Nr._10_Gasly.jpg",
     founded: 2021,
     headquarters: "Enstone, Oxfordshire, United Kingdom (factory); Viry-Châtillon, France (engine)",
     teamPrincipal: "Oliver Oakes",
@@ -346,6 +352,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   williams: {
     logo: "/logos/williams.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/2025_Japan_GP_-_Williams_-_Carlos_Sainz_-_FP1.jpg/500px-2025_Japan_GP_-_Williams_-_Carlos_Sainz_-_FP1.jpg",
     founded: 1977,
     headquarters: "Grove, Oxfordshire, United Kingdom",
     teamPrincipal: "James Vowles",
@@ -405,6 +412,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   haas: {
     logo: "/logos/haas.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/FIA_F1_Austria_2025_Nr._87_Bearman.jpg/500px-FIA_F1_Austria_2025_Nr._87_Bearman.jpg",
     founded: 2016,
     headquarters: "Kannapolis, North Carolina, USA (owner); Banbury, Oxfordshire, UK (operations)",
     teamPrincipal: "Ayao Komatsu",
@@ -461,6 +469,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   sauber: {
     logo: "/logos/sauber.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/2025_Japan_GP_-_Sauber_-_Nico_Hulkenberg_-_FP1.jpg/500px-2025_Japan_GP_-_Sauber_-_Nico_Hulkenberg_-_FP1.jpg",
     founded: 1993,
     headquarters: "Hinwil, Zurich, Switzerland",
     teamPrincipal: "Alessandro Alunni Bravi",
@@ -517,6 +526,7 @@ const teamInfo = {
   // ─────────────────────────────────────────────────────────────────────────────
   rb: {
     logo: "/logos/racing_bulls.png",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/2025_Japan_GP_-_Racing_Bulls_-_Liam_Lawson_-_FP2.jpg/500px-2025_Japan_GP_-_Racing_Bulls_-_Liam_Lawson_-_FP2.jpg",
     founded: 2006,
     headquarters: "Faenza, Emilia-Romagna, Italy",
     teamPrincipal: "Laurent Mekies",

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import driverInfo from "../data/driverInfo";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 
 function Drivers() {
     const [drivers, setDrivers] = useState([]);
@@ -48,8 +50,25 @@ function Drivers() {
                     <Link
                         to={`/drivers/${year}/${d.Driver.driverId}`}
                         key={d.Driver.driverId}
-                        className="list-card"
+                        className="list-card driver-list-card"
                     >
+                        {(() => {
+                            const info = driverInfo[`${d.Driver.givenName} ${d.Driver.familyName}`];
+                            const name = `${d.Driver.givenName} ${d.Driver.familyName}`;
+                            return (
+                                <div className="driver-list-img-wrap">
+                                    <ImagePlaceholder name={name} type="driver" className="entity-placeholder" />
+                                    {info?.image && (
+                                        <img
+                                            src={info.image}
+                                            alt={name}
+                                            className="driver-list-img"
+                                            onError={(e) => { e.target.style.display = "none"; }}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })()}
                         <div className="driver-list-header">
                             <span
                                 className="driver-list-pos"

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import teamInfo from "../data/teamInfo";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 
 function Teams() {
     const [teams, setTeams] = useState([]);
@@ -50,24 +51,37 @@ function Teams() {
                         <Link
                             to={`/teams/${year}/${t.constructorId}`}
                             key={t.constructorId}
-                            className="list-card"
+                            className="list-card team-list-card"
                             style={{ borderTopColor: teamColor || "#E10600" }}
                         >
-                            {info?.logo && (
-                                <img
-                                    src={info.logo}
-                                    alt={`${t.name} logo`}
-                                    style={{ height: 40, objectFit: "contain", marginBottom: 8 }}
-                                />
-                            )}
-                            <h3>{t.name}</h3>
-                            <p>{t.nationality}</p>
-                            {info?.engineSupplier && (
-                                <p>{info.engineSupplier} Power Unit</p>
-                            )}
-                            {info?.teamPrincipal && (
-                                <p className="list-date">TP: {info.teamPrincipal}</p>
-                            )}
+                            <div className="team-list-img-wrap" style={{ "--team-color": teamColor || "#E10600" }}>
+                                <ImagePlaceholder name={t.name} type="team" color={teamColor || "#E10600"} className="entity-placeholder" />
+                                {info?.image && (
+                                    <img
+                                        src={info.image}
+                                        alt={`${t.name} car`}
+                                        className="team-list-img"
+                                        onError={(e) => { e.target.style.display = "none"; }}
+                                    />
+                                )}
+                                {info?.logo && (
+                                    <img
+                                        src={info.logo}
+                                        alt={`${t.name} logo`}
+                                        className="team-list-logo"
+                                    />
+                                )}
+                            </div>
+                            <div className="team-list-body">
+                                <h3>{t.name}</h3>
+                                <p>{t.nationality}</p>
+                                {info?.engineSupplier && (
+                                    <p>{info.engineSupplier} Power Unit</p>
+                                )}
+                                {info?.teamPrincipal && (
+                                    <p className="list-date">TP: {info.teamPrincipal}</p>
+                                )}
+                            </div>
                         </Link>
                     );
                 })}

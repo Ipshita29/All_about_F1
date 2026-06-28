@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { circuitInfo } from "../data/circuitInfo";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 
 function getTrackBadge(trackType) {
     if (!trackType) return null;
@@ -54,8 +55,8 @@ function CircuitMaps() {
                                     <img src={info.mapImage} alt={c.circuitName} />
                                 </div>
                             ) : (
-                                <div className="circuit-card-img circuit-card-placeholder">
-                                    <span>{c.circuitName[0]}</span>
+                                <div className="circuit-card-img">
+                                    <ImagePlaceholder name={c.circuitName} type="circuit" className="entity-placeholder" />
                                 </div>
                             )}
                             <div className="circuit-card-body">
