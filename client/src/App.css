@@ -1017,17 +1017,71 @@ a.list-card.circuit-card,
     margin-bottom: 4px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+/* ── F1 Starting Lights Loading Screen ───────────────── */
+
+.f1-lights-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
 }
 
-.loading-spinner-ring {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(0, 0, 0, 0.1);
-    border-top-color: #E10600;
+.f1-lights-gantry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.f1-lights-beam {
+    width: 260px;
+    height: 14px;
+    background: #1a1a1a;
+    border-radius: 2px;
+}
+
+.f1-lights-row {
+    display: flex;
+    gap: 14px;
+    background: #17171a;
+    padding: 10px 14px 14px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.f1-light-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.f1-light {
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    background: radial-gradient(circle at 35% 30%, #4a1210, #200504);
+    border: 2px solid #050505;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.f1-light.lit {
+    background: radial-gradient(circle at 35% 30%, #ff5c4d, #E10600);
+    box-shadow: 0 0 12px 3px rgba(225, 6, 0, 0.75), 0 0 24px 6px rgba(225, 6, 0, 0.35);
+}
+
+.f1-lights-label {
+    font-family: 'Barlow Condensed', 'Arial Black', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #999;
+    transition: color 0.15s ease;
+}
+
+.f1-lights-label.go {
+    color: #1fa64a;
+    font-size: 1.1rem;
+    font-weight: 700;
 }
 
 .landing-page {
@@ -1967,11 +2021,11 @@ a.feature-card,
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #e8eaed 0%, #d6d8dc 100%);
+    background: #000000;
 }
 
 .img-placeholder--driver {
-    background: linear-gradient(135deg, #2a2d3e 0%, #1a1c2a 100%);
+    background: #000000;
 }
 
 .img-placeholder--team {
@@ -2013,7 +2067,7 @@ a.feature-card,
 }
 
 .driver-list-img-wrap {
-    height: 180px;
+    height: 260px;
     background: #1a1c2a;
     overflow: hidden;
     border-bottom: 1px solid #efefef;
@@ -2025,8 +2079,8 @@ a.feature-card,
     inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
+    object-position: center bottom;
     display: block;
     transition: transform 0.3s ease;
 }
@@ -3046,5 +3100,63 @@ a.feature-card,
     font-size: 0.88rem;
     color: #333;
     line-height: 1.4;
+}
+
+/* Race track scroll progress bar (horizontal, top edge) */
+.f1-scroll-track {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 7px;
+    z-index: 1300;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            transparent 14px,
+            rgba(255, 255, 255, 0.35) 14px,
+            rgba(255, 255, 255, 0.35) 22px
+        ),
+        #1c1c1c;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    overflow: visible;
+}
+
+.f1-scroll-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(225, 6, 0, 0) 0%, rgba(225, 6, 0, 0.75) 100%);
+    transition: width 0.08s linear;
+}
+
+.f1-scroll-car {
+    position: absolute;
+    top: 50%;
+    width: 26px;
+    height: 11px;
+    transform: translate(-85%, -50%);
+    transition: left 0.08s linear;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+    pointer-events: none;
+}
+
+.f1-scroll-car-svg {
+    width: 100%;
+    height: 100%;
+    color: #E10600;
+}
+
+.f1-scroll-finish {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    background-image:
+        conic-gradient(#fff 90deg, #111 0 180deg, #fff 0 270deg, #111 0);
+    background-size: 4px 4px;
 }
 

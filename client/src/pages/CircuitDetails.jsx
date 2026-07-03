@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { circuitInfo } from "../data/circuitInfo";
+import LoadingSpinner from "../components/LoadingSpinner";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
@@ -19,7 +20,7 @@ function CircuitDetails() {
             });
     }, [id]);
 
-    if (!circuit) return <div className="loading">Loading...</div>;
+    if (!circuit) return <div className="loading"><LoadingSpinner /></div>;
 
     const info = circuitInfo[id];
 

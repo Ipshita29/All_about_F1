@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import driverInfo from "../data/driverInfo";
+import LoadingSpinner from "../components/LoadingSpinner";
 import ImagePlaceholder from "../components/ImagePlaceholder";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
@@ -30,7 +31,7 @@ function DriverDetails() {
             });
     }, [year, id]);
 
-    if (!driver || !standing) return <div className="loading">Loading...</div>;
+    if (!driver || !standing) return <div className="loading"><LoadingSpinner /></div>;
 
     const age = new Date().getFullYear() - new Date(driver.dateOfBirth).getFullYear();
     const extraInfo = driverInfo[`${driver.givenName} ${driver.familyName}`];

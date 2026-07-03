@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { circuitInfo } from "../data/circuitInfo";
+import LoadingSpinner from "../components/LoadingSpinner";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
@@ -44,7 +45,7 @@ function GrandPrixDetails() {
             .catch(() => setQualifying([]));
     }, [year, id]);
 
-    if (!race) return <div className="loading">Loading...</div>;
+    if (!race) return <div className="loading"><LoadingSpinner /></div>;
 
     const now = new Date();
     const raceDate = new Date(race.date + "T00:00:00");

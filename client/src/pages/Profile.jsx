@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const driverIdMap = {
     "Charles Leclerc": "leclerc",
@@ -51,7 +52,7 @@ function Profile() {
             .then((data) => setUser(data));
     }, []);
 
-    if (!user) return <div className="loading">Loading...</div>;
+    if (!user) return <div className="loading"><LoadingSpinner /></div>;
 
     const initials = user.name
         ?.split(" ")

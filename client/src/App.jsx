@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar"
+import ScrollProgress from "./components/ScrollProgress"
 import CircuitMaps from "./pages/CircuitMaps"
 import CircuitDetails from "./pages/CircuitDetails"
 import Drivers from "./pages/Drivers"
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollProgress />
       <Navbar />
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>

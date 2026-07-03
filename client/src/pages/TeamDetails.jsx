@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import teamInfo from "../data/teamInfo";
 import ImagePlaceholder from "../components/ImagePlaceholder";
+import LoadingSpinner from "../components/LoadingSpinner";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
@@ -32,7 +33,7 @@ function TeamDetails() {
             });
     }, [year, id]);
 
-    if (!team || !standing) return <div className="loading">Loading...</div>;
+    if (!team || !standing) return <div className="loading"><LoadingSpinner /></div>;
 
     const extraInfo = teamInfo[team.constructorId];
     const teamColor = extraInfo?.teamColors?.primary;

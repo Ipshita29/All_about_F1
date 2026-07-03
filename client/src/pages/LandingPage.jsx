@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { formatSessionTime } from "../utils/timeUtils";
 import Ferrari3D from "../components/Ferrari3D";
+import LoadingSpinner from "../components/LoadingSpinner";
 import {
     Users, Wrench, Map, Flag,
     Trophy, Radio, ArrowRight, ChevronRight,
@@ -143,9 +144,7 @@ function LandingPage() {
     if (loading) {
         return (
             <div className="landing-loading">
-                <img src="/main/main.png" alt="Formula 1" className="loading-f1-logo" />
-                <div className="loading-spinner-ring"></div>
-                <span>Loading F1 Data...</span>
+                <LoadingSpinner label="Loading F1 Data..." />
             </div>
         );
     }
