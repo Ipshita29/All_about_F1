@@ -7,6 +7,7 @@ const NAV_LINKS = [
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Teams" },
     { to: "/circuitmaps", label: "Circuits" },
+    { to: "/dictionary", label: "Dictionary" },
 ];
 
 function SettingsIcon() {
