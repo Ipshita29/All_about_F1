@@ -8,6 +8,7 @@ const NAV_LINKS = [
     { to: "/teams", label: "Teams" },
     { to: "/circuitmaps", label: "Circuits" },
     { to: "/dictionary", label: "Dictionary" },
+    { to: "/news", label: "News" },
 ];
 
 function SettingsIcon() {

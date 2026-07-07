@@ -10,6 +10,7 @@ const connectDB = require("./config/db")
 const authRoutes = require("./routes/authRoutes")
 const authMiddleware = require("./middleware/authMiddleware");
 const userRoutes = require("./routes/userRoutes");
+const newsRoutes = require ("./routes/news.js");
 
 app.use(cors());
 app.use(express.json());
@@ -31,6 +32,7 @@ app.use("/grandprixdashboard",grandprixRoutes)
 app.use("/circuitmaps",circuitRoutes)
 app.use("/auth", authRoutes)
 app.use("/user", userRoutes);
+app.use("/news", newsRoutes);
 
 app.listen(process.env.PORT||3000,()=>{
     console.log("Server listening on port 3000")

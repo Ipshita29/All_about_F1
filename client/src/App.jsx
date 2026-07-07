@@ -18,6 +18,7 @@ import DriverComparison from "./pages/DriverComparison";
 import TeamComparison from "./pages/TeamComparison";
 import F1Dictionary from "./pages/F1Dictionary";
 import DictionaryTerm from "./pages/DictionaryTerm";
+import NewsPage from "./pages/NewsPage";
 import "./App.css";
 
 
@@ -43,6 +44,7 @@ function App() {
         <Route path="/compare-teams" element={<TeamComparison />} />
         <Route path="/dictionary" element={<F1Dictionary />} />
         <Route path="/dictionary/:slug" element={<DictionaryTerm />} />
+        <Route path="/news" element={<NewsPage />} />
         <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>

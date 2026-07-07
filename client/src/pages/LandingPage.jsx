@@ -82,6 +82,7 @@ function LandingPage() {
     const [latestRace, setLatestRace] = useState(null);
     const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true);
+    const [newsArticles, setNewsArticles] = useState([]);
 
     useEffect(() => {
         fetch("http://localhost:3000/grandprixdashboard/2026")
@@ -118,6 +119,13 @@ function LandingPage() {
         fetch("http://localhost:3000/grandprixdashboard/latest")
             .then((res) => res.json())
             .then((data) => setLatestRace(data));
+    }, []);
+
+    useEffect(() => {
+        fetch("http://localhost:3000/news")
+            .then((res) => res.json())
+            .then((data) => setNewsArticles(Array.isArray(data) ? data : []))
+            .catch(() => setNewsArticles([]));
     }, []);
 
     useEffect(() => {
@@ -374,6 +382,36 @@ function LandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* ── Latest News ── */}
+            {newsArticles.length > 0 && (
+                <section className="landing-section">
+                    <h2 className="section-label">Latest News</h2>
+                    <div className="news-preview-grid">
+                        {newsArticles.slice(0, 3).map((article) => (
+                            <div key={article.id} className="news-preview-card">
+                                <div className="news-preview-img">
+                                    <img
+                                        src={article.image}
+                                        alt={article.title}
+                                        onError={(e) => { e.target.src = "https://via.placeholder.com/800x450?text=Formula+1+News"; }}
+                                    />
+                                </div>
+                                <div className="news-preview-body">
+                                    <span className="news-source-badge">{article.source}</span>
+                                    <h3>{article.title}</h3>
+                                    <a href={article.url} target="_blank" rel="noreferrer" className="news-read-link">
+                                        Read Full Article <ArrowRight size={12} />
+                                    </a>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <Link to="/news" className="standings-more-link">
+                        All News <ArrowRight size={12} style={{ display: "inline", verticalAlign: "middle" }} />
+                    </Link>
+                </section>
+            )}
 
             {/* ── Live Race Center ── */}
             <section className="landing-section">
