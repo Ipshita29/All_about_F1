@@ -1,7 +1,4 @@
 import { knowMoreInfo } from "../data/knowMoreInfo";
-
-// Display order + chip label + short blurb for each category.
-// Chip labels are shortened for the filter row (e.g. "Weekend Format" -> "Race Weekend").
 export const CATEGORY_INFO = [
   { name: "Race Terms", chip: "Flags & Race", icon: "Flag", description: "Flags, safety cars, and the language of race day." },
   { name: "Strategy Terms", chip: "Strategy", icon: "Brain", description: "Undercuts, overcuts, and the pit-wall chess match." },
@@ -74,6 +71,14 @@ export function getTermBySlug(slug) {
 export function getRandomTerm() {
   const terms = getAllTerms();
   return terms[Math.floor(Math.random() * terms.length)];
+}
+
+export function getWordOfTheDay() {
+  const terms = getAllTerms();
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000
+  );
+  return terms[dayOfYear % terms.length];
 }
 
 export function getRelatedTerms(term) {

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { formatSessionTime } from "../utils/timeUtils";
 import Ferrari3D from "../components/Ferrari3D";
 import LoadingSpinner from "../components/LoadingSpinner";
+import WordOfTheDay from "../components/WordOfTheDay";
 import {
     Users, Wrench, Map, Flag,
     Trophy, Radio, ArrowRight, ChevronRight,
@@ -161,6 +162,7 @@ function LandingPage() {
 
     return (
         <div className="page landing-page">
+            <WordOfTheDay />
 
             {/* ── Hero ── */}
             <div className="landing-hero">
