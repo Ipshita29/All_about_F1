@@ -1,0 +1,2480 @@
+/* ════════════════════════════════════════════════════════════════════
+   LANDING PAGE — cinematic F1 experience
+   Scope: every rule is namespaced under .lp so nothing leaks into the
+   rest of the (light-themed) site.
+
+   Colour system:
+     #141616  primary dark background      (--lp-bg)
+     #3D3C38  elevated surfaces            (--lp-surface)
+     #746D67  borders / structural detail  (--lp-border)
+     #A49F9D  secondary text               (--lp-text2)
+     #7F1D1A  primary racing-red accent    (--lp-red)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Registered so the hero mask position can be animated on touch devices */
+@property --hx {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 50%;
+}
+@property --hy {
+    syntax: "<percentage>";
+    inherits: true;
+    initial-value: 45%;
+}
+
+.lp {
+    --lp-bg: #141616;
+    --lp-bg-deep: #0e1010;
+    --lp-surface: #3d3c38;
+    --lp-surface-dark: #1b1d1d;
+    --lp-border: #746d67;
+    --lp-line: rgba(116, 109, 103, 0.28);
+    --lp-text: #f2f0ed;
+    --lp-text2: #a49f9d;
+    --lp-red: #7f1d1a;
+    --lp-red-bright: #b3271e;
+    --lp-green: #3e9b4f;
+    --lp-font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --lp-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    background: var(--lp-bg);
+    color: var(--lp-text);
+    min-height: 100vh;
+    overflow-x: clip;
+}
+
+/* dark overscroll + smooth in-page anchor scroll while landing is mounted */
+html:has(.lp) {
+    background: var(--lp-bg);
+}
+@media (prefers-reduced-motion: no-preference) {
+    html:has(.lp) {
+        scroll-behavior: smooth;
+    }
+}
+
+body.lp-no-scroll {
+    overflow: hidden;
+}
+
+.lp a {
+    color: inherit;
+}
+
+.lp-mono {
+    font-family: var(--lp-font-mono);
+    letter-spacing: 0.06em;
+}
+
+.lp *:focus-visible {
+    outline: 2px solid var(--lp-red-bright);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+/* ── Shared section scaffolding ─────────────────────────────────── */
+
+.lp-main {
+    display: block;
+}
+
+.lp-section {
+    position: relative;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 104px 40px;
+}
+
+/* connective tissue: a thin rule with a red kerb tick between sections */
+.lp-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 40px;
+    right: 40px;
+    height: 1px;
+    background: var(--lp-line);
+}
+.lp-section::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 40px;
+    width: 56px;
+    height: 5px;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--lp-red) 0 10px,
+        transparent 10px 18px
+    );
+}
+
+.lp-section-head {
+    margin-bottom: 44px;
+}
+
+.lp-section-eyebrow {
+    display: block;
+    font-family: var(--lp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    color: var(--lp-text2);
+    margin-bottom: 10px;
+}
+
+.lp-section-title {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--lp-text);
+}
+
+.lp-inline-state {
+    padding: 42px 0;
+    color: var(--lp-text2);
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+}
+
+.lp-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--lp-font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.18em;
+    color: var(--lp-text);
+    border: 1px solid var(--lp-border);
+    padding: 12px 20px;
+    background: transparent;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.lp-cta:hover,
+.lp-cta:focus-visible {
+    border-color: var(--lp-red-bright);
+    background: rgba(127, 29, 26, 0.18);
+}
+.lp-cta span {
+    transition: transform 0.2s;
+}
+.lp-cta:hover span {
+    transform: translateX(4px);
+}
+
+/* ── Car silhouette (shared by intro / hero / footer / explore) ──── */
+
+.lp-car-visual {
+    line-height: 0;
+}
+.lp-car-visual-svg,
+.lp-car-visual-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.lp-car-body {
+    fill: #343634;
+}
+.lp-car-halo {
+    stroke: #4a4c4a;
+}
+.lp-car-helmet {
+    fill: var(--lp-red);
+}
+.lp-car-accent {
+    fill: var(--lp-red);
+}
+.lp-car-floor {
+    fill: #0c0d0d;
+}
+.lp-car-tyre {
+    fill: #1c1d1d;
+}
+.lp-car-rim {
+    fill: #746d67;
+}
+.lp-car-spoke {
+    fill: #504b46;
+}
+.lp-car-rearlight {
+    fill: #5b1512;
+}
+
+/* ── Intro overlay ──────────────────────────────────────────────── */
+
+.lp-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: #0a0b0b;
+    overflow: hidden;
+    animation: lp-intro-wipe 0.42s cubic-bezier(0.7, 0, 0.3, 1) 1.08s forwards;
+}
+
+@keyframes lp-intro-wipe {
+    to {
+        clip-path: inset(0 0 0 100%);
+    }
+}
+
+.lp-intro-scene {
+    position: absolute;
+    inset: 0;
+    animation: lp-intro-shake 0.9s linear 0.1s 1;
+}
+
+@keyframes lp-intro-shake {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(1.5px); }
+    50% { transform: translateY(-1px); }
+    75% { transform: translateY(1px); }
+}
+
+.lp-intro-speedlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0 46px,
+        rgba(164, 159, 157, 0.05) 46px 47px
+    );
+    opacity: 0;
+    animation: lp-intro-lines 0.9s linear 0.12s 1;
+}
+
+@keyframes lp-intro-lines {
+    0% { opacity: 0; transform: translateX(0); }
+    15% { opacity: 1; }
+    100% { opacity: 0.4; transform: translateX(-18vw); }
+}
+
+.lp-intro-runner {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: clamp(240px, 34vw, 460px);
+    transform: translate(-110%, -50%);
+    animation: lp-intro-drive 1.02s cubic-bezier(0.55, 0, 0.35, 1) 0.12s forwards;
+    will-change: transform;
+}
+
+@keyframes lp-intro-drive {
+    0% { transform: translate(-110%, -50%); }
+    100% { transform: translate(110vw, -50%); }
+}
+
+.lp-intro-car {
+    position: relative;
+    filter: blur(0.6px) drop-shadow(-24px 0 18px rgba(127, 29, 26, 0.35));
+    transform: skewX(-2deg);
+}
+
+.lp-intro-car .lp-car-wheel {
+    animation: lp-wheel-spin 0.28s linear infinite;
+}
+
+@keyframes lp-wheel-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* racing-red light trail dragged behind the car */
+.lp-intro-trail {
+    position: absolute;
+    right: 88%;
+    top: 52%;
+    width: 70vw;
+    height: 5px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(127, 29, 26, 0.1) 30%,
+        rgba(179, 39, 30, 0.85)
+    );
+    filter: blur(1px);
+    box-shadow: 0 0 22px rgba(179, 39, 30, 0.5);
+}
+
+.lp-intro-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 12vh;
+    transform: translateX(-50%);
+    font-family: var(--lp-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.6em;
+    color: var(--lp-text2);
+    opacity: 0;
+    animation: lp-intro-caption 0.9s ease 0.15s 1;
+}
+
+@keyframes lp-intro-caption {
+    0% { opacity: 0; }
+    30% { opacity: 0.9; }
+    100% { opacity: 0; }
+}
+
+/* reduced motion: quiet fade instead of the drive-by */
+.lp-intro--reduced {
+    animation: lp-intro-fade 0.4s ease 0.05s forwards;
+}
+.lp-intro--reduced .lp-intro-scene,
+.lp-intro--reduced .lp-intro-speedlines,
+.lp-intro--reduced .lp-intro-runner,
+.lp-intro--reduced .lp-intro-caption,
+.lp-intro--reduced .lp-intro-car .lp-car-wheel {
+    animation: none;
+}
+.lp-intro--reduced .lp-intro-runner {
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.35;
+}
+
+@keyframes lp-intro-fade {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+@media (max-width: 640px) {
+    .lp-intro-runner {
+        width: 62vw;
+        animation-duration: 0.85s;
+    }
+    .lp-intro-trail {
+        width: 50vw;
+    }
+}
+
+/* ── Hero ───────────────────────────────────────────────────────── */
+
+.lp-hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 40px 0;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 90% 60% at 50% 20%, rgba(61, 60, 56, 0.28), transparent 65%),
+        var(--lp-bg);
+}
+
+.lp-hero-gridlines {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(116, 109, 103, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(116, 109, 103, 0.07) 1px, transparent 1px);
+    background-size: 88px 88px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, black 30%, transparent 80%);
+    pointer-events: none;
+}
+
+.lp-hero-center {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+    gap: 28px;
+}
+
+.lp-hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--lp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.34em;
+    color: var(--lp-text2);
+}
+
+.lp-hero-kicker-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--lp-red-bright);
+    animation: lp-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes lp-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
+/* three stacked layers, identical grid cell so they align exactly */
+.lp-hero-stack {
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+.lp-hero-stack > * {
+    grid-area: 1 / 1;
+}
+
+.lp-hero-word {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 0.9;
+    color: var(--lp-text);
+    user-select: none;
+}
+
+.lp-hero-word-top {
+    font-size: clamp(2rem, 6.5vw, 5.4rem);
+    letter-spacing: 0.34em;
+    margin-right: -0.34em; /* optically recenter the tracked text */
+}
+
+.lp-hero-word-f1 {
+    font-size: clamp(9rem, 32vw, 26rem);
+    letter-spacing: 0.02em;
+    line-height: 0.86;
+}
+
+/* red-lit duplicate revealed in a soft window around the cursor */
+.lp-hero-word--reveal {
+    pointer-events: none;
+    background:
+        repeating-linear-gradient(
+            115deg,
+            #b3271e 0 3px,
+            #7f1d1a 3px 7px,
+            #d8453a 7px 8px,
+            #8c211d 8px 14px
+        );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    -webkit-mask-image: radial-gradient(
+        circle 190px at var(--hx, 50%) var(--hy, 45%),
+        black 30%,
+        transparent 72%
+    );
+    mask-image: radial-gradient(
+        circle 190px at var(--hx, 50%) var(--hy, 45%),
+        black 30%,
+        transparent 72%
+    );
+}
+
+.lp-hero--tracking .lp-hero-word--reveal {
+    opacity: 1;
+}
+
+/* faint car silhouette parallaxing behind the type */
+.lp-hero-carlayer {
+    width: min(72vw, 900px);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    transform: translateX(calc(var(--hshift, 0) * 36px));
+    will-change: transform;
+    pointer-events: none;
+    -webkit-mask-image: radial-gradient(
+        circle 320px at var(--hx, 50%) var(--hy, 45%),
+        black 25%,
+        transparent 75%
+    );
+    mask-image: radial-gradient(
+        circle 320px at var(--hx, 50%) var(--hy, 45%),
+        black 25%,
+        transparent 75%
+    );
+}
+.lp-hero--tracking .lp-hero-carlayer {
+    opacity: 0.5;
+}
+.lp-hero-carsvg {
+    width: 100%;
+    height: auto;
+}
+.lp-hero-carlayer .lp-car-body {
+    fill: #2a2c2b;
+}
+.lp-hero-carlayer .lp-car-accent {
+    fill: var(--lp-red-bright);
+}
+
+.lp-hero-tagline {
+    font-family: var(--lp-font-mono);
+    font-size: clamp(0.72rem, 1.4vw, 0.95rem);
+    letter-spacing: 0.42em;
+    color: var(--lp-text2);
+    text-align: center;
+}
+
+/* touch devices: slow automatic sweep instead of hover */
+@media (hover: none) {
+    .lp-hero-word--reveal,
+    .lp-hero-carlayer {
+        opacity: 1;
+        animation: lp-hero-sweep 10s ease-in-out infinite alternate;
+    }
+    .lp-hero-carlayer {
+        opacity: 0.35;
+    }
+}
+
+@keyframes lp-hero-sweep {
+    from {
+        --hx: 22%;
+        --hy: 42%;
+    }
+    to {
+        --hx: 78%;
+        --hy: 55%;
+    }
+}
+
+.lp-hero-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid var(--lp-line);
+    padding: 18px 0 26px;
+    margin-top: 40px;
+}
+
+.lp-hero-foot-item {
+    font-family: var(--lp-font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    color: var(--lp-text2);
+}
+
+.lp-hero-scrollcue {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--lp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.26em;
+    color: var(--lp-text);
+    padding: 6px 4px;
+}
+.lp-hero-scrollcue:hover {
+    color: #fff;
+}
+.lp-hero-scrollcue-arrow {
+    display: inline-block;
+    color: var(--lp-red-bright);
+    animation: lp-cue-bob 1.8s ease-in-out infinite;
+}
+
+@keyframes lp-cue-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+}
+
+@media (max-width: 640px) {
+    .lp-hero {
+        padding: 100px 20px 0;
+    }
+    .lp-hero-foot-item--right {
+        display: none;
+    }
+}
+
+/* ── Grid invite (logged-out personalization panel) ─────────────── */
+
+.lp-invite {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+    width: min(340px, calc(100vw - 32px));
+    background: linear-gradient(160deg, #1e2020, var(--lp-surface-dark));
+    border: 1px solid var(--lp-line);
+    border-top: 3px solid var(--lp-red);
+    padding: 22px 22px 20px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+    animation: lp-invite-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes lp-invite-in {
+    from {
+        transform: translateY(24px);
+        opacity: 0;
+    }
+}
+
+.lp-invite-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--lp-text2);
+    cursor: pointer;
+    padding: 6px;
+    line-height: 0;
+}
+.lp-invite-close:hover {
+    color: var(--lp-text);
+}
+
+.lp-invite-eyebrow {
+    font-family: var(--lp-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+    margin-bottom: 8px;
+}
+
+.lp-invite-title {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    color: var(--lp-text);
+}
+
+.lp-invite-copy {
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--lp-text2);
+    margin-bottom: 16px;
+}
+
+.lp-invite-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.lp-invite-primary {
+    font-family: var(--lp-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    background: var(--lp-red);
+    color: var(--lp-text);
+    padding: 11px 16px;
+    border: 1px solid transparent;
+    transition: background 0.2s;
+}
+.lp-invite-primary:hover {
+    background: var(--lp-red-bright);
+}
+
+.lp-invite-secondary {
+    font-family: var(--lp-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    background: none;
+    border: none;
+    color: var(--lp-text2);
+    cursor: pointer;
+    padding: 10px 4px;
+}
+.lp-invite-secondary:hover {
+    color: var(--lp-text);
+}
+
+@media (max-width: 640px) {
+    .lp-invite {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: auto;
+    }
+}
+
+/* ── Live Race Center ───────────────────────────────────────────── */
+
+.lp-rc {
+    padding-top: 84px;
+}
+
+.lp-rc-topbar {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    border: 1px solid var(--lp-line);
+    border-bottom: none;
+    background: var(--lp-surface-dark);
+    padding: 14px 20px;
+}
+
+.lp-rc-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--lp-font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.24em;
+    color: var(--lp-text2);
+}
+.lp-rc-status--live {
+    color: #ff6b5e;
+}
+
+.lp-rc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--lp-border);
+}
+.lp-rc-status--live .lp-rc-dot {
+    background: var(--lp-red-bright);
+    animation: lp-pulse 1.4s ease-in-out infinite;
+}
+
+.lp-rc-gpname {
+    font-family: var(--lp-font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.12em;
+    color: var(--lp-text);
+}
+
+.lp-rc-utc {
+    margin-left: auto;
+    font-family: var(--lp-font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text2);
+}
+
+.lp-rc-body {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    border: 1px solid var(--lp-line);
+    background: rgba(27, 29, 29, 0.6);
+}
+
+.lp-rc-body--empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 44px 28px;
+}
+
+.lp-rc-main {
+    padding: 28px;
+    min-width: 0;
+}
+
+.lp-rc-side {
+    border-left: 1px solid var(--lp-line);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lp-rc-side-label {
+    font-family: var(--lp-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+    font-weight: 400;
+    margin-top: 16px;
+}
+.lp-rc-side-label:first-child {
+    margin-top: 0;
+}
+
+.lp-rc-side-value {
+    font-family: var(--lp-font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.lp-rc-side-note {
+    font-family: var(--lp-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--lp-text2);
+}
+
+.lp-rc-side .lp-cta {
+    margin-top: 26px;
+    align-self: flex-start;
+}
+
+/* timing board */
+.lp-rc-row {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1.4fr) minmax(0, 1fr) 76px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 6px;
+    border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-rc-row--head {
+    font-family: var(--lp-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.26em;
+    color: var(--lp-text2);
+    border-bottom: 1px solid var(--lp-border);
+    padding-bottom: 12px;
+}
+
+.lp-rc-pos {
+    font-family: var(--lp-font-mono);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-align: center;
+}
+.lp-rc-row--head .lp-rc-pos {
+    font-size: 0.62rem;
+    font-weight: 400;
+}
+
+.lp-rc-drv {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.lp-rc-drv b {
+    font-family: var(--lp-font-mono);
+    font-size: 0.92rem;
+    letter-spacing: 0.1em;
+}
+.lp-rc-fullname {
+    font-style: normal;
+    font-size: 0.8rem;
+    color: var(--lp-text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lp-rc-strip {
+    width: 4px;
+    height: 20px;
+    flex-shrink: 0;
+    background: var(--lp-border);
+}
+
+.lp-rc-team {
+    font-size: 0.8rem;
+    color: var(--lp-text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lp-rc-num {
+    font-family: var(--lp-font-mono);
+    font-size: 0.9rem;
+    text-align: right;
+    padding-right: 6px;
+}
+
+.lp-rc-row--fav {
+    background: rgba(127, 29, 26, 0.1);
+    box-shadow: inset 3px 0 0 var(--fav-color, var(--lp-red-bright));
+}
+
+.lp-rc-favtag,
+.lp-champ-favtag {
+    font-family: var(--lp-font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text);
+    background: var(--lp-red);
+    padding: 2px 6px;
+    flex-shrink: 0;
+}
+
+.lp-rc-caption {
+    font-family: var(--lp-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text2);
+    padding-top: 14px;
+}
+
+.lp-rc-empty {
+    font-family: var(--lp-font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    color: var(--lp-text2);
+}
+
+/* next-session state */
+.lp-rc-nextname {
+    font-family: var(--lp-font-display);
+    font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.05;
+}
+
+.lp-rc-nextsession {
+    font-family: var(--lp-font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    color: var(--lp-text2);
+    margin: 12px 0 30px;
+}
+
+.lp-rc-countdown {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 34px;
+}
+
+.lp-rc-countdown > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.lp-rc-countdown b {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.lp-rc-countdown small {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+}
+
+.lp-rc-colon {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--lp-border);
+    line-height: 1.2;
+}
+
+/* weekend schedule list */
+.lp-rc-schedule {
+    list-style: none;
+}
+
+.lp-rc-schedule-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-rc-schedule-name {
+    font-family: var(--lp-font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.lp-rc-schedule-time {
+    font-family: var(--lp-font-mono);
+    font-size: 0.72rem;
+    color: var(--lp-text2);
+    text-align: right;
+}
+
+.lp-rc-schedule-row.is-done {
+    opacity: 0.42;
+}
+
+.lp-rc-schedule-row.is-next {
+    box-shadow: inset 3px 0 0 var(--lp-red-bright);
+    padding-left: 12px;
+}
+
+@media (max-width: 900px) {
+    .lp-rc-body {
+        grid-template-columns: 1fr;
+    }
+    .lp-rc-side {
+        border-left: none;
+        border-top: 1px solid var(--lp-line);
+    }
+    .lp-rc-row {
+        grid-template-columns: 40px minmax(0, 1.6fr) 64px;
+    }
+    .lp-rc-team {
+        display: none;
+    }
+    .lp-rc-row--head .lp-rc-team {
+        display: none;
+    }
+}
+
+/* ── Next GP garage ─────────────────────────────────────────────── */
+
+.lp-garage {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+    background:
+        radial-gradient(ellipse 70% 45% at 50% 0%, rgba(61, 60, 56, 0.35), transparent 70%),
+        repeating-linear-gradient(90deg, transparent 0 119px, rgba(116, 109, 103, 0.06) 119px 120px),
+        repeating-linear-gradient(0deg, transparent 0 119px, rgba(116, 109, 103, 0.06) 119px 120px),
+        var(--lp-bg-deep);
+}
+.lp-garage::before,
+.lp-garage::after {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    width: min(1160px, calc(100% - 80px));
+}
+.lp-garage::after {
+    width: 56px;
+}
+
+.lp-garage > * {
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+/* ceiling lights that switch on when the section enters the viewport */
+.lp-garage-lights {
+    display: flex;
+    justify-content: center;
+    gap: 18vw;
+    padding-top: 26px;
+}
+
+.lp-garage-lights span,
+.lp-footer-lights span {
+    width: 84px;
+    height: 6px;
+    background: #262727;
+    border-radius: 3px;
+    opacity: 0.5;
+    transition: box-shadow 0.8s ease, background 0.8s ease, opacity 0.8s ease;
+}
+
+.lp-garage--lit .lp-garage-lights span,
+.lp-footer--lit .lp-footer-lights span {
+    background: #efeadf;
+    opacity: 1;
+    box-shadow:
+        0 4px 18px rgba(239, 234, 223, 0.35),
+        0 18px 80px 24px rgba(239, 234, 223, 0.08);
+}
+
+.lp-garage--lit .lp-garage-lights span:nth-child(2),
+.lp-footer--lit .lp-footer-lights span:nth-child(2) {
+    transition-delay: 0.18s;
+}
+.lp-garage--lit .lp-garage-lights span:nth-child(3),
+.lp-footer--lit .lp-footer-lights span:nth-child(3) {
+    transition-delay: 0.36s;
+}
+
+.lp-garage .lp-section-head,
+.lp-garage-body {
+    opacity: 0.45;
+    transition: opacity 0.9s ease 0.2s;
+}
+.lp-garage--lit .lp-section-head,
+.lp-garage--lit .lp-garage-body {
+    opacity: 1;
+}
+
+.lp-garage .lp-section-head {
+    margin-top: 48px;
+}
+
+.lp-garage-meta {
+    font-size: 0.72rem;
+    color: var(--lp-text2);
+    margin-top: 12px;
+    letter-spacing: 0.18em;
+}
+
+.lp-garage-body {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 56px;
+    padding-bottom: 96px;
+    align-items: start;
+}
+
+.lp-garage-map {
+    position: relative;
+    border: 1px solid var(--lp-line);
+    background:
+        linear-gradient(rgba(116, 109, 103, 0.05) 1px, transparent 1px) 0 0 / 100% 28px,
+        rgba(20, 22, 22, 0.6);
+    padding: 34px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lp-garage-map img {
+    max-width: 100%;
+    max-height: 340px;
+    filter: invert(0.88) drop-shadow(0 0 14px rgba(179, 39, 30, 0.12));
+    opacity: 0.92;
+}
+
+.lp-garage-blueprint {
+    width: 100%;
+    max-width: 380px;
+    stroke: var(--lp-border);
+}
+
+.lp-garage-map-label {
+    position: absolute;
+    bottom: 10px;
+    left: 14px;
+    font-size: 0.6rem;
+    letter-spacing: 0.26em;
+    color: var(--lp-text2);
+}
+
+.lp-garage-countdown {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+    padding-bottom: 30px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-garage-count-unit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lp-garage-count-unit b {
+    font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.lp-garage-count-unit small {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+}
+
+.lp-garage-sessions {
+    list-style: none;
+    margin-bottom: 32px;
+}
+
+.lp-garage-session-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--lp-line);
+}
+
+.lp-garage-session-name {
+    font-family: var(--lp-font-display);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+}
+
+.lp-garage-session-time {
+    font-size: 0.72rem;
+    color: var(--lp-text2);
+    text-align: right;
+}
+
+@media (max-width: 900px) {
+    .lp-garage-body {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+    .lp-garage-lights {
+        gap: 10vw;
+    }
+}
+
+/* ── Podium ─────────────────────────────────────────────────────── */
+
+.lp-podium-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+/* custom race selector */
+.lp-raceselect {
+    position: relative;
+    min-width: 280px;
+}
+
+.lp-raceselect-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: var(--lp-surface-dark);
+    border: 1px solid var(--lp-border);
+    color: var(--lp-text);
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+.lp-raceselect-btn:hover {
+    border-color: var(--lp-red-bright);
+}
+
+.lp-raceselect-round {
+    font-size: 0.66rem;
+    color: var(--lp-text2);
+    letter-spacing: 0.16em;
+}
+
+.lp-raceselect-name {
+    font-family: var(--lp-font-display);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lp-raceselect-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    list-style: none;
+    background: #1b1d1d;
+    border: 1px solid var(--lp-border);
+    max-height: 320px;
+    overflow-y: auto;
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
+}
+
+.lp-raceselect-opt {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding: 11px 16px;
+    font-size: 0.86rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--lp-line);
+}
+.lp-raceselect-opt .lp-mono {
+    font-size: 0.64rem;
+    color: var(--lp-text2);
+    letter-spacing: 0.14em;
+}
+.lp-raceselect-opt.is-active {
+    background: rgba(127, 29, 26, 0.22);
+}
+.lp-raceselect-opt.is-selected {
+    box-shadow: inset 3px 0 0 var(--lp-red-bright);
+}
+
+/* steps: P3 — P1 — P2 */
+.lp-podium-steps {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 34px;
+}
+
+.lp-podium-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 320px;
+    padding: 0 0 26px;
+    border-bottom: 4px solid var(--lp-surface);
+}
+
+.lp-podium-step--p1 {
+    max-width: 380px;
+    border-bottom-color: var(--lp-red);
+}
+.lp-podium-step--p2 {
+    transform: scale(0.92);
+    transform-origin: bottom;
+}
+.lp-podium-step--p3 {
+    transform: scale(0.86);
+    transform-origin: bottom;
+}
+
+.lp-podium-step--fav .lp-podium-portrait {
+    box-shadow: 0 0 0 2px var(--team-color, var(--lp-red-bright)),
+        0 0 34px rgba(179, 39, 30, 0.25);
+}
+
+.lp-podium-pos {
+    position: absolute;
+    top: -0.35em;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: clamp(6rem, 11vw, 10rem);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(116, 109, 103, 0.4);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.lp-podium-portrait {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 240px);
+    aspect-ratio: 3 / 3.6;
+    margin-top: clamp(2.4rem, 4vw, 4rem);
+    overflow: hidden;
+    background: linear-gradient(180deg, #202222, #171919);
+    border: 1px solid var(--lp-line);
+    transition: box-shadow 0.25s ease;
+}
+.lp-podium-step--p1 .lp-podium-portrait {
+    width: min(100%, 280px);
+}
+
+.lp-podium-portrait:hover {
+    box-shadow: 0 0 0 1px var(--team-color, var(--lp-border)),
+        0 14px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lp-podium-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+/* helmet/race-suit layer, revealed in a soft window around the cursor */
+.lp-podium-img--helmet {
+    opacity: 0;
+}
+
+.lp-podium-portrait.has-helmet:hover .lp-podium-img--helmet {
+    opacity: 1;
+    -webkit-mask-image: radial-gradient(
+        circle 84px at var(--px, 50%) var(--py, 40%),
+        black 35%,
+        transparent 78%
+    );
+    mask-image: radial-gradient(
+        circle 84px at var(--px, 50%) var(--py, 40%),
+        black 35%,
+        transparent 78%
+    );
+}
+
+/* touch: tap swaps the full image */
+.lp-podium-portrait.is-swapped .lp-podium-img--helmet {
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+
+.lp-podium-portrait--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lp-podium-monogram {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: 4rem;
+    color: rgba(164, 159, 157, 0.4);
+    letter-spacing: 0.08em;
+}
+
+.lp-podium-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    margin-top: 20px;
+    text-align: center;
+    z-index: 1;
+}
+
+.lp-podium-p {
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-red-bright);
+}
+
+.lp-podium-name {
+    font-family: var(--lp-font-display);
+    font-weight: 500;
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+}
+.lp-podium-name b {
+    font-weight: 800;
+}
+.lp-podium-step--p1 .lp-podium-name {
+    font-size: 1.7rem;
+}
+
+.lp-podium-teamline {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.82rem;
+    color: var(--lp-text2);
+}
+
+.lp-podium-teamstrip {
+    width: 4px;
+    height: 14px;
+    background: var(--lp-border);
+}
+
+.lp-podium-number {
+    font-size: 0.7rem;
+    color: var(--lp-text2);
+}
+
+.lp-podium-points {
+    font-size: 0.86rem;
+    letter-spacing: 0.16em;
+}
+
+.lp-podium-delta {
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    color: var(--lp-text2);
+}
+.lp-podium-delta.is-up {
+    color: var(--lp-green);
+}
+.lp-podium-delta.is-down {
+    color: #d05a4e;
+}
+
+.lp-podium-favtag {
+    font-family: var(--lp-font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    background: var(--lp-red);
+    padding: 3px 8px;
+    margin-top: 2px;
+}
+
+@media (max-width: 820px) {
+    .lp-podium-steps {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+    .lp-podium-step,
+    .lp-podium-step--p2,
+    .lp-podium-step--p3 {
+        transform: none;
+        width: 100%;
+        max-width: 340px;
+    }
+    /* stack in finishing order on mobile */
+    .lp-podium-step--p1 { order: 1; }
+    .lp-podium-step--p2 { order: 2; }
+    .lp-podium-step--p3 { order: 3; }
+}
+
+/* ── Championship ───────────────────────────────────────────────── */
+
+.lp-champ-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.lp-champ-toggle {
+    display: inline-flex;
+    border: 1px solid var(--lp-border);
+}
+
+.lp-champ-tab {
+    font-family: var(--lp-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    background: transparent;
+    color: var(--lp-text2);
+    border: none;
+    padding: 13px 26px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s, background 0.2s;
+}
+
+.lp-champ-tab.is-active {
+    color: var(--lp-text);
+    background: rgba(127, 29, 26, 0.22);
+    box-shadow: inset 0 -3px 0 var(--lp-red-bright);
+}
+
+.lp-champ-list {
+    list-style: none;
+    counter-reset: none;
+}
+
+.lp-champ-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 46px 4px minmax(0, 1.5fr) minmax(0, 1fr) 150px 110px;
+    align-items: center;
+    gap: 18px;
+    padding: 17px 10px;
+    border-bottom: 1px solid var(--lp-line);
+    overflow: hidden;
+}
+
+.lp-champ-row--team {
+    grid-template-columns: 46px 4px minmax(0, 1.5fr) 150px 110px minmax(80px, 0.7fr);
+}
+
+.lp-champ-ghostnum {
+    position: absolute;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 4.6rem;
+    font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(116, 109, 103, 0.22);
+    pointer-events: none;
+    user-select: none;
+}
+
+.lp-champ-pos {
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: center;
+    z-index: 1;
+}
+
+.lp-champ-strip {
+    width: 4px;
+    height: 26px;
+    background: var(--lp-border);
+}
+
+.lp-champ-name {
+    font-family: var(--lp-font-display);
+    font-weight: 500;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 1;
+}
+.lp-champ-name b {
+    font-weight: 800;
+}
+
+.lp-champ-team {
+    font-size: 0.84rem;
+    color: var(--lp-text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lp-champ-gap {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    color: var(--lp-text2);
+    text-align: right;
+}
+
+.lp-champ-pts {
+    font-size: 1.15rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.lp-champ-pts small {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text2);
+}
+
+.lp-champ-row--fav {
+    background: rgba(127, 29, 26, 0.08);
+    box-shadow: inset 3px 0 0 var(--fav-color, var(--lp-red-bright));
+}
+
+.lp-champ-car {
+    justify-self: end;
+    height: 30px;
+    width: auto;
+    transition: transform 0.25s ease;
+}
+.lp-champ-row:hover .lp-champ-car {
+    transform: translateX(6px);
+}
+
+.lp-champ-more {
+    margin-top: 30px;
+}
+
+@media (max-width: 820px) {
+    .lp-champ-row,
+    .lp-champ-row--team {
+        grid-template-columns: 36px 4px minmax(0, 1fr) 96px;
+    }
+    .lp-champ-team,
+    .lp-champ-gap,
+    .lp-champ-car {
+        display: none;
+    }
+    .lp-champ-ghostnum {
+        font-size: 3.2rem;
+        left: 20px;
+    }
+}
+
+/* ── News ───────────────────────────────────────────────────────── */
+
+.lp-news-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.lp-news-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+.lp-news-featured {
+    display: block;
+    min-width: 0;
+}
+
+.lp-news-featured-img {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--lp-line);
+    background: var(--lp-surface-dark);
+}
+.lp-news-featured-img img,
+.lp-news-item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.85);
+    transition: transform 0.4s ease, filter 0.4s ease;
+}
+.lp-news-featured:hover .lp-news-featured-img img {
+    transform: scale(1.03);
+    filter: saturate(1);
+}
+.lp-news-featured-img.is-imgless img,
+.lp-news-item-img.is-imgless img {
+    display: none;
+}
+
+.lp-news-featured-body {
+    padding: 22px 0 0;
+}
+
+.lp-news-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text2);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.lp-news-foryou {
+    font-family: var(--lp-font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.22em;
+    color: var(--lp-text);
+    border: 1px solid var(--lp-red-bright);
+    padding: 2px 7px;
+}
+
+.lp-news-featured-title {
+    font-family: var(--lp-font-display);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 1.12;
+    letter-spacing: 0.01em;
+    margin-bottom: 12px;
+    color: var(--lp-text);
+    transition: color 0.2s;
+}
+.lp-news-featured:hover .lp-news-featured-title {
+    color: #fff;
+}
+
+.lp-news-featured-desc {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--lp-text2);
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lp-news-readmore {
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    color: var(--lp-red-bright);
+}
+
+.lp-news-side {
+    display: flex;
+    flex-direction: column;
+}
+
+.lp-news-item {
+    display: grid;
+    grid-template-columns: 112px 1fr;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--lp-line);
+    align-items: start;
+}
+.lp-news-item:first-child {
+    padding-top: 0;
+}
+
+.lp-news-item-img {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--lp-line);
+    background: var(--lp-surface-dark);
+}
+
+.lp-news-item-title {
+    font-family: var(--lp-font-display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--lp-text);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s;
+}
+.lp-news-item:hover .lp-news-item-title {
+    color: #fff;
+}
+
+@media (max-width: 900px) {
+    .lp-news-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Pit Wall Radio ─────────────────────────────────────────────── */
+
+.lp-radio {
+    position: fixed;
+    right: 22px;
+    bottom: 96px;
+    z-index: 1100;
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.4s ease;
+}
+
+.lp-radio--hidden {
+    transform: translateX(calc(100% + 30px));
+    opacity: 0;
+    pointer-events: none;
+}
+
+.lp-radio-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 236px;
+    background: linear-gradient(165deg, #1e2020, var(--lp-surface-dark));
+    border: 1px solid var(--lp-line);
+    border-right: 3px solid var(--radio-accent, var(--lp-red));
+    color: var(--lp-text);
+    text-align: left;
+    padding: 14px 16px;
+    cursor: pointer;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+    transition: border-color 0.2s, transform 0.2s;
+}
+.lp-radio-tab:hover {
+    transform: translateX(-4px);
+}
+
+.lp-radio-head {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.62rem;
+    letter-spacing: 0.26em;
+    color: var(--lp-text2);
+}
+
+.lp-radio-blink {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--radio-accent, var(--lp-red-bright));
+    animation: lp-pulse 1.6s ease-in-out infinite;
+}
+
+.lp-radio-callsign {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text);
+}
+
+.lp-radio-quote {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--lp-text2);
+    line-height: 1.4;
+}
+
+.lp-radio-cta {
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    color: var(--lp-red-bright);
+    margin-top: 4px;
+}
+
+.lp-radio-panel {
+    width: min(340px, calc(100vw - 32px));
+    background: linear-gradient(165deg, #1e2020, var(--lp-surface-dark));
+    border: 1px solid var(--lp-line);
+    border-right: 3px solid var(--radio-accent, var(--lp-red));
+    padding: 18px 20px 22px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+    animation: lp-invite-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.lp-radio-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.lp-radio-close {
+    background: none;
+    border: none;
+    color: var(--lp-text2);
+    cursor: pointer;
+    padding: 6px;
+    line-height: 0;
+}
+.lp-radio-close:hover {
+    color: var(--lp-text);
+}
+
+/* decorative waveform — deliberately no play affordance */
+.lp-radio-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+    margin-bottom: 14px;
+}
+.lp-radio-wave span {
+    width: 3px;
+    height: 30%;
+    background: var(--radio-accent, var(--lp-red-bright));
+    opacity: 0.75;
+    animation: lp-wave 1.3s ease-in-out calc(var(--i) * 0.09s) infinite alternate;
+}
+
+@keyframes lp-wave {
+    from { height: 18%; }
+    to { height: 92%; }
+}
+
+.lp-radio-to {
+    font-size: 0.64rem;
+    letter-spacing: 0.26em;
+    color: var(--lp-text2);
+    margin-bottom: 8px;
+}
+
+.lp-radio-message {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--lp-text);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.lp-radio-term {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.lp-radio-def {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--lp-text2);
+    margin-bottom: 12px;
+}
+
+.lp-radio-example {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--lp-text2);
+    border-left: 2px solid var(--radio-accent, var(--lp-red));
+    padding-left: 12px;
+    margin-bottom: 18px;
+}
+.lp-radio-example .lp-mono {
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text);
+}
+
+.lp-radio-link {
+    font-size: 0.68rem;
+}
+
+@media (max-width: 720px) {
+    .lp-radio {
+        right: 12px;
+        bottom: 14px;
+    }
+    .lp-radio-tab {
+        width: auto;
+        max-width: 210px;
+    }
+    .lp-radio-quote {
+        display: none;
+    }
+}
+
+/* ── Explore grid ───────────────────────────────────────────────── */
+
+.lp-explore-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+}
+
+.lp-explore-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    min-height: 190px;
+    padding: 22px;
+    border: 1px solid var(--lp-line);
+    background: #181a1a;
+    overflow: hidden;
+    transition: border-color 0.25s ease, background 0.25s ease;
+}
+.lp-explore-tile:hover,
+.lp-explore-tile:focus-visible {
+    border-color: var(--lp-red-bright);
+    background: #1c1e1e;
+}
+
+.lp-explore-tile h3 {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: 0.05em;
+    color: var(--lp-text);
+    z-index: 1;
+}
+
+.lp-explore-tile p {
+    font-size: 0.8rem;
+    color: var(--lp-text2);
+    line-height: 1.4;
+    z-index: 1;
+}
+
+.lp-explore-go {
+    font-size: 0.62rem;
+    letter-spacing: 0.24em;
+    color: var(--lp-red-bright);
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 1;
+}
+.lp-explore-tile:hover .lp-explore-go,
+.lp-explore-tile:focus-visible .lp-explore-go {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* asymmetric spans */
+.lp-explore-tile--drivers { grid-column: span 3; min-height: 250px; }
+.lp-explore-tile--teams { grid-column: span 3; min-height: 250px; }
+.lp-explore-tile--gp { grid-column: span 2; }
+.lp-explore-tile--circuits { grid-column: span 2; }
+.lp-explore-tile--dict { grid-column: span 2; }
+.lp-explore-tile--news { grid-column: span 3; }
+.lp-explore-tile--compare { grid-column: span 3; }
+.lp-explore-tile--racecenter { grid-column: span 6; min-height: 150px; }
+
+/* drivers: helmet shifts subtly */
+.lp-explore-helmet {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    width: 84px;
+    transition: transform 0.35s ease;
+}
+.lp-explore-helmet-shell { fill: #2c2e2d; }
+.lp-explore-helmet-visor { fill: var(--lp-red); }
+.lp-explore-tile--drivers:hover .lp-explore-helmet {
+    transform: translateX(-8px) rotate(-3deg);
+}
+
+/* teams: car slides through the tile on hover */
+.lp-explore-carlane {
+    position: absolute;
+    inset: auto 0 58px 0;
+    opacity: 0.35;
+}
+.lp-explore-carsvg {
+    width: 190px;
+    transform: translateX(-30px);
+    transition: transform 0.6s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.lp-explore-tile--teams:hover .lp-explore-carsvg {
+    transform: translateX(calc(100% + 60px));
+}
+
+/* grand prix: chequered corner */
+.lp-explore-flag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 74px;
+    height: 74px;
+    background:
+        repeating-conic-gradient(rgba(242, 240, 237, 0.16) 0% 25%, transparent 0% 50%)
+        0 0 / 18px 18px;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+.lp-explore-tile--gp:hover .lp-explore-flag {
+    opacity: 1;
+}
+
+/* circuits: track outline draws itself */
+.lp-explore-circuit {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 130px;
+    opacity: 0.7;
+}
+.lp-explore-circuit-path {
+    stroke: var(--lp-border);
+    stroke-dasharray: 460;
+    stroke-dashoffset: 0;
+}
+.lp-explore-tile--circuits:hover .lp-explore-circuit-path {
+    stroke: var(--lp-red-bright);
+    stroke-dashoffset: 460;
+    animation: lp-circuit-draw 1.2s ease forwards;
+}
+
+@keyframes lp-circuit-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* dictionary: terms cycle while hovered */
+.lp-explore-terms {
+    position: absolute;
+    top: 20px;
+    left: 22px;
+    right: 22px;
+    height: 20px;
+}
+.lp-explore-terms span {
+    position: absolute;
+    inset: 0;
+    font-size: 0.66rem;
+    letter-spacing: 0.24em;
+    color: var(--lp-text2);
+    opacity: 0;
+}
+.lp-explore-terms span:first-child {
+    opacity: 0.7;
+}
+.lp-explore-tile--dict:hover .lp-explore-terms span {
+    animation: lp-term-cycle 3.2s linear infinite;
+}
+.lp-explore-tile--dict:hover .lp-explore-terms span:nth-child(1) { animation-delay: 0s; }
+.lp-explore-tile--dict:hover .lp-explore-terms span:nth-child(2) { animation-delay: 0.8s; }
+.lp-explore-tile--dict:hover .lp-explore-terms span:nth-child(3) { animation-delay: 1.6s; }
+.lp-explore-tile--dict:hover .lp-explore-terms span:nth-child(4) { animation-delay: 2.4s; }
+
+@keyframes lp-term-cycle {
+    0%, 22% { opacity: 0.85; }
+    28%, 100% { opacity: 0; }
+}
+
+/* news: headline ticker */
+.lp-explore-ticker {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0.55;
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+}
+.lp-explore-ticker span {
+    display: inline-block;
+    padding-left: 12px;
+    font-size: 0.64rem;
+    letter-spacing: 0.24em;
+    color: var(--lp-text2);
+}
+.lp-explore-tile--news:hover .lp-explore-ticker span {
+    animation: lp-ticker 9s linear infinite;
+}
+
+@keyframes lp-ticker {
+    to {
+        transform: translateX(-55%);
+    }
+}
+
+/* comparison: VS */
+.lp-explore-vs {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+}
+.lp-explore-vs i {
+    font-style: normal;
+    color: var(--lp-red-bright);
+    transition: transform 0.3s;
+    display: inline-block;
+}
+.lp-explore-tile--compare:hover .lp-explore-vs i:first-child {
+    transform: translateX(-4px);
+}
+.lp-explore-tile--compare:hover .lp-explore-vs i:last-child {
+    transform: translateX(4px);
+}
+
+/* race center: timing digits swap on hover */
+.lp-explore-timing {
+    position: absolute;
+    top: 50%;
+    right: 26px;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: rgba(164, 159, 157, 0.5);
+    font-variant-numeric: tabular-nums;
+}
+.lp-explore-timing span {
+    display: block;
+    transition: opacity 0.3s;
+}
+.lp-explore-timing span:last-child {
+    display: none;
+    color: rgba(242, 240, 237, 0.75);
+}
+.lp-explore-tile--racecenter:hover .lp-explore-timing span:first-child {
+    display: none;
+}
+.lp-explore-tile--racecenter:hover .lp-explore-timing span:last-child {
+    display: block;
+}
+
+@media (max-width: 900px) {
+    .lp-explore-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .lp-explore-tile {
+        grid-column: span 2 !important;
+        min-height: 160px;
+    }
+    .lp-explore-tile--gp,
+    .lp-explore-tile--circuits,
+    .lp-explore-tile--dict {
+        grid-column: span 1 !important;
+    }
+}
+
+/* ── Garage footer ──────────────────────────────────────────────── */
+
+.lp-footer {
+    position: relative;
+    margin-top: 40px;
+    background:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(61, 60, 56, 0.3), transparent 70%),
+        linear-gradient(180deg, var(--lp-bg) 0%, #0c0d0d 100%);
+    border-top: 1px solid var(--lp-line);
+    overflow: hidden;
+}
+
+.lp-footer-lights {
+    display: flex;
+    justify-content: center;
+    gap: 16vw;
+    padding-top: 28px;
+}
+
+.lp-footer-garage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 44px 20px 0;
+}
+
+.lp-footer-car {
+    width: min(480px, 72vw);
+    opacity: 0.55;
+    transition: opacity 1s ease 0.3s;
+}
+.lp-footer--lit .lp-footer-car {
+    opacity: 1;
+}
+
+/* rear light pulses once when the garage lights come on */
+.lp-footer--lit .lp-footer-car .lp-car-rearlight {
+    animation: lp-rearlight 1.6s ease 0.9s 1;
+}
+
+@keyframes lp-rearlight {
+    0%, 100% { fill: #5b1512; }
+    35% { fill: #ff4136; filter: drop-shadow(0 0 6px rgba(255, 65, 54, 0.9)); }
+}
+
+.lp-footer-floor {
+    width: min(760px, 92vw);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lp-border), transparent);
+    margin-top: -6px;
+}
+
+.lp-footer-bay {
+    font-size: 0.6rem;
+    letter-spacing: 0.34em;
+    color: var(--lp-text2);
+    padding: 14px 0 0;
+}
+
+.lp-footer-content {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 56px 40px 40px;
+    display: grid;
+    grid-template-columns: 1.2fr 2fr;
+    gap: 48px;
+}
+
+.lp-footer-logo {
+    font-family: var(--lp-font-display);
+    font-weight: 800;
+    font-size: 1.9rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+}
+
+.lp-footer-line {
+    font-family: var(--lp-font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.24em;
+    color: var(--lp-text2);
+}
+
+.lp-footer-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.lp-footer-group-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    color: var(--lp-text2);
+    font-weight: 400;
+    margin-bottom: 14px;
+}
+
+.lp-footer-group ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.lp-footer-group a {
+    font-size: 0.88rem;
+    color: var(--lp-text2);
+    transition: color 0.2s;
+}
+.lp-footer-group a:hover {
+    color: var(--lp-text);
+}
+
+.lp-footer-bottom {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 20px 40px 30px;
+    border-top: 1px solid var(--lp-line);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--lp-text2);
+}
+
+.lp-footer-signoff {
+    color: var(--lp-red-bright);
+}
+
+@media (max-width: 900px) {
+    .lp-footer-content {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+    .lp-footer-nav {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+    }
+}
+
+/* ── Small screens: general section padding ─────────────────────── */
+
+@media (max-width: 640px) {
+    .lp-section {
+        padding: 72px 20px;
+    }
+    .lp-section::before {
+        left: 20px;
+        right: 20px;
+    }
+    .lp-section::after {
+        left: 20px;
+    }
+    .lp-garage > * {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .lp-footer-content,
+    .lp-footer-bottom {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* ── Reduced motion: quiet everything down ──────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .lp *,
+    .lp *::before,
+    .lp *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.15s !important;
+    }
+    /* static partial reveal instead of cursor tracking */
+    .lp-hero-word--reveal,
+    .lp-hero-carlayer {
+        opacity: 0.55;
+        -webkit-mask-image: radial-gradient(circle 240px at 50% 45%, black 30%, transparent 75%);
+        mask-image: radial-gradient(circle 240px at 50% 45%, black 30%, transparent 75%);
+        transform: none;
+    }
+    .lp-hero-scrollcue-arrow,
+    .lp-hero-kicker-dot,
+    .lp-radio-blink,
+    .lp-radio-wave span,
+    .lp-rc-dot {
+        animation: none !important;
+    }
+    .lp-garage .lp-section-head,
+    .lp-garage-body,
+    .lp-footer-car {
+        opacity: 1;
+    }
+}

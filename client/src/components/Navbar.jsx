@@ -1,14 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const NAV_LINKS = [
-    { to: "/", label: "Home" },
-    { to: "/grandprixdashboard", label: "Grand Prix" },
+const PRIMARY_LINKS = [
+    { to: "/grandprixdashboard", label: "Race Center" },
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Teams" },
+];
+
+const EXPLORE_LINKS = [
     { to: "/circuitmaps", label: "Circuits" },
-    { to: "/dictionary", label: "Dictionary" },
+    { to: "/dictionary", label: "F1 Dictionary" },
     { to: "/news", label: "News" },
+    { to: "/compare-drivers", label: "Driver Comparison" },
+    { to: "/compare-teams", label: "Team Comparison" },
 ];
 
 function SettingsIcon() {
@@ -29,10 +33,57 @@ function UserIcon() {
     );
 }
 
+function ChevronIcon() {
+    return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+        </svg>
+    );
+}
+
 function Navbar() {
     const token = localStorage.getItem("token");
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [exploreOpen, setExploreOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(() => window.scrollY > 24);
+    const exploreRef = useRef(null);
+
+    const isLanding = location.pathname === "/";
+
+    /* transparent over the landing hero, solid once scrolled */
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 24);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    /* close menus whenever the route changes (state adjustment during
+       render, per React docs, instead of a cascading effect) */
+    const [lastPath, setLastPath] = useState(location.pathname);
+    if (lastPath !== location.pathname) {
+        setLastPath(location.pathname);
+        setMenuOpen(false);
+        setExploreOpen(false);
+    }
+
+    /* Explore dropdown: Escape + outside click */
+    useEffect(() => {
+        if (!exploreOpen) return undefined;
+        const onKey = (e) => e.key === "Escape" && setExploreOpen(false);
+        const onOutside = (e) => {
+            if (exploreRef.current && !exploreRef.current.contains(e.target)) {
+                setExploreOpen(false);
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        document.addEventListener("pointerdown", onOutside);
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.removeEventListener("pointerdown", onOutside);
+        };
+    }, [exploreOpen]);
 
     const close = () => setMenuOpen(false);
 
@@ -46,17 +97,23 @@ function Navbar() {
         return location.pathname.startsWith(path);
     };
 
+    const exploreActive = EXPLORE_LINKS.some((l) => isActive(l.to));
+
     return (
-        <nav className="navbar">
+        <nav
+            className={`navbar${isLanding ? " navbar--landing" : ""}${
+                isLanding && !scrolled ? " navbar--top" : ""
+            }`}
+        >
             <div className="navbar-inner">
-                <Link to="/" className="navbar-logo-link" onClick={close}>
-                    <img src="/main/main.png" alt="Formula 1" className="navbar-logo" />
+                <Link to="/" className="navbar-wordmark" onClick={close}>
+                    ALL ABOUT F1
                 </Link>
 
                 <div className="navbar-divider" />
 
                 <div className="navbar-links">
-                    {NAV_LINKS.map(({ to, label }) => (
+                    {PRIMARY_LINKS.map(({ to, label }) => (
                         <Link
                             key={to}
                             to={to}
@@ -65,6 +122,37 @@ function Navbar() {
                             {label}
                         </Link>
                     ))}
+
+                    <div className="navbar-explore" ref={exploreRef}>
+                        <button
+                            type="button"
+                            className={`navbar-link navbar-explore-btn${
+                                exploreActive ? " navbar-link-active" : ""
+                            }`}
+                            aria-haspopup="true"
+                            aria-expanded={exploreOpen}
+                            onClick={() => setExploreOpen((o) => !o)}
+                        >
+                            Explore <ChevronIcon />
+                        </button>
+                        {exploreOpen && (
+                            <div className="navbar-explore-menu" role="menu">
+                                {EXPLORE_LINKS.map(({ to, label }) => (
+                                    <Link
+                                        key={to}
+                                        to={to}
+                                        role="menuitem"
+                                        className={`navbar-explore-item${
+                                            isActive(to) ? " navbar-explore-item-active" : ""
+                                        }`}
+                                        onClick={() => setExploreOpen(false)}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="navbar-right">
@@ -90,6 +178,7 @@ function Navbar() {
                     className={`navbar-hamburger${menuOpen ? " open" : ""}`}
                     onClick={() => setMenuOpen(!menuOpen)}
                     aria-label="Toggle menu"
+                    aria-expanded={menuOpen}
                 >
                     <span />
                     <span />
@@ -99,7 +188,14 @@ function Navbar() {
 
             {menuOpen && (
                 <div className="navbar-mobile-menu">
-                    {NAV_LINKS.map(({ to, label }) => (
+                    <Link
+                        to="/"
+                        className={`navbar-mobile-link${isActive("/") ? " navbar-mobile-link-active" : ""}`}
+                        onClick={close}
+                    >
+                        Home
+                    </Link>
+                    {[...PRIMARY_LINKS, ...EXPLORE_LINKS].map(({ to, label }) => (
                         <Link
                             key={to}
                             to={to}
