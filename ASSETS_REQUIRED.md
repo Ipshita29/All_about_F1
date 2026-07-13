@@ -93,3 +93,79 @@ initials monogram on the podium — adding a portrait to
 - No fonts (uses the already-loaded Barlow / Barlow Condensed + system monospace).
 - No video, no audio, no textures — garage/concrete/grid surfaces are pure CSS.
 - No icon packs beyond the already-installed `lucide-react`.
+
+---
+---
+
+# Part 2 — Entity Experience (The Grid · Pit Lane · Wheel to Wheel · Constructor Battle)
+
+The redesigned Drivers, Driver Details, Teams, Team Details and both
+comparison pages work **fully without any new assets** — every image slot
+has a fallback chain, ending in a styled monogram/blueprint placeholder.
+
+**How the drop-in pipeline works:** the components try a *canonical local
+path first* (it may 404 today — that is expected and harmless), then the
+image currently configured in `driverAssets.js` / `teamAssets.js` /
+`data/*Info.js`, then a styled placeholder. So upgrading an image means
+**placing one file in the right folder — no code changes**. Framing
+(object-position / scale) and team accent colours are tuned centrally in:
+
+- `client/src/config/driverAssets.js`
+- `client/src/config/teamAssets.js`
+
+## 6. Driver cut-outs (HIGH IMPACT — Driver Pass, dossier hero, Wheel to Wheel)
+
+| | |
+|---|---|
+| **Asset** | Waist-up cut-out of each driver in race suit, facing camera or slightly angled, **transparent background** |
+| **Filenames** | `<driverId>.webp` or `<driverId>.png` using Jolpica driver ids: `max_verstappen`, `leclerc`, `hamilton`, `russell`, `antonelli`, `norris`, `piastri`, `sainz`, `alonso`, `stroll`, `gasly`, `albon`, `ocon`, `bearman`, `hulkenberg`, `bortoleto`, `tsunoda`, `hadjar`, `lawson`, `colapinto`, `doohan`, `lindblad`, `bottas` … |
+| **Folder** | `client/public/drivers/cutouts/` (create this folder) |
+| **Dimensions** | ~800 × 1000 px (portrait), subject filling most of the height |
+| **Format** | WebP or PNG with real alpha transparency (no white box) |
+| **Used by** | Driver Pass (THE GRID carousel), Driver Details hero (shared-element transition), Wheel to Wheel hero |
+| **Search terms** | `<driver name> 2026 render png transparent`, `<driver name> F1 driver cutout`, `<driver name> race suit png` |
+| **Fallback until added** | The nine existing portraits in `client/public/drivers/` (mapped in `driverAssets.js`), then remote images from `data/driverInfo.js`, then an initials monogram |
+
+## 7. Driver helmet renders (OPTIONAL — future hover/flip treatments)
+
+| | |
+|---|---|
+| **Asset** | Side or 3/4 view of each driver's current helmet, transparent background |
+| **Filenames** | Same `<driverId>.webp` / `<driverId>.png` convention |
+| **Folder** | `client/public/drivers/helmets/` (shared with the landing page podium; both features read the same folder) |
+| **Dimensions** | ~600 × 600 px |
+| **Format** | WebP/PNG with alpha |
+| **Used by** | Reserved slots in `driverAssets.js` (`helmetCandidates`) — wired for future reveal interactions, nothing breaks without them |
+| **Search terms** | `<driver name> 2026 helmet png transparent` |
+
+## 8. Team car side views (HIGH IMPACT — Garage Cards, Team Details hero, Constructor Battle)
+
+| | |
+|---|---|
+| **Asset** | Full side view of each constructor's current car, **nose pointing right**, transparent background |
+| **Filenames** | `<constructorId>.webp` or `<constructorId>.png`: `red_bull`, `ferrari`, `mercedes`, `mclaren`, `aston_martin`, `alpine`, `williams`, `haas`, `sauber`, `rb`, `audi`, `cadillac` |
+| **Folder** | `client/public/teams/cars/` (create this folder) |
+| **Dimensions** | ~1600 × 450 px, sharp, generous transparent padding trimmed |
+| **Format** | WebP or PNG with alpha |
+| **Used by** | Pit Lane Garage Card interiors (behind the shutter door), Team Details hero (shared-element transition), Constructor Battle facing cars |
+| **Search terms** | `F1 2026 <team> car side view png transparent`, `<team> livery side profile render` |
+| **Fallback until added** | The remote press photos referenced in `data/teamInfo.js` (shown inside a darkened garage frame), then a line-drawn blueprint car |
+
+> Note: this folder (`client/public/teams/cars/`) is the canonical one for the
+> entity pages. Section 3 above (`client/public/cars/`) belongs to the older
+> landing-page constructors table; if you only source one set, place it here
+> and update `ChampionshipSection.jsx` to read the same path.
+
+## 9. Team accent colours (nothing to download)
+
+Ambient garage lighting, pass hairlines and duel-meter colours come from
+`TEAM_ACCENTS` in `client/src/config/driverAssets.js`. They are deliberately
+desaturated to sit inside the site palette — adjust there if a team rebrands.
+
+## 10. Explicitly NOT required for the entity pages
+
+- No fonts, no textures, no video — carbon fibre, blueprints, shutter doors
+  and start-line graphics are pure CSS.
+- No new libraries — the coverflow carousel, count-up telemetry and
+  shared-element page transitions (View Transitions API via React Router's
+  `viewTransition`) are all dependency-free.

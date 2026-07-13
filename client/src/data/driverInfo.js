@@ -93,7 +93,7 @@ const driverInfo = {
     drivingStyle:
       "Spectacular on a single qualifying lap — widely considered one of the best qualifiers in the field. Leclerc has exceptional mechanical sensitivity, knowing immediately what changes the car needs to suit his preferred entry-speed style. He attacks corners with confidence and precision, particularly in high-speed sections. His weakness has historically been tyre management in long stints, though this has improved significantly through his career. He is a driver who wins from the front — his race wins almost exclusively come from pole position.",
     championships: 0,
-    raceWins: 8,
+    raceWins: 9,
     podiums: 42,
     polePositions: 24,
     debut: "2018 Australian Grand Prix (Sauber)",

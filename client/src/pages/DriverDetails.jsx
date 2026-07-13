@@ -1,12 +1,23 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import driverInfo from "../data/driverInfo";
 import LoadingSpinner from "../components/LoadingSpinner";
-import ImagePlaceholder from "../components/ImagePlaceholder";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
+import LayeredImage from "../components/entity/LayeredImage";
+import ExSection from "../components/entity/ExSection";
+import TelemetryStat from "../components/entity/TelemetryStat";
+import AnimatedNumber from "../components/entity/AnimatedNumber";
+import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
+import "./EntityPages.css";
 
+/*
+ * DRIVER DOSSIER — the editorial profile a Driver Pass unfolds into.
+ * The hero portrait and racing number carry the view-transition names
+ * shared with the centered pass on THE GRID, so arriving here feels like
+ * opening the credential rather than loading a new page.
+ */
 function DriverDetails() {
     const { year, id } = useParams();
     const [driver, setDriver] = useState(null);
@@ -31,168 +42,238 @@ function DriverDetails() {
             });
     }, [year, id]);
 
-    if (!driver || !standing) return <div className="loading"><LoadingSpinner /></div>;
+    if (!driver || !standing) {
+        return (
+            <div className="ex">
+                <div className="ex-loading"><LoadingSpinner /></div>
+            </div>
+        );
+    }
 
+    const fullName = `${driver.givenName} ${driver.familyName}`;
     const age = new Date().getFullYear() - new Date(driver.dateOfBirth).getFullYear();
-    const extraInfo = driverInfo[`${driver.givenName} ${driver.familyName}`];
+    const extraInfo = driverInfo[fullName];
+    const team = standing.Constructors[0];
+    const accent = getTeamAccent(team?.constructorId);
+    const assets = getDriverAssets(driver.driverId, fullName);
 
     return (
-        <div className="page detail-page">
-            <div className="driver-profile-hero">
-                <div className="driver-profile-hero-info">
-                    <h1>{driver.givenName} {driver.familyName}</h1>
-                    {extraInfo?.nickname && <p className="driver-nickname">"{extraInfo.nickname}"</p>}
-                    <p>
-                        <a href={driver.url} target="_blank" rel="noreferrer">
-                            {driver.familyName}'s Wikipedia Profile
-                        </a>
+        <div className="ex" style={{ "--accent": accent }}>
+            {/* ── dossier hero ── */}
+            <header className="ex-dossier-hero">
+                <div className="ex-dossier-info">
+                    <Link to="/drivers" viewTransition className="ex-back">
+                        ← RETURN TO THE GRID
+                    </Link>
+
+                    <p className="ex-dossier-kicker">
+                        <span className="ex-dossier-kicker-accent" aria-hidden="true" />
+                        DRIVER DOSSIER · {year} SEASON
                     </p>
-                </div>
-                <div className="driver-profile-img-wrap">
-                    <ImagePlaceholder
-                        name={`${driver.givenName} ${driver.familyName}`}
-                        type="driver"
-                        className="entity-placeholder"
-                    />
-                    {extraInfo?.image && (
-                        <img
-                            src={extraInfo.image}
-                            alt={`${driver.givenName} ${driver.familyName}`}
-                            className="driver-profile-img"
-                            onError={(e) => { e.target.style.display = "none"; }}
-                        />
+
+                    <h1 className="ex-dossier-name">
+                        <span className="given">{driver.givenName}</span>
+                        <span className="family">{driver.familyName}</span>
+                    </h1>
+
+                    {extraInfo?.nickname && (
+                        <p className="ex-dossier-nickname">“{extraInfo.nickname}”</p>
                     )}
-                </div>
-            </div>
 
-            {extraInfo?.description && (
-                <>
-                    <h2>About</h2>
-                    <p>{extraInfo.description}</p>
-                </>
-            )}
-
-            <h2>Driver Info</h2>
-            <div className="info-card" style={{ padding: "16px 20px" }}>
-                <div className="detail-info-row">
-                    <span className="detail-info-label">Nationality</span>
-                    <span className="detail-info-value">{driver.nationality}</span>
-                </div>
-                <div className="detail-info-row">
-                    <span className="detail-info-label">Date of Birth</span>
-                    <span className="detail-info-value">{driver.dateOfBirth} (age {age})</span>
-                </div>
-                <div className="detail-info-row">
-                    <span className="detail-info-label">Car Number</span>
-                    <span className="detail-info-value">#{driver.permanentNumber}</span>
-                </div>
-                <div className="detail-info-row">
-                    <span className="detail-info-label">Code</span>
-                    <span className="detail-info-value">{driver.code}</span>
-                </div>
-                {extraInfo?.debut && (
-                    <div className="detail-info-row">
-                        <span className="detail-info-label">F1 Debut</span>
-                        <span className="detail-info-value">{extraInfo.debut}</span>
+                    <div className="ex-dossier-tags">
+                        <span className="ex-tag ex-tag--accent">{team?.name}</span>
+                        <span className="ex-tag">{driver.nationality}</span>
+                        <span className="ex-tag">CODE {driver.code}</span>
+                        <span className="ex-tag">
+                            <a href={driver.url} target="_blank" rel="noreferrer">
+                                WIKIPEDIA ↗
+                            </a>
+                        </span>
                     </div>
+
+                    <div className="ex-dossier-live">
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">P{standing.position}</span>
+                            <span className="ex-dossier-live-label">Championship</span>
+                        </div>
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">
+                                <AnimatedNumber value={standing.points} />
+                            </span>
+                            <span className="ex-dossier-live-label">
+                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                            </span>
+                        </div>
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">
+                                <AnimatedNumber value={standing.wins} />
+                            </span>
+                            <span className="ex-dossier-live-label">Wins · {year}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="ex-dossier-visual">
+                    <span
+                        className="ex-dossier-num"
+                        aria-hidden="true"
+                        style={{ viewTransitionName: "driver-number" }}
+                    >
+                        {driver.permanentNumber}
+                    </span>
+                    <div
+                        className="ex-dossier-img-wrap"
+                        style={{ viewTransitionName: "driver-portrait" }}
+                    >
+                        <LayeredImage
+                            candidates={assets.imageCandidates}
+                            alt={fullName}
+                            className="ex-dossier-img"
+                            fallback={
+                                <div className="ex-entity-fallback" aria-hidden="true">
+                                    <span>{driver.givenName[0]}{driver.familyName[0]}</span>
+                                </div>
+                            }
+                        />
+                    </div>
+                </div>
+
+                <div className="ex-dossier-floor" aria-hidden="true" />
+            </header>
+
+            <main className="ex-main">
+                {extraInfo?.description && (
+                    <ExSection eyebrow="Profile" title="The Story">
+                        <p className="ex-prose">{extraInfo.description}</p>
+                    </ExSection>
                 )}
-                <div className="detail-info-row">
-                    <span className="detail-info-label">Current Team</span>
-                    <span className="detail-info-value">{standing.Constructors[0].name}</span>
-                </div>
-            </div>
 
-            <h2>{year} Season</h2>
-            <div className="stat-row">
-                <div className="stat-box">
-                    <span className="stat-value">{standing.position}</span>
-                    <span className="stat-label">Position</span>
-                </div>
-                <div className="stat-box">
-                    <span className="stat-value">{standing.points}</span>
-                    <span className="stat-label">
-                        <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
-                    </span>
-                </div>
-                <div className="stat-box">
-                    <span className="stat-value">{standing.wins}</span>
-                    <span className="stat-label">Wins</span>
-                </div>
-            </div>
-
-            <h2>Career Stats</h2>
-            <div className="stat-row">
-                <div className="stat-box">
-                    <span className="stat-value">{extraInfo?.championships ?? "—"}</span>
-                    <span className="stat-label">
-                        <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
-                    </span>
-                </div>
-                <div className="stat-box">
-                    <span className="stat-value">{extraInfo?.raceWins ?? "—"}</span>
-                    <span className="stat-label">Race Wins</span>
-                </div>
-                <div className="stat-box">
-                    <span className="stat-value">{extraInfo?.podiums ?? "—"}</span>
-                    <span className="stat-label">
-                        <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
-                    </span>
-                </div>
-            </div>
-            <p>
-                <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
-                {": "}{extraInfo?.polePositions ?? "—"}
-            </p>
-            {extraInfo?.bestSeason && <p>Best Season: {extraInfo.bestSeason}</p>}
-
-            {extraInfo?.drivingStyle && (
-                <>
-                    <h2>Driving Style</h2>
-                    <p>{extraInfo.drivingStyle}</p>
-                </>
-            )}
-
-            {extraInfo?.careerHighlights?.length > 0 && (
-                <>
-                    <h2>Career Highlights</h2>
-                    <ul>
-                        {extraInfo.careerHighlights.map((highlight, index) => (
-                            <li key={index}>{highlight}</li>
-                        ))}
-                    </ul>
-                </>
-            )}
-
-            {extraInfo?.famousRaces?.length > 0 && (
-                <>
-                    <h2>Famous Races</h2>
-                    <ul>
-                        {extraInfo.famousRaces.map((race, index) => (
-                            <li key={index}>{race}</li>
-                        ))}
-                    </ul>
-                </>
-            )}
-
-            {extraInfo?.funFacts?.length > 0 && (
-                <>
-                    <h2>Fun Facts</h2>
-                    <ul>
-                        {extraInfo.funFacts.map((fact, index) => (
-                            <li key={index}>{fact}</li>
-                        ))}
-                    </ul>
-                </>
-            )}
-
-            {extraInfo?.quote && (
-                <>
-                    <h2>In Their Own Words</h2>
-                    <div className="detail-quote">
-                        <p>"{extraInfo.quote}"</p>
+                <ExSection eyebrow="Credential" title="Driver File">
+                    <div className="ex-spec">
+                        <div className="ex-spec-row">
+                            <span className="ex-spec-label">Nationality</span>
+                            <span className="ex-spec-value">{driver.nationality}</span>
+                        </div>
+                        <div className="ex-spec-row">
+                            <span className="ex-spec-label">Date of Birth</span>
+                            <span className="ex-spec-value">{driver.dateOfBirth} · AGE {age}</span>
+                        </div>
+                        <div className="ex-spec-row">
+                            <span className="ex-spec-label">Race Number</span>
+                            <span className="ex-spec-value">#{driver.permanentNumber}</span>
+                        </div>
+                        <div className="ex-spec-row">
+                            <span className="ex-spec-label">Driver Code</span>
+                            <span className="ex-spec-value">{driver.code}</span>
+                        </div>
+                        {extraInfo?.debut && (
+                            <div className="ex-spec-row">
+                                <span className="ex-spec-label">F1 Debut</span>
+                                <span className="ex-spec-value">{extraInfo.debut}</span>
+                            </div>
+                        )}
+                        <div className="ex-spec-row">
+                            <span className="ex-spec-label">Current Team</span>
+                            <span className="ex-spec-value">{team?.name}</span>
+                        </div>
                     </div>
-                </>
-            )}
+                </ExSection>
+
+                <ExSection eyebrow="Telemetry" title={`${year} Season`}>
+                    <div className="ex-stat-row">
+                        <TelemetryStat value={standing.position} label="Position" accent />
+                        <TelemetryStat
+                            value={standing.points}
+                            label={
+                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                            }
+                        />
+                        <TelemetryStat value={standing.wins} label="Wins" />
+                    </div>
+                </ExSection>
+
+                <ExSection eyebrow="Career" title="Career Statistics">
+                    <div className="ex-stat-row">
+                        <TelemetryStat
+                            value={extraInfo?.championships ?? "—"}
+                            label={
+                                <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
+                            }
+                            meter={(extraInfo?.championships ?? 0) / 8}
+                            accent
+                        />
+                        <TelemetryStat
+                            value={extraInfo?.raceWins ?? "—"}
+                            label="Race Wins"
+                            meter={(extraInfo?.raceWins ?? 0) / 105}
+                        />
+                        <TelemetryStat
+                            value={extraInfo?.podiums ?? "—"}
+                            label={
+                                <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
+                            }
+                            meter={(extraInfo?.podiums ?? 0) / 200}
+                        />
+                        <TelemetryStat
+                            value={extraInfo?.polePositions ?? "—"}
+                            label={
+                                <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
+                            }
+                            meter={(extraInfo?.polePositions ?? 0) / 104}
+                        />
+                    </div>
+                    {extraInfo?.bestSeason && (
+                        <p className="ex-prose" style={{ marginTop: 22 }}>
+                            <strong>Best season —</strong> {extraInfo.bestSeason}
+                        </p>
+                    )}
+                </ExSection>
+
+                {extraInfo?.drivingStyle && (
+                    <ExSection eyebrow="On Track" title="Driving Style">
+                        <p className="ex-prose">{extraInfo.drivingStyle}</p>
+                    </ExSection>
+                )}
+
+                {extraInfo?.careerHighlights?.length > 0 && (
+                    <ExSection eyebrow="Milestones" title="Career Timeline">
+                        <ul className="ex-timeline">
+                            {extraInfo.careerHighlights.map((highlight, index) => (
+                                <li key={index}>{highlight}</li>
+                            ))}
+                        </ul>
+                    </ExSection>
+                )}
+
+                {extraInfo?.famousRaces?.length > 0 && (
+                    <ExSection eyebrow="Signature Drives" title="Famous Races">
+                        <ul className="ex-list">
+                            {extraInfo.famousRaces.map((race, index) => (
+                                <li key={index}>{race}</li>
+                            ))}
+                        </ul>
+                    </ExSection>
+                )}
+
+                {extraInfo?.funFacts?.length > 0 && (
+                    <ExSection eyebrow="Paddock Notes" title="Fun Facts">
+                        <ul className="ex-list">
+                            {extraInfo.funFacts.map((fact, index) => (
+                                <li key={index}>{fact}</li>
+                            ))}
+                        </ul>
+                    </ExSection>
+                )}
+
+                {extraInfo?.quote && (
+                    <ExSection eyebrow="Team Radio" title="In Their Own Words">
+                        <blockquote className="ex-quote">
+                            “{extraInfo.quote}”
+                            <cite>{fullName.toUpperCase()}</cite>
+                        </blockquote>
+                    </ExSection>
+                )}
+            </main>
 
             <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>

@@ -3,29 +3,57 @@ import driverInfo from "../data/driverInfo";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
+import LayeredImage from "../components/entity/LayeredImage";
+import ExSection from "../components/entity/ExSection";
+import DuelMeter from "../components/entity/DuelMeter";
+import EntitySelect from "../components/entity/EntitySelect";
+import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
+import "./EntityPages.css";
 
-function getWinner(val1, val2, lowerIsBetter = false) {
-    const n1 = parseFloat(val1);
-    const n2 = parseFloat(val2);
-    if (isNaN(n1) || isNaN(n2) || n1 === n2) return null;
-    if (lowerIsBetter) return n1 < n2 ? "left" : "right";
-    return n1 > n2 ? "left" : "right";
-}
+const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
-function CompareBar({ val1, val2, lowerIsBetter = false }) {
-    const n1 = parseFloat(val1);
-    const n2 = parseFloat(val2);
-    if (isNaN(n1) || isNaN(n2) || n1 + n2 === 0) return null;
-    const pct1 = lowerIsBetter ? (n2 / (n1 + n2)) * 100 : (n1 / (n1 + n2)) * 100;
+/*
+ * WHEEL TO WHEEL — driver comparison as a rivalry, not a spreadsheet.
+ * Two drivers face each other from opposite sides of the screen, each side
+ * tinted by its team; statistics race outward from a centre spine on
+ * telemetry-style duel meters. Swapping one driver re-enters only that
+ * side of the composition (keyed side panels).
+ */
+
+/* one half of the hero — keyed by driverId so a swap animates only itself */
+function W2WSide({ side, driver, standing }) {
+    const fullName = `${driver.givenName} ${driver.familyName}`;
+    const team = standing?.Constructors?.[0];
+    const accent = getTeamAccent(team?.constructorId);
+    const assets = getDriverAssets(driver.driverId, fullName);
+
     return (
-        <div className="cmp-bar-track" style={{ gridColumn: "1 / -1" }}>
-            <div className="cmp-bar-left" style={{ width: `${pct1}%` }} />
-            <div className="cmp-bar-right" style={{ width: `${100 - pct1}%` }} />
+        <div className={`ex-w2w-side ex-w2w-side--${side}`} style={{ "--accent": accent }}>
+            <div className="ex-w2w-portrait">
+                <span className="ex-w2w-num" aria-hidden="true">
+                    {driver.permanentNumber}
+                </span>
+                <LayeredImage
+                    candidates={assets.imageCandidates}
+                    alt={fullName}
+                    className="ex-w2w-img"
+                    fallback={
+                        <div className="ex-entity-fallback" aria-hidden="true">
+                            <span>{driver.givenName[0]}{driver.familyName[0]}</span>
+                        </div>
+                    }
+                />
+            </div>
+            <span className="ex-w2w-id-given">{driver.givenName}</span>
+            <span className="ex-w2w-id-family">{driver.familyName}</span>
+            <div>
+                <span className="ex-w2w-id-team">
+                    {team?.name ?? "—"} · {driver.nationality}
+                </span>
+            </div>
         </div>
     );
 }
-
-const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 function DriverComparison() {
     const [drivers, setDrivers] = useState([]);
@@ -54,220 +82,217 @@ function DriverComparison() {
             .then((data) => setStandings(data));
     }, [year]);
 
-    function cls(side, val1, val2, lowerIsBetter = false) {
-        const right = side === "right" ? " v-right" : "";
-        const w = getWinner(val1, val2, lowerIsBetter);
-        if (w === null) return "compare-val" + right;
-        return w === side ? "compare-val winning" + right : "compare-val losing" + right;
-    }
+    const accent1 = getTeamAccent(s1?.Constructors?.[0]?.constructorId);
+    const accent2 = getTeamAccent(s2?.Constructors?.[0]?.constructorId);
 
     return (
-        <div className="page">
-            <h1>Driver Comparison</h1>
+        <div className="ex ex-w2w-page">
+            <header className="ex-hero">
+                <span className="ex-hero-eyebrow">Formula 1 · Head to Head</span>
+                <h1 className="ex-hero-title">Wheel to Wheel</h1>
+                <p className="ex-hero-sub">Every Statistic. Every Rivalry. Every Advantage.</p>
+                <div className="ex-hero-rule" aria-hidden="true" />
 
-            <div className="page-controls">
-                <select value={year} onChange={(e) => setYear(e.target.value)}>
-                    {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <select value={driver1} onChange={(e) => setDriver1(e.target.value)}>
-                    <option value="">Driver 1</option>
-                    {drivers.map((d) => (
-                        <option key={d.driverId} value={d.driverId}>{d.givenName} {d.familyName}</option>
-                    ))}
-                </select>
-                <select value={driver2} onChange={(e) => setDriver2(e.target.value)}>
-                    <option value="">Driver 2</option>
-                    {drivers.map((d) => (
-                        <option key={d.driverId} value={d.driverId}>{d.givenName} {d.familyName}</option>
-                    ))}
-                </select>
-            </div>
+                <div className="ex-controls">
+                    <label className="ex-field">
+                        <span className="ex-field-label">SEASON</span>
+                        <select value={year} onChange={(e) => setYear(e.target.value)}>
+                            {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </label>
+                    <EntitySelect
+                        label="CAR 1"
+                        placeholder="Select driver"
+                        searchPlaceholder="Search drivers…"
+                        value={driver1}
+                        onChange={setDriver1}
+                        options={drivers}
+                        getId={(d) => d.driverId}
+                        getLabel={(d) => `${d.givenName} ${d.familyName}`}
+                        getSubLabel={(d) =>
+                            standings.find((s) => s.Driver.driverId === d.driverId)
+                                ?.Constructors?.[0]?.name ?? d.nationality
+                        }
+                    />
+                    <EntitySelect
+                        label="CAR 2"
+                        placeholder="Select driver"
+                        searchPlaceholder="Search drivers…"
+                        value={driver2}
+                        onChange={setDriver2}
+                        options={drivers}
+                        getId={(d) => d.driverId}
+                        getLabel={(d) => `${d.givenName} ${d.familyName}`}
+                        getSubLabel={(d) =>
+                            standings.find((s) => s.Driver.driverId === d.driverId)
+                                ?.Constructors?.[0]?.name ?? d.nationality
+                        }
+                    />
+                </div>
+            </header>
 
             {!d1 || !d2 ? (
-                <div className="cmp-empty">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="8" y1="12" x2="16" y2="12" />
-                        <line x1="12" y1="8" x2="12" y2="16" />
-                    </svg>
-                    <span className="cmp-empty-title">Head-to-Head Comparison</span>
-                    <span className="cmp-empty-sub">Select two drivers above to begin the comparison</span>
-                </div>
+                <main className="ex-main">
+                    <div className="ex-empty">
+                        <span className="ex-empty-title">Two cars. One straight.</span>
+                        <span className="ex-empty-sub">
+                            SELECT TWO DRIVERS ABOVE TO LINE THEM UP
+                        </span>
+                    </div>
+                </main>
             ) : (
                 <>
-                    {/* ── Dark Hero Header ── */}
-                    <div className="cmp-hero">
-                        <div className="cmp-hero-driver cmp-hero-left">
-                            <div className="cmp-hero-number">#{d1.permanentNumber}</div>
-                            <div className="cmp-hero-name-block">
-                                <span className="cmp-hero-given">{d1.givenName}</span>
-                                <span className="cmp-hero-family">{d1.familyName}</span>
-                                {info1?.nickname && (
-                                    <span className="cmp-hero-nick">"{info1.nickname}"</span>
-                                )}
-                            </div>
-                            <div className="cmp-hero-tags">
-                                {s1?.Constructors?.[0]?.name && (
-                                    <span className="cmp-hero-tag">{s1.Constructors[0].name}</span>
-                                )}
-                                <span className="cmp-hero-tag">{d1.nationality}</span>
-                            </div>
+                    {/* ── facing hero ── */}
+                    <div className="ex-w2w-hero">
+                        <W2WSide key={`l-${d1.driverId}`} side="left" driver={d1} standing={s1} />
+                        <div className="ex-w2w-center">
+                            <span className="ex-w2w-vs">VS</span>
+                            <span className="ex-w2w-season">{year} SEASON</span>
                         </div>
-
-                        <div className="cmp-hero-vs">
-                            <span className="cmp-hero-vs-text">VS</span>
-                            <span className="cmp-hero-season-badge">{year} Season</span>
-                        </div>
-
-                        <div className="cmp-hero-driver cmp-hero-right">
-                            <div className="cmp-hero-number">#{d2.permanentNumber}</div>
-                            <div className="cmp-hero-name-block">
-                                <span className="cmp-hero-given">{d2.givenName}</span>
-                                <span className="cmp-hero-family">{d2.familyName}</span>
-                                {info2?.nickname && (
-                                    <span className="cmp-hero-nick">"{info2.nickname}"</span>
-                                )}
-                            </div>
-                            <div className="cmp-hero-tags">
-                                {s2?.Constructors?.[0]?.name && (
-                                    <span className="cmp-hero-tag">{s2.Constructors[0].name}</span>
-                                )}
-                                <span className="cmp-hero-tag">{d2.nationality}</span>
-                            </div>
-                        </div>
+                        <W2WSide key={`r-${d2.driverId}`} side="right" driver={d2} standing={s2} />
                     </div>
 
-                    {/* ── Season Stats ── */}
-                    <div className="compare-block">
-                        <div className="compare-block-title">{year} Season</div>
-
-                        <div className="compare-row">
-                            <div className={cls("left", s1?.position, s2?.position, true)}>{s1?.position ?? "—"}</div>
-                            <div className="compare-label">
-                                <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship Pos.</KnowMoreTerm>
+                    <main className="ex-main">
+                        <ExSection eyebrow="Telemetry" title={`${year} Season`}>
+                            <div className="ex-duel-block">
+                                <DuelMeter
+                                    val1={s1?.position}
+                                    val2={s2?.position}
+                                    lowerIsBetter
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                >
+                                    <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship Pos.</KnowMoreTerm>
+                                </DuelMeter>
+                                <DuelMeter
+                                    val1={s1?.points}
+                                    val2={s2?.points}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                >
+                                    <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                                </DuelMeter>
+                                <DuelMeter
+                                    label="Race Wins"
+                                    val1={s1?.wins}
+                                    val2={s2?.wins}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                />
                             </div>
-                            <div className={cls("right", s1?.position, s2?.position, true)}>{s2?.position ?? "—"}</div>
-                            <CompareBar val1={s1?.position} val2={s2?.position} lowerIsBetter />
-                        </div>
+                        </ExSection>
 
-                        <div className="compare-row">
-                            <div className={cls("left", s1?.points, s2?.points)}>{s1?.points ?? "—"}</div>
-                            <div className="compare-label">
-                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                        <ExSection eyebrow="The Long Game" title="Career">
+                            <div className="ex-duel-block">
+                                <DuelMeter
+                                    val1={info1?.championships}
+                                    val2={info2?.championships}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                >
+                                    <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
+                                </DuelMeter>
+                                <DuelMeter
+                                    label="Race Wins"
+                                    val1={info1?.raceWins}
+                                    val2={info2?.raceWins}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                />
+                                <DuelMeter
+                                    val1={info1?.podiums}
+                                    val2={info2?.podiums}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                >
+                                    <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
+                                </DuelMeter>
+                                <DuelMeter
+                                    val1={info1?.polePositions}
+                                    val2={info2?.polePositions}
+                                    accent1={accent1}
+                                    accent2={accent2}
+                                >
+                                    <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
+                                </DuelMeter>
                             </div>
-                            <div className={cls("right", s1?.points, s2?.points)}>{s2?.points ?? "—"}</div>
-                            <CompareBar val1={s1?.points} val2={s2?.points} />
-                        </div>
+                        </ExSection>
 
-                        <div className="compare-row">
-                            <div className={cls("left", s1?.wins, s2?.wins)}>{s1?.wins ?? "—"}</div>
-                            <div className="compare-label">Race Wins</div>
-                            <div className={cls("right", s1?.wins, s2?.wins)}>{s2?.wins ?? "—"}</div>
-                            <CompareBar val1={s1?.wins} val2={s2?.wins} />
-                        </div>
-
-                        <div className="compare-row">
-                            <div className="compare-val" style={{ fontSize: "0.95rem" }}>{s1?.Constructors?.[0]?.name ?? "—"}</div>
-                            <div className="compare-label">Team</div>
-                            <div className="compare-val v-right" style={{ fontSize: "0.95rem" }}>{s2?.Constructors?.[0]?.name ?? "—"}</div>
-                        </div>
-                    </div>
-
-                    {/* ── Career Stats ── */}
-                    <div className="compare-block">
-                        <div className="compare-block-title">Career Stats</div>
-
-                        <div className="compare-row">
-                            <div className={cls("left", info1?.championships, info2?.championships)}>{info1?.championships ?? "—"}</div>
-                            <div className="compare-label">
-                                <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
-                            </div>
-                            <div className={cls("right", info1?.championships, info2?.championships)}>{info2?.championships ?? "—"}</div>
-                            <CompareBar val1={info1?.championships} val2={info2?.championships} />
-                        </div>
-
-                        <div className="compare-row">
-                            <div className={cls("left", info1?.raceWins, info2?.raceWins)}>{info1?.raceWins ?? "—"}</div>
-                            <div className="compare-label">Race Wins</div>
-                            <div className={cls("right", info1?.raceWins, info2?.raceWins)}>{info2?.raceWins ?? "—"}</div>
-                            <CompareBar val1={info1?.raceWins} val2={info2?.raceWins} />
-                        </div>
-
-                        <div className="compare-row">
-                            <div className={cls("left", info1?.podiums, info2?.podiums)}>{info1?.podiums ?? "—"}</div>
-                            <div className="compare-label">
-                                <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
-                            </div>
-                            <div className={cls("right", info1?.podiums, info2?.podiums)}>{info2?.podiums ?? "—"}</div>
-                            <CompareBar val1={info1?.podiums} val2={info2?.podiums} />
-                        </div>
-
-                        <div className="compare-row">
-                            <div className={cls("left", info1?.polePositions, info2?.polePositions)}>{info1?.polePositions ?? "—"}</div>
-                            <div className="compare-label">
-                                <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
-                            </div>
-                            <div className={cls("right", info1?.polePositions, info2?.polePositions)}>{info2?.polePositions ?? "—"}</div>
-                            <CompareBar val1={info1?.polePositions} val2={info2?.polePositions} />
-                        </div>
-                    </div>
-
-                    {/* ── Driver Profile ── */}
-                    <div className="compare-block">
-                        <div className="compare-block-title">Driver Profile</div>
-
-                        <div className="compare-row">
-                            <div className="compare-val">{d1.nationality}</div>
-                            <div className="compare-label">Nationality</div>
-                            <div className="compare-val v-right">{d2.nationality}</div>
-                        </div>
-
-                        <div className="compare-row">
-                            <div className="compare-val" style={{ fontSize: "0.95rem" }}>{d1.dateOfBirth}</div>
-                            <div className="compare-label">Date of Birth</div>
-                            <div className="compare-val v-right" style={{ fontSize: "0.95rem" }}>{d2.dateOfBirth}</div>
-                        </div>
-
-                        <div className="compare-row">
-                            <div className="compare-val">{d1.code}</div>
-                            <div className="compare-label">Driver Code</div>
-                            <div className="compare-val v-right">{d2.code}</div>
-                        </div>
-
-                        <div className="compare-row">
-                            <div className="compare-val" style={{ fontSize: "0.95rem" }}>{info1?.debut ?? "—"}</div>
-                            <div className="compare-label">F1 Debut</div>
-                            <div className="compare-val v-right" style={{ fontSize: "0.95rem" }}>{info2?.debut ?? "—"}</div>
-                        </div>
-
-                        <div className="compare-row">
-                            <div className="compare-val" style={{ fontSize: "0.95rem" }}>{info1?.bestSeason ?? "—"}</div>
-                            <div className="compare-label">Best Season</div>
-                            <div className="compare-val v-right" style={{ fontSize: "0.95rem" }}>{info2?.bestSeason ?? "—"}</div>
-                        </div>
-                    </div>
-
-                    {/* ── About ── */}
-                    {(info1 || info2) && (
-                        <div className="compare-block">
-                            <div className="compare-block-title">About</div>
-                            <div className="compare-about">
-                                <div className="compare-about-col">
-                                    {info1?.quote && (
-                                        <blockquote className="compare-quote">"{info1.quote}"</blockquote>
-                                    )}
-                                    <p>{info1?.description ?? "—"}</p>
+                        <ExSection eyebrow="Credentials" title="Driver Profile">
+                            <div className="ex-cols">
+                                <div className="ex-spec">
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Nationality</span>
+                                        <span className="ex-spec-value">{d1.nationality}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Date of Birth</span>
+                                        <span className="ex-spec-value">{d1.dateOfBirth}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Driver Code</span>
+                                        <span className="ex-spec-value">{d1.code}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">F1 Debut</span>
+                                        <span className="ex-spec-value">{info1?.debut ?? "—"}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Best Season</span>
+                                        <span className="ex-spec-value">{info1?.bestSeason ?? "—"}</span>
+                                    </div>
                                 </div>
-                                <div className="compare-about-divider" />
-                                <div className="compare-about-col">
-                                    {info2?.quote && (
-                                        <blockquote className="compare-quote">"{info2.quote}"</blockquote>
-                                    )}
-                                    <p>{info2?.description ?? "—"}</p>
+                                <div className="ex-spec">
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Nationality</span>
+                                        <span className="ex-spec-value">{d2.nationality}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Date of Birth</span>
+                                        <span className="ex-spec-value">{d2.dateOfBirth}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Driver Code</span>
+                                        <span className="ex-spec-value">{d2.code}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">F1 Debut</span>
+                                        <span className="ex-spec-value">{info2?.debut ?? "—"}</span>
+                                    </div>
+                                    <div className="ex-spec-row">
+                                        <span className="ex-spec-label">Best Season</span>
+                                        <span className="ex-spec-value">{info2?.bestSeason ?? "—"}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        </ExSection>
+
+                        {(info1 || info2) && (
+                            <ExSection eyebrow="The Rivalry" title="Two Stories">
+                                <div className="ex-about-cols">
+                                    <div>
+                                        {info1?.quote && (
+                                            <blockquote className="ex-quote" style={{ marginBottom: 20 }}>
+                                                “{info1.quote}”
+                                                <cite>{d1.givenName} {d1.familyName}</cite>
+                                            </blockquote>
+                                        )}
+                                        <p className="ex-prose">{info1?.description ?? "—"}</p>
+                                    </div>
+                                    <div className="ex-about-divider" aria-hidden="true" />
+                                    <div>
+                                        {info2?.quote && (
+                                            <blockquote className="ex-quote" style={{ marginBottom: 20 }}>
+                                                “{info2.quote}”
+                                                <cite>{d2.givenName} {d2.familyName}</cite>
+                                            </blockquote>
+                                        )}
+                                        <p className="ex-prose">{info2?.description ?? "—"}</p>
+                                    </div>
+                                </div>
+                            </ExSection>
+                        )}
+                    </main>
                 </>
             )}
 

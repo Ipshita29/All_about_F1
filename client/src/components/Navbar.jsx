@@ -99,9 +99,13 @@ function Navbar() {
 
     const exploreActive = EXPLORE_LINKS.some((l) => isActive(l.to));
 
+    /* entity experience pages share the landing page's dark chrome */
+    const DARK_ROUTES = ["/drivers", "/teams", "/compare-drivers", "/compare-teams"];
+    const isDark = isLanding || DARK_ROUTES.some((p) => location.pathname.startsWith(p));
+
     return (
         <nav
-            className={`navbar${isLanding ? " navbar--landing" : ""}${
+            className={`navbar${isDark ? " navbar--landing" : ""}${
                 isLanding && !scrolled ? " navbar--top" : ""
             }`}
         >
