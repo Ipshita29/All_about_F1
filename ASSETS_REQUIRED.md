@@ -169,3 +169,75 @@ desaturated to sit inside the site palette — adjust there if a team rebrands.
 - No new libraries — the coverflow carousel, count-up telemetry and
   shared-element page transitions (View Transitions API via React Router's
   `viewTransition`) are all dependency-free.
+
+---
+---
+
+# Part 3 — Experience Pages (Race Weekend · Grand Prix HQ · From the Paddock · Pit Wall Briefing · My Garage · Join the Grid)
+
+Like Parts 1 and 2, the redesigned experience pages work **fully without any
+new assets** — every image slot has a styled fallback (dashed SVG blueprint,
+halftone placeholder panel, monogram). Drop the files below into place and
+each page upgrades itself with **no code changes**.
+
+## 11. Circuit blueprint maps (HIGH IMPACT — Race Weekend + Grand Prix HQ)
+
+| | |
+|---|---|
+| **Asset** | Clean top-down track outline per circuit (line art works best) |
+| **Filenames** | `map.png` inside `client/public/circuits/<circuitId>/` using Jolpica circuit ids: `albert_park`, `shanghai`, `suzuka`, `bahrain`, `jeddah`, `miami`, `imola`, `monaco`, `catalunya`, `villeneuve`, `red_bull_ring`, `silverstone`, `spa`, `hungaroring`, `zandvoort`, `monza`, `baku`, `marina_bay`, `americas`, `rodriguez`, `interlagos`, `vegas`, `losail`, `yas_marina`, `madring` … |
+| **Folder** | `client/public/circuits/<circuitId>/` (same folder the landing page already reads) |
+| **Dimensions** | ~800 × 500 px, dark line art on light/transparent background |
+| **Format** | PNG (the pages apply a CSS invert/hue filter so light-background maps sit correctly on the dark blueprint panels) |
+| **Used by** | Race Weekend focus module + future-race hover reveals (`GrandPrix.jsx`), Grand Prix HQ hero (`GrandPrixDetails.jsx`), landing page garage |
+| **Search terms** | `<circuit name> track map outline png`, `F1 <circuit> layout vector` |
+| **Fallback until added** | A dashed SVG blueprint outline (already looks intentional) |
+
+## 12. Race weekend hero photography (OPTIONAL — future upgrade)
+
+| | |
+|---|---|
+| **Asset** | One wide atmospheric photo per circuit (grandstands, cityscape, key corner) to eventually sit behind the Race Weekend focus module and Grand Prix HQ hero |
+| **Filenames** | `hero.jpg` inside `client/public/circuits/<circuitId>/` (a slot already referenced by `data/circuitInfo.js` → `image`) |
+| **Dimensions** | ~1920 × 900 px, JPG, dark-friendly (the pages overlay a dark scrim) |
+| **Used by** | Reserved — current implementation is pure CSS (carbon + blueprint), nothing breaks without these |
+| **Search terms** | `<circuit name> grand prix wide shot`, `<circuit> aerial photo` |
+
+## 13. News photography (nothing to do)
+
+From the Paddock uses the article images delivered by the existing NewsAPI
+backend (external by nature). Broken/missing images automatically fall back
+to a styled halftone "FROM THE PADDOCK" panel — no local asset needed. If
+you ever want a branded fallback, replace the CSS panel in
+`client/src/pages/Paddock.css` (`.fp-img--missing`) with a local image.
+
+## 14. Pit Wall Briefing diagrams (nothing to do)
+
+The educational animations (DRS flap, tyre wear stages, marshal flags,
+pit-stop wheel change, undercut/overcut strategy demo) are hand-drawn
+SVG + CSS in `client/src/components/dictionary/TermAnimation.jsx` and
+`client/src/pages/F1Dictionary.css`. No image assets required. To add an
+animation for a new term, add a case to the slug map at the bottom of
+`TermAnimation.jsx`.
+
+## 15. My Garage / Join the Grid textures (nothing to do)
+
+Garage lights, concrete floor, telemetry trace, carbon fibre, the starting
+light gantry and the engineering rings are all pure CSS/SVG. Explicitly
+**not** required: photos, videos, texture files.
+
+## 16. Team accent colours (nothing to download)
+
+- The constructor picker in Join the Grid (`client/src/pages/Authpage.jsx`,
+  `TEAMS` array) carries its own official-team swatch colours — adjust there
+  if a team rebrands.
+- My Garage tints the constructor bay from `teamInfo` via
+  `getTeamColor()` in `client/src/utils/landingHelpers.js`.
+
+## 17. Explicitly NOT required for the experience pages
+
+- No fonts (Barlow / Barlow Condensed already loaded + system monospace).
+- No icon packs beyond the installed `lucide-react`.
+- No new libraries — countdowns, scroll reveals, the shared-element story
+  reader (View Transitions API) and the calendar → Grand Prix HQ page
+  flight (React Router `viewTransition`) are all dependency-free.

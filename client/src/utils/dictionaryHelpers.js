@@ -116,6 +116,17 @@ export function estimateReadingTime(term) {
   return Math.max(1, Math.round(words / 200));
 }
 
+/* Rookie / Race Engineer depth for the Pit Wall Briefing pages */
+const MODE_KEY = "fd_briefing_mode";
+
+export function getBriefingMode() {
+  return localStorage.getItem(MODE_KEY) === "expert" ? "expert" : "beginner";
+}
+
+export function saveBriefingMode(mode) {
+  localStorage.setItem(MODE_KEY, mode);
+}
+
 const VISITED_KEY = "f1dict_visited_terms";
 
 export function getVisitedSlugs() {

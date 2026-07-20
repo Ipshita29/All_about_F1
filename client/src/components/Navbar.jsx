@@ -99,8 +99,19 @@ function Navbar() {
 
     const exploreActive = EXPLORE_LINKS.some((l) => isActive(l.to));
 
-    /* entity experience pages share the landing page's dark chrome */
-    const DARK_ROUTES = ["/drivers", "/teams", "/compare-drivers", "/compare-teams"];
+    /* experience pages share the landing page's dark chrome */
+    const DARK_ROUTES = [
+        "/drivers",
+        "/teams",
+        "/compare-drivers",
+        "/compare-teams",
+        "/grandprixdashboard",
+        "/news",
+        "/dictionary",
+        "/profile",
+        "/preferences",
+        "/auth",
+    ];
     const isDark = isLanding || DARK_ROUTES.some((p) => location.pathname.startsWith(p));
 
     return (

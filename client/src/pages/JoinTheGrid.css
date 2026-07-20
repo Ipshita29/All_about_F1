@@ -1,0 +1,636 @@
+/* ════════════════════════════════════════════════════════════════════
+   JOIN THE GRID — one immersive authentication journey.
+   Scope: every rule is namespaced under .jg. Continues the site system:
+
+     #141616  primary dark background
+     #3D3C38  elevated surfaces
+     #746D67  borders / structural detail
+     #A49F9D  secondary text
+     #7F1D1A  primary racing-red accent
+   ════════════════════════════════════════════════════════════════════ */
+
+.jg {
+    --jg-bg: #141616;
+    --jg-bg-deep: #0e1010;
+    --jg-surface: #3d3c38;
+    --jg-surface-dark: #1b1d1d;
+    --jg-border: #746d67;
+    --jg-line: rgba(116, 109, 103, 0.28);
+    --jg-text: #f2f0ed;
+    --jg-text2: #a49f9d;
+    --jg-red: #7f1d1a;
+    --jg-red-bright: #b3271e;
+    --jg-green: #3e9b4f;
+    --jg-font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --jg-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    --jg-carbon:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 4px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 4px),
+        linear-gradient(180deg, #191b1b, #131515);
+
+    background: var(--jg-bg);
+    color: var(--jg-text);
+    min-height: 100vh;
+    padding-top: 60px; /* fixed dark navbar */
+    display: flex;
+    overflow-x: clip;
+}
+
+html:has(.jg) {
+    background: var(--jg-bg);
+}
+
+.jg a {
+    color: inherit;
+}
+
+.jg button {
+    font-family: inherit;
+}
+
+.jg-mono {
+    font-family: var(--jg-font-mono);
+    letter-spacing: 0.06em;
+}
+
+.jg *:focus-visible {
+    outline: 2px solid var(--jg-red-bright);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+.jg-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    min-height: calc(100vh - 60px);
+}
+
+/* ── Left: the starting procedure ──────────────────────────────────── */
+
+.jg-procedure {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 60px 48px;
+    text-align: center;
+    border-right: 1px solid var(--jg-line);
+    isolation: isolate;
+    overflow: hidden;
+}
+
+/* ambient light + faint engineering grid */
+.jg-procedure::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+        radial-gradient(70% 60% at 50% 18%, rgba(127, 29, 26, 0.2), transparent 65%),
+        linear-gradient(rgba(116, 109, 103, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(116, 109, 103, 0.06) 1px, transparent 1px);
+    background-size: auto, 64px 64px, 64px 64px;
+    pointer-events: none;
+}
+
+/* slowly rotating engineering ring behind the gantry */
+.jg-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: min(440px, 80%);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px dashed rgba(116, 109, 103, 0.4);
+    animation: jg-ring-spin 46s linear infinite;
+    pointer-events: none;
+}
+.jg-ring::after {
+    content: "";
+    position: absolute;
+    inset: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(116, 109, 103, 0.2);
+    border-top-color: rgba(179, 39, 30, 0.55);
+}
+@keyframes jg-ring-spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.jg-eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    color: var(--jg-text2);
+}
+
+.jg-title {
+    font-family: var(--jg-font-display);
+    font-weight: 800;
+    font-size: clamp(2.8rem, 6vw, 4.6rem);
+    line-height: 0.94;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--jg-text);
+    text-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+    margin: 0;
+}
+
+.jg-caption {
+    font-size: 0.62rem;
+    letter-spacing: 0.26em;
+    color: var(--jg-red-bright);
+    min-height: 1.2em;
+    animation: jg-caption-in 0.5s ease both;
+}
+@keyframes jg-caption-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* the gantry */
+.jg-gantry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.jg-gantry-beam {
+    width: 240px;
+    height: 12px;
+    background: var(--jg-carbon);
+    border: 1px solid var(--jg-line);
+}
+
+.jg-gantry-row {
+    display: flex;
+    gap: 13px;
+    background: #101212;
+    border: 1px solid var(--jg-line);
+    border-top: none;
+    padding: 10px 14px 13px;
+}
+
+.jg-light-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.jg-light {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3a1210, #1c0605);
+    border: 2px solid #060707;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.jg-light--on {
+    background: radial-gradient(circle at 35% 30%, #ff6a52, var(--jg-red-bright));
+    box-shadow:
+        0 0 12px 3px rgba(179, 39, 30, 0.75),
+        0 0 26px 7px rgba(179, 39, 30, 0.3);
+}
+
+/* lights out: every lamp snaps dark at once */
+.jg-gantry--out .jg-light {
+    background: radial-gradient(circle at 35% 30%, #3a1210, #1c0605);
+    box-shadow: none;
+    transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.jg-go {
+    font-size: 0.9rem;
+    letter-spacing: 0.5em;
+    color: var(--jg-green);
+    animation: jg-go-in 0.4s ease 0.25s both;
+}
+@keyframes jg-go-in {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: none; }
+}
+
+.jg-steps {
+    display: flex;
+    gap: 22px;
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+}
+.jg-steps li {
+    position: relative;
+    margin: 0;
+    font-size: 0.54rem;
+    letter-spacing: 0.22em;
+    color: rgba(164, 159, 157, 0.55);
+    transition: color 0.3s;
+}
+.jg-steps li::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -8px;
+    width: 4px;
+    height: 4px;
+    transform: translateX(-50%) rotate(45deg);
+    background: currentColor;
+}
+.jg-step--now {
+    color: var(--jg-text) !important;
+}
+.jg-step--now::before {
+    background: var(--jg-red-bright) !important;
+}
+
+/* ── Right: the transforming console ───────────────────────────────── */
+
+.jg-console {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px clamp(28px, 6vw, 80px);
+    background:
+        radial-gradient(90% 70% at 100% 0%, rgba(61, 60, 56, 0.18), transparent 60%),
+        var(--jg-bg);
+}
+
+/* mode toggle styled as a pit-lane selector */
+.jg-mode-toggle {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--jg-border);
+    background: var(--jg-bg-deep);
+    margin-bottom: 34px;
+    isolation: isolate;
+}
+
+.jg-mode-btn {
+    position: relative;
+    z-index: 1;
+    padding: 14px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    font-family: var(--jg-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    color: var(--jg-text2);
+    transition: color 0.3s;
+}
+.jg-mode-btn:hover {
+    background: transparent;
+    color: var(--jg-text);
+    transform: none;
+    box-shadow: none;
+}
+.jg-mode-btn--active {
+    color: var(--jg-text);
+}
+
+.jg-mode-thumb {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+    background: rgba(127, 29, 26, 0.35);
+    border-bottom: 2px solid var(--jg-red-bright);
+    transition: left 0.4s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.jg-mode-thumb--right {
+    left: 50%;
+}
+
+/* each stage slides in as a new layered panel */
+.jg-panel {
+    animation: jg-panel-in 0.5s cubic-bezier(0.3, 0.8, 0.3, 1) both;
+    transform-style: preserve-3d;
+}
+@keyframes jg-panel-in {
+    from { opacity: 0; transform: perspective(1200px) rotateY(-3deg) translateX(26px); }
+    to { opacity: 1; transform: none; }
+}
+
+.jg-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.jg-panel-title {
+    font-family: var(--jg-font-display);
+    font-weight: 800;
+    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--jg-text);
+    margin: 0;
+}
+
+.jg-panel-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.26em;
+    color: var(--jg-text2);
+    margin: -8px 0 6px;
+}
+
+.jg-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.jg-field-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.26em;
+    color: var(--jg-text2);
+}
+
+.jg-field input {
+    width: 100%;
+    margin: 0;
+    padding: 13px 16px;
+    background: var(--jg-bg-deep);
+    border: 1px solid var(--jg-border);
+    border-radius: 0;
+    color: var(--jg-text);
+    font-family: var(--jg-font-display);
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.jg-field input::placeholder {
+    color: rgba(164, 159, 157, 0.5);
+}
+.jg-field input:focus {
+    outline: none;
+    border-color: var(--jg-red-bright);
+    box-shadow: 0 0 0 3px rgba(179, 39, 30, 0.16);
+}
+
+.jg-error {
+    margin: 0;
+    padding: 12px 16px;
+    border: 1px dashed rgba(232, 185, 35, 0.55);
+    background: rgba(232, 185, 35, 0.06);
+    color: #e8b923;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    animation: jg-caption-in 0.35s ease both;
+}
+
+.jg-primary-btn {
+    padding: 15px 24px;
+    background: var(--jg-red);
+    border: 1px solid var(--jg-red-bright);
+    border-radius: 0;
+    color: var(--jg-text);
+    font-family: var(--jg-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.26em;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.jg-primary-btn:hover:not(:disabled) {
+    background: var(--jg-red-bright);
+    box-shadow: 0 12px 34px rgba(127, 29, 26, 0.45);
+    transform: none;
+}
+.jg-primary-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.jg-ghost-btn {
+    padding: 13px 20px;
+    background: transparent;
+    border: 1px solid var(--jg-line);
+    border-radius: 0;
+    color: var(--jg-text2);
+    font-family: var(--jg-font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+.jg-ghost-btn:hover {
+    background: transparent;
+    color: var(--jg-text);
+    border-color: var(--jg-border);
+    transform: none;
+    box-shadow: none;
+}
+
+.jg-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+}
+.jg-row .jg-primary-btn {
+    flex: 1;
+    min-width: 180px;
+}
+
+.jg-swap {
+    font-size: 0.86rem;
+    color: var(--jg-text2);
+    margin: 4px 0 0;
+}
+
+.jg-swap-link {
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    color: var(--jg-red-bright);
+    font-size: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(179, 39, 30, 0.5);
+}
+.jg-swap-link:hover {
+    background: none;
+    transform: none;
+    box-shadow: none;
+    color: var(--jg-text);
+}
+
+/* ── Driver / constructor pick grids ───────────────────────────────── */
+
+.jg-pick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+    max-height: 46vh;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.jg-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--jg-surface-dark);
+    border: 1px solid var(--jg-line);
+    border-radius: 0;
+    color: var(--jg-text);
+    font-family: var(--jg-font-display);
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    animation: jg-pick-in 0.4s ease both;
+}
+@keyframes jg-pick-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+}
+.jg-pick:hover {
+    background: var(--jg-surface-dark);
+    border-color: var(--jg-border);
+    transform: translateY(-2px);
+    box-shadow: none;
+}
+.jg-pick--on {
+    border-color: var(--jg-red-bright);
+    background: rgba(127, 29, 26, 0.22);
+    box-shadow: inset 0 0 0 1px var(--jg-red-bright);
+}
+
+.jg-pick-num {
+    font-size: 0.58rem;
+    color: var(--jg-text2);
+    flex-shrink: 0;
+}
+
+.jg-pick--team {
+    border-bottom: 3px solid color-mix(in srgb, var(--jg-team, #7f1d1a) 70%, #141616);
+}
+.jg-pick--team.jg-pick--on {
+    border-color: var(--jg-red-bright);
+    border-bottom-color: var(--jg-team, var(--jg-red-bright));
+}
+
+.jg-pick-swatch {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    transform: rotate(45deg);
+    background: color-mix(in srgb, var(--jg-team, #7f1d1a) 82%, #f2f0ed 0%);
+    border: 1px solid rgba(242, 240, 237, 0.25);
+}
+
+/* ── Launch state ──────────────────────────────────────────────────── */
+
+.jg-launch {
+    position: relative;
+    padding: 50px 0;
+    text-align: center;
+    overflow: hidden;
+}
+
+.jg-launch-streaks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.jg-launch-streaks span {
+    position: absolute;
+    top: 20%;
+    left: -40%;
+    width: 34%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(179, 39, 30, 0.85), transparent);
+    animation: jg-streak 0.9s linear infinite;
+}
+.jg-launch-streaks span:nth-child(2) {
+    top: 52%;
+    animation-delay: 0.22s;
+}
+.jg-launch-streaks span:nth-child(3) {
+    top: 80%;
+    animation-delay: 0.48s;
+}
+@keyframes jg-streak {
+    to { left: 130%; }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .jg-stage {
+        grid-template-columns: 1fr;
+    }
+    .jg-procedure {
+        border-right: none;
+        border-bottom: 1px solid var(--jg-line);
+        padding: 44px 24px 36px;
+        min-height: 0;
+    }
+    .jg-console {
+        padding: 40px 24px 70px;
+        justify-content: flex-start;
+    }
+    .jg-ring {
+        width: 300px;
+    }
+    .jg-pick-grid {
+        max-height: none;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 480px) {
+    .jg-steps {
+        gap: 14px;
+    }
+    .jg-gantry-beam {
+        width: 200px;
+    }
+    .jg-light {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .jg-ring {
+        animation: none;
+    }
+    .jg-panel,
+    .jg-caption,
+    .jg-error,
+    .jg-go,
+    .jg-pick {
+        animation: none;
+    }
+    .jg-pick:hover {
+        transform: none;
+    }
+    .jg-launch-streaks {
+        display: none;
+    }
+    .jg-mode-thumb {
+        transition: none;
+    }
+}

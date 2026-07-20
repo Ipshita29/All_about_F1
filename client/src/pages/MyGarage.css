@@ -1,0 +1,732 @@
+/* ════════════════════════════════════════════════════════════════════
+   MY GARAGE + TUNE YOUR SETUP — the user's personal paddock.
+   Scope: every rule is namespaced under .mg. Continues the site system:
+
+     #141616  primary dark background
+     #3D3C38  elevated surfaces
+     #746D67  borders / structural detail
+     #A49F9D  secondary text
+     #7F1D1A  primary racing-red accent
+   ════════════════════════════════════════════════════════════════════ */
+
+.mg {
+    --mg-bg: #141616;
+    --mg-bg-deep: #0e1010;
+    --mg-surface: #3d3c38;
+    --mg-surface-dark: #1b1d1d;
+    --mg-border: #746d67;
+    --mg-line: rgba(116, 109, 103, 0.28);
+    --mg-text: #f2f0ed;
+    --mg-text2: #a49f9d;
+    --mg-red: #7f1d1a;
+    --mg-red-bright: #b3271e;
+    --mg-green: #3e9b4f;
+    --mg-font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --mg-font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
+    --mg-carbon:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 4px),
+        repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.022) 0 2px, transparent 2px 4px),
+        linear-gradient(180deg, #191b1b, #131515);
+
+    background: var(--mg-bg);
+    color: var(--mg-text);
+    min-height: 100vh;
+    padding-top: 60px; /* fixed dark navbar */
+    overflow-x: clip;
+}
+
+html:has(.mg) {
+    background: var(--mg-bg);
+}
+
+.mg a {
+    color: inherit;
+}
+
+.mg button {
+    font-family: inherit;
+}
+
+.mg-mono {
+    font-family: var(--mg-font-mono);
+    letter-spacing: 0.06em;
+}
+
+.mg *:focus-visible {
+    outline: 2px solid var(--mg-red-bright);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+
+.mg-loading {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mg-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: flex-start;
+    margin-top: auto;
+    font-family: var(--mg-font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.2em;
+    color: var(--mg-text);
+    border: 1px solid var(--mg-border);
+    padding: 10px 16px;
+    background: transparent;
+    transition: border-color 0.2s, background 0.2s;
+}
+.mg-cta:hover,
+.mg-cta:focus-visible {
+    border-color: var(--mg-red-bright);
+    background: rgba(127, 29, 26, 0.18);
+}
+.mg-cta span {
+    transition: transform 0.2s;
+}
+.mg-cta:hover span {
+    transform: translateX(4px);
+}
+
+/* ── Hero: the garage wakes up ─────────────────────────────────────── */
+
+.mg-hero {
+    position: relative;
+    padding: 90px 40px 0;
+    max-width: 1240px;
+    margin: 0 auto;
+    text-align: center;
+    isolation: isolate;
+}
+.mg-hero--compact {
+    padding-top: 70px;
+}
+
+/* concrete floor + ambient glow, revealed when the lights switch on */
+.mg-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0 -100vw;
+    z-index: -1;
+    background:
+        radial-gradient(55% 130% at 50% -25%, rgba(127, 29, 26, 0.16), transparent 62%),
+        repeating-linear-gradient(90deg, transparent 0 118px, rgba(116, 109, 103, 0.08) 118px 120px),
+        linear-gradient(rgba(116, 109, 103, 0.05) 1px, transparent 1px);
+    background-size: auto, auto, 100% 26px;
+    mask-image: linear-gradient(180deg, #000 55%, transparent);
+    opacity: 0;
+    transition: opacity 1.1s ease 0.25s;
+    pointer-events: none;
+}
+.mg--lit .mg-hero::before {
+    opacity: 1;
+}
+
+/* three overhead lamps that switch on in sequence */
+.mg-hero-lights {
+    display: flex;
+    justify-content: center;
+    gap: 120px;
+    margin-bottom: 34px;
+}
+.mg-hero-lights span {
+    position: relative;
+    width: 44px;
+    height: 7px;
+    background: #202222;
+    border: 1px solid var(--mg-line);
+}
+.mg-hero-lights span::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 34px solid transparent;
+    border-right: 34px solid transparent;
+    border-top: 0 solid transparent;
+    border-bottom: 74px solid rgba(242, 240, 237, 0.05);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.mg--lit .mg-hero-lights span::after {
+    opacity: 1;
+}
+.mg--lit .mg-hero-lights span {
+    background: #efe9dd;
+    box-shadow: 0 0 18px rgba(242, 240, 237, 0.55);
+}
+.mg--lit .mg-hero-lights span:nth-child(1) { transition: background 0.2s ease 0.15s, box-shadow 0.2s ease 0.15s; }
+.mg--lit .mg-hero-lights span:nth-child(2) { transition: background 0.2s ease 0.45s, box-shadow 0.2s ease 0.45s; }
+.mg--lit .mg-hero-lights span:nth-child(3) { transition: background 0.2s ease 0.75s, box-shadow 0.2s ease 0.75s; }
+.mg--lit .mg-hero-lights span:nth-child(1)::after { transition-delay: 0.15s; }
+.mg--lit .mg-hero-lights span:nth-child(2)::after { transition-delay: 0.45s; }
+.mg--lit .mg-hero-lights span:nth-child(3)::after { transition-delay: 0.75s; }
+
+.mg-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.66rem;
+    letter-spacing: 0.32em;
+    color: var(--mg-text2);
+}
+.mg-hero-eyebrow::before,
+.mg-hero-eyebrow::after {
+    content: "";
+    width: 44px;
+    height: 1px;
+    background: var(--mg-line);
+}
+
+.mg-hero-title {
+    margin: 16px 0 10px;
+    font-family: var(--mg-font-display);
+    font-weight: 800;
+    font-size: clamp(3rem, 8.6vw, 6.2rem);
+    line-height: 0.94;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--mg-text);
+    text-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+    opacity: 0.25;
+    transition: opacity 0.9s ease 0.3s;
+}
+.mg--lit .mg-hero-title {
+    opacity: 1;
+}
+
+.mg-hero-sub {
+    font-size: clamp(0.64rem, 1.3vw, 0.78rem);
+    letter-spacing: 0.24em;
+    color: var(--mg-text2);
+}
+
+/* the telemetry trace draws itself once the lights are on */
+.mg-telemetry {
+    display: block;
+    width: min(680px, 90%);
+    height: 40px;
+    margin: 34px auto 0;
+}
+.mg-telemetry-trace {
+    stroke: var(--mg-red-bright);
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    opacity: 0.85;
+}
+.mg--lit .mg-telemetry-trace {
+    animation: mg-trace 1.6s cubic-bezier(0.4, 0, 0.3, 1) 0.7s forwards;
+}
+@keyframes mg-trace {
+    to { stroke-dashoffset: 0; }
+}
+
+/* ── Workstation grid ──────────────────────────────────────────────── */
+
+.mg-main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 44px 40px 120px;
+}
+
+.mg-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.mg-module {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 26px;
+    border: 1px solid var(--mg-line);
+    background: var(--mg-surface-dark);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.25s;
+}
+.mg--lit .mg-module {
+    opacity: 1;
+    transform: none;
+}
+.mg--lit .mg-module:nth-child(1) { transition-delay: 0.25s; }
+.mg--lit .mg-module:nth-child(2) { transition-delay: 0.35s; }
+.mg--lit .mg-module:nth-child(3) { transition-delay: 0.45s; }
+.mg--lit .mg-module:nth-child(4) { transition-delay: 0.55s; }
+.mg--lit .mg-module:nth-child(5) { transition-delay: 0.65s; }
+.mg--lit .mg-module:nth-child(6) { transition-delay: 0.75s; }
+
+.mg-module:hover {
+    border-color: var(--mg-border);
+}
+
+/* a soft reflection sweeps across a module once on hover */
+.mg-module::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+    left: -60%;
+    background: linear-gradient(100deg, transparent, rgba(242, 240, 237, 0.045), transparent);
+    transform: skewX(-14deg);
+    transition: left 0.7s cubic-bezier(0.3, 0.8, 0.3, 1);
+    pointer-events: none;
+}
+.mg-module:hover::after {
+    left: 130%;
+}
+
+.mg-module-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.28em;
+    color: var(--mg-text2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.mg-module-label::before {
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, var(--mg-red) 0 5px, transparent 5px 9px);
+    flex-shrink: 0;
+}
+
+/* module placement */
+.mg-module--identity { grid-column: span 3; }
+.mg-module--driver { grid-column: span 3; }
+.mg-module--team { grid-column: span 3; }
+.mg-module--learning { grid-column: span 3; }
+.mg-module--milestones { grid-column: span 4; }
+.mg-module--shortcuts { grid-column: span 2; }
+
+/* identity plate */
+.mg-identity {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.mg-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    flex-shrink: 0;
+    background:
+        radial-gradient(circle at 32% 28%, rgba(179, 39, 30, 0.9), var(--mg-red) 70%);
+    border: 1px solid rgba(179, 39, 30, 0.6);
+    font-family: var(--mg-font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--mg-text);
+}
+
+.mg-identity-name {
+    font-family: var(--mg-font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+}
+
+.mg-identity-mail {
+    font-size: 0.68rem;
+    color: var(--mg-text2);
+    margin: 0;
+}
+
+.mg-idrows {
+    margin: 4px 0 12px;
+    border-top: 1px dashed var(--mg-line);
+}
+
+.mg-idrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--mg-line);
+}
+.mg-idrow dt {
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    color: var(--mg-text2);
+}
+.mg-idrow dd {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--mg-text);
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+/* favourite picks */
+.mg-module--driver,
+.mg-module--team {
+    background:
+        radial-gradient(130% 130% at 100% 0%, rgba(127, 29, 26, 0.14), transparent 55%),
+        var(--mg-carbon);
+}
+.mg-module--team {
+    background:
+        radial-gradient(130% 130% at 100% 0%, color-mix(in srgb, var(--mg-team, #7f1d1a) 18%, transparent), transparent 55%),
+        var(--mg-carbon);
+    border-bottom: 3px solid var(--mg-team, var(--mg-red));
+}
+.mg-module--driver {
+    border-bottom: 3px solid var(--mg-red);
+}
+
+.mg-big-pick {
+    font-family: var(--mg-font-display);
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-top: 10px;
+}
+.mg-big-pick--empty {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(164, 159, 157, 0.55);
+}
+
+.mg-pick-sub {
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    color: var(--mg-text2);
+    margin-bottom: 16px;
+}
+
+/* learning telemetry */
+.mg-learn-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.mg-learn-count {
+    font-family: var(--mg-font-display);
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.mg-learn-count small {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--mg-text2);
+    margin-left: 6px;
+}
+
+.mg-progress-track {
+    height: 6px;
+    background: var(--mg-bg-deep);
+    border: 1px solid var(--mg-line);
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+.mg-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mg-red), var(--mg-red-bright));
+    transition: width 1.2s cubic-bezier(0.3, 0.8, 0.3, 1) 0.8s;
+}
+
+/* milestones */
+.mg-milestones {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mg-milestone {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 2px;
+    border-bottom: 1px dashed var(--mg-line);
+    margin: 0;
+    opacity: 0.55;
+}
+.mg-milestone--unlocked {
+    opacity: 1;
+}
+.mg-milestone:last-child {
+    border-bottom: none;
+}
+
+.mg-milestone-lamp {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--mg-bg-deep);
+    border: 1px solid var(--mg-border);
+    justify-self: center;
+}
+.mg-milestone--unlocked .mg-milestone-lamp {
+    background: var(--mg-green);
+    border-color: var(--mg-green);
+    box-shadow: 0 0 10px rgba(62, 155, 79, 0.6);
+}
+
+.mg-milestone-title {
+    display: block;
+    font-family: var(--mg-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mg-milestone-detail {
+    display: block;
+    font-size: 0.56rem;
+    letter-spacing: 0.18em;
+    color: var(--mg-text2);
+    margin-top: 2px;
+}
+
+.mg-milestone-state {
+    font-size: 0.54rem;
+    letter-spacing: 0.22em;
+    color: var(--mg-text2);
+}
+.mg-milestone--unlocked .mg-milestone-state {
+    color: var(--mg-green);
+}
+
+/* shortcuts */
+.mg-shortcuts {
+    display: flex;
+    flex-direction: column;
+}
+
+.mg-shortcut {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 13px 2px;
+    border-bottom: 1px dashed var(--mg-line);
+    font-family: var(--mg-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: transform 0.2s, color 0.2s;
+}
+.mg-shortcut:hover {
+    transform: translateX(6px);
+    color: var(--mg-red-bright);
+}
+.mg-shortcut:last-child {
+    border-bottom: none;
+}
+
+.mg-shortcut-num {
+    font-size: 0.6rem;
+    color: var(--mg-text2);
+}
+
+/* ── Tune Your Setup ───────────────────────────────────────────────── */
+
+.mg-tune {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    gap: 18px;
+    max-width: 940px;
+    margin: 0 auto;
+}
+
+.mg-module--tune {
+    border-top: 3px solid var(--mg-red);
+}
+
+.mg-tune-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.mg-tune-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.24em;
+    color: var(--mg-text2);
+}
+
+.mg-tune-field select {
+    width: 100%;
+    margin: 0;
+    padding: 12px 14px;
+    background: var(--mg-bg-deep);
+    border: 1px solid var(--mg-border);
+    border-radius: 0;
+    color: var(--mg-text);
+    font-family: var(--mg-font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+.mg-tune-field select:focus {
+    outline: none;
+    border-color: var(--mg-red-bright);
+    box-shadow: 0 0 0 3px rgba(179, 39, 30, 0.18);
+}
+.mg-tune-field select option {
+    background: var(--mg-bg-deep);
+    color: var(--mg-text);
+}
+
+.mg-tune-message {
+    margin: 4px 0 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--mg-green);
+}
+
+.mg-save-btn {
+    margin-top: 14px;
+    padding: 14px 20px;
+    background: var(--mg-red);
+    border: 1px solid var(--mg-red-bright);
+    border-radius: 0;
+    color: var(--mg-text);
+    font-family: var(--mg-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.mg-save-btn:hover:not(:disabled) {
+    background: var(--mg-red-bright);
+    box-shadow: 0 10px 30px rgba(127, 29, 26, 0.4);
+    transform: none;
+}
+.mg-save-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.mg-why-text {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--mg-text2);
+    margin: 0;
+}
+
+.mg-why-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.mg-why-list li {
+    position: relative;
+    margin: 0;
+    padding: 8px 0 8px 22px;
+    border-bottom: 1px dashed var(--mg-line);
+    font-size: 0.88rem;
+    color: var(--mg-text);
+}
+.mg-why-list li::before {
+    content: "▸";
+    position: absolute;
+    left: 4px;
+    color: var(--mg-red-bright);
+}
+.mg-why-list li:last-child {
+    border-bottom: none;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 980px) {
+    .mg-module--identity,
+    .mg-module--driver,
+    .mg-module--team,
+    .mg-module--learning {
+        grid-column: span 6;
+    }
+    .mg-module--milestones {
+        grid-column: span 6;
+    }
+    .mg-module--shortcuts {
+        grid-column: span 6;
+    }
+    .mg-tune {
+        grid-template-columns: 1fr;
+    }
+    .mg-hero-lights {
+        gap: 60px;
+    }
+}
+
+@media (max-width: 700px) {
+    .mg-hero {
+        padding: 76px 22px 0;
+    }
+    .mg-main {
+        padding: 34px 22px 90px;
+    }
+    .mg-hero-lights {
+        gap: 34px;
+    }
+    .mg-idrow dd {
+        font-size: 0.82rem;
+    }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .mg-hero::before,
+    .mg-hero-title,
+    .mg-module {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+    .mg-hero-lights span,
+    .mg-hero-lights span::after {
+        transition: none;
+    }
+    .mg .mg-hero-lights span {
+        background: #efe9dd;
+        box-shadow: 0 0 18px rgba(242, 240, 237, 0.55);
+    }
+    .mg .mg-hero-lights span::after {
+        opacity: 1;
+    }
+    .mg-telemetry-trace {
+        stroke-dashoffset: 0;
+        animation: none;
+    }
+    .mg-module::after {
+        display: none;
+    }
+    .mg-shortcut:hover {
+        transform: none;
+    }
+}
