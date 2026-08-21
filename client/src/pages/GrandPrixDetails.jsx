@@ -18,7 +18,7 @@ import KnowMoreTerm from "../components/KnowMoreTerm";
 import { formatSessionTime } from "../utils/timeUtils";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
-import { getWeekendSessions, circuitMapSrc } from "../utils/landingHelpers";
+import { getWeekendSessions, circuitMapCandidates } from "../utils/landingHelpers";
 import "./RaceWeekend.css";
 
 const API = "http://localhost:3000";
@@ -92,7 +92,7 @@ function GrandPrixDetails() {
     const [results, setResults] = useState([]);
     const [qualifying, setQualifying] = useState([]);
     const [selectedTerm, setSelectedTerm] = useState(null);
-    const [mapFailed, setMapFailed] = useState(false);
+    const [mapTier, setMapTier] = useState(0);
 
     useEffect(() => {
         fetch(`${API}/grandprixdashboard/${year}`)
@@ -171,7 +171,8 @@ function GrandPrixDetails() {
         .slice(0, 3);
 
     const circuitData = circuitInfo[race?.Circuit?.circuitId];
-    const mapSrc = circuitMapSrc(race.Circuit?.circuitId);
+    const mapCandidates = circuitMapCandidates(race.Circuit?.circuitId);
+    const mapSrc = mapCandidates[mapTier];
 
     const podiumOrder = [1, 0, 2]; // P2 · P1 · P3 plinth arrangement
 
@@ -241,12 +242,12 @@ function GrandPrixDetails() {
                     </div>
 
                     <div className="rw-hq-hero-map" aria-hidden="true">
-                        {mapSrc && !mapFailed ? (
+                        {mapSrc ? (
                             <img
                                 src={mapSrc}
                                 alt=""
                                 className="rw-circuit-img"
-                                onError={() => setMapFailed(true)}
+                                onError={() => setMapTier((t) => t + 1)}
                             />
                         ) : (
                             <BlueprintFallback />

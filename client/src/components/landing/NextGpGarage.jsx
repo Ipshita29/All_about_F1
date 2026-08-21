@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { formatSessionTime } from "../../utils/timeUtils";
 import {
-    circuitMapSrc,
+    circuitMapCandidates,
     formatWeekendRange,
     getWeekendSessions,
 } from "../../utils/landingHelpers";
@@ -38,7 +38,7 @@ function BlueprintFallback() {
 
 export default function NextGpGarage({ race }) {
     const [ref, inView] = useInViewOnce({ threshold: 0.3 });
-    const [mapFailed, setMapFailed] = useState(false);
+    const [mapTier, setMapTier] = useState(0);
 
     const sessions = race ? getWeekendSessions(race) : [];
     const raceSession = sessions.find((s) => s.key === "Race");
@@ -46,7 +46,8 @@ export default function NextGpGarage({ race }) {
 
     if (!race) return null;
 
-    const mapSrc = circuitMapSrc(race.Circuit?.circuitId);
+    const mapCandidates = circuitMapCandidates(race.Circuit?.circuitId);
+    const mapSrc = mapCandidates[mapTier];
 
     return (
         <section
@@ -71,12 +72,12 @@ export default function NextGpGarage({ race }) {
 
             <div className="lp-garage-body">
                 <div className="lp-garage-map">
-                    {mapSrc && !mapFailed ? (
+                    {mapSrc ? (
                         <img
                             src={mapSrc}
                             alt={`${race.Circuit?.circuitName} track layout`}
                             loading="lazy"
-                            onError={() => setMapFailed(true)}
+                            onError={() => setMapTier((t) => t + 1)}
                         />
                     ) : (
                         <BlueprintFallback />

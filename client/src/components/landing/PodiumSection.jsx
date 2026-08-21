@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import {
     driverInitials,
-    getHelmetPortrait,
+    getHelmetPortraitCandidates,
     getLocalDriverPortrait,
     getTeamColor,
     isFavouriteDriver,
@@ -131,7 +131,9 @@ function RaceSelector({ options, value, onChange }) {
 function PodiumPortrait({ result }) {
     const fullName = `${result.Driver.givenName} ${result.Driver.familyName}`;
     const portrait = getLocalDriverPortrait(fullName);
-    const helmetSrc = portrait ? getHelmetPortrait(fullName) : null;
+    const helmetCandidates = portrait ? getHelmetPortraitCandidates(fullName) : [];
+    const [helmetTier, setHelmetTier] = useState(0);
+    const helmetSrc = helmetCandidates[helmetTier] || null;
     const [helmetOk, setHelmetOk] = useState(false);
     const [swapped, setSwapped] = useState(false);
     const wrapRef = useRef(null);
@@ -185,6 +187,10 @@ function PodiumPortrait({ result }) {
                     loading="lazy"
                     onLoad={() => setHelmetOk(true)}
                     onError={(e) => {
+                        if (helmetTier < helmetCandidates.length - 1) {
+                            setHelmetTier((t) => t + 1);
+                            return;
+                        }
                         setHelmetOk(false);
                         e.target.style.display = "none";
                     }}

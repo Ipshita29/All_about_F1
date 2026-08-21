@@ -40,7 +40,7 @@ export const circuitInfo = {
       "Melbourne's race has a particular tradition of dramatic first-lap incidents — the close confines of Turn 1 create the perfect storm for contact at the start of a brand new season."
     ],
     image: "/circuits/albert_park/hero.jpg",
-    mapImage: "/circuits/albert_park/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Albert_Park_Circuit_2021.svg"
   },
 
   // ── R2  CHINA ────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export const circuitInfo = {
       "The circuit's enormous main grandstand was designed to evoke the shape of a traditional Chinese roof, though many visitors simply note it as one of the largest viewing structures at any racing venue in Asia."
     ],
     image: "/circuits/shanghai/hero.jpg",
-    mapImage: "/circuits/shanghai/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Shanghai_International_Racing_Circuit_track_map.svg"
   },
 
   // ── R3  JAPAN ────────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ export const circuitInfo = {
       "Suzuka was built and is still privately owned by Honda — one of the only circuits in modern Formula 1 to be owned and operated directly by a competing manufacturer."
     ],
     image: "/circuits/suzuka/hero.jpg",
-    mapImage: "/circuits/suzuka/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Suzuka_circuit_map--2005.svg"
   },
 
   // ── R4  BAHRAIN ──────────────────────────────────────────────────────────────
@@ -174,7 +174,7 @@ export const circuitInfo = {
       "The circuit possesses a separate Outer Loop configuration — a near-oval variant used once for the 2020 Sakhir Grand Prix — which produced some of the highest average race speeds in Formula 1 history."
     ],
     image: "/circuits/bahrain/hero.jpg",
-    mapImage: "/circuits/bahrain/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Bahrain_International_Circuit--Grand_Prix_Layout.svg"
   },
 
   // ── R5  SAUDI ARABIA ─────────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ export const circuitInfo = {
       "Saudi Arabia is currently developing a permanent circuit near Riyadh known as the Qiddiya Speed Park, which is expected to eventually replace Jeddah as the host of the Saudi Arabian Grand Prix."
     ],
     image: "/circuits/jeddah/hero.jpg",
-    mapImage: "/circuits/jeddah/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Jeddah_Street_Circuit_2021.svg"
   },
   // ── R6  MIAMI ────────────────────────────────────────────────────────────────
   miami: {
@@ -262,7 +262,7 @@ export const circuitInfo = {
       "Formula 1's three American races — Miami, Austin, and Las Vegas — have together transformed the sport's profile in North America, with combined attendance across the three weekends now exceeding half a million people per season."
     ],
     image: "/circuits/miami/hero.jpg",
-    mapImage: "/circuits/miami/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Formula1_Circuit_Miami_Hard_Rock_Stadium.svg"
   },
 
   // ── R7  CANADA ───────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ export const circuitInfo = {
       "The Canadian Grand Prix is officially sponsored by and run in French — the bilingual nature of Montréal and Québec gives the event a distinct cultural atmosphere that sets it apart from other North American rounds of the championship."
     ],
     image: "/circuits/villeneuve/hero.jpg",
-    mapImage: "/circuits/villeneuve/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Circuit_Gilles_Villeneuve.svg"
   },
 
   // ── R8  MONACO ───────────────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ export const circuitInfo = {
       "Only Graham Hill, Juan Manuel Fangio, Ayrton Senna, Michael Schumacher, and one or two others have won here more than twice — the skill, concentration, and fortune required to convert pole position into a Monaco victory is the sport's ultimate test of completeness."
     ],
     image: "/circuits/monaco/hero.jpg",
-    mapImage: "/circuits/monaco/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Monte_Carlo_Formula_1_track_map.svg"
   },
 
   // ── R9  SPAIN (Barcelona-Catalunya GP — final year) ──────────────────────────
@@ -399,7 +399,7 @@ export const circuitInfo = {
       "The circuit's high-speed third sector — particularly the run from Turn 13 through the final chicane — is so sensitive to aerodynamic setup that a few tenths gained here can represent the difference between pole position and third row on the grid."
     ],
     image: "/circuits/catalunya/hero.jpg",
-    mapImage: "/circuits/catalunya/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Formula1_Circuit_Catalunya_2021.svg"
   },
   // ── R10  AUSTRIA ─────────────────────────────────────────────────────────────
   red_bull_ring: {
@@ -443,7 +443,7 @@ export const circuitInfo = {
       "Red Bull Racing considers the Austrian Grand Prix a home event in everything but formal definition — the team's strong ties to the circuit mean a special atmosphere within the garage that goes beyond the normal commercial partnership."
     ],
     image: "/circuits/red_bull_ring/hero.jpg",
-    mapImage: "/circuits/red_bull_ring/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Spielberg_bare_map_numbers_contextless_2021_corner_names.svg"
   },
 
   // ── R11  GREAT BRITAIN ───────────────────────────────────────────────────────
@@ -488,7 +488,7 @@ export const circuitInfo = {
       "The flat geography of the circuit still follows the basic outline of the wartime RAF Silverstone bomber airfield — standing in the infield, a person can see almost the entire circuit simultaneously due to the complete absence of hills or elevation changes."
     ],
     image: "/circuits/silverstone/hero.jpg",
-    mapImage: "/circuits/silverstone/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Silverstone_Circuit_2020.png"
   },
 
   // ── R12  BELGIUM ─────────────────────────────────────────────────────────────
@@ -534,7 +534,7 @@ export const circuitInfo = {
       "Multiple tragedies have occurred at Spa across motorsport disciplines over the decades, including Formula 2 driver Anthoine Hubert's fatal accident in 2019, reminding the sport that Spa's beauty and its danger are permanently inseparable."
     ],
     image: "/circuits/spa/hero.jpg",
-    mapImage: "/circuits/spa/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Spa-Francorchamps_of_Belgium.svg"
   },
 
   // ── R13  HUNGARY ─────────────────────────────────────────────────────────────
@@ -579,7 +579,7 @@ export const circuitInfo = {
       "Despite its reputation for processions, the Hungarian Grand Prix has produced a disproportionate number of different winners over the decades, as its sensitivity to tyre condition and undercut strategy means that a perfect strategic call can trump outright pace."
     ],
     image: "/circuits/hungaroring/hero.jpg",
-    mapImage: "/circuits/hungaroring/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Hungaroring.svg"
   },
   // ── R14  NETHERLANDS (Final Dutch GP) ────────────────────────────────────────
   zandvoort: {
@@ -623,7 +623,7 @@ export const circuitInfo = {
       "Niki Lauda's final Formula 1 race victory was achieved at Zandvoort in 1985, the year before the Dutch Grand Prix left the calendar — making his win the last chapter of the circuit's first Formula 1 era."
     ],
     image: "/circuits/zandvoort/hero.jpg",
-    mapImage: "/circuits/zandvoort/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Zandvoort_Circuit.png"
   },
 
   // ── R15  ITALY ───────────────────────────────────────────────────────────────
@@ -667,7 +667,7 @@ export const circuitInfo = {
       "In 2026, Monza is Italy's sole Formula 1 race following the loss of Imola from the calendar — a reality that amplifies the already extraordinary emotional stakes of every session of the Italian Grand Prix weekend."
     ],
     image: "/circuits/monza/hero.jpg",
-    mapImage: "/circuits/monza/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Monza_track_map.svg"
   },
 
   // ── R16  MADRID (NEW — Formula 1 debut 2026) ─────────────────────────────────
@@ -715,7 +715,7 @@ export const circuitInfo = {
       "The circuit's main straight measures 589 metres — the second longest section of the entire layout — providing a substantial DRS run from Turn 22 into Turn 1 that will create the race's primary overtaking theatre on every single lap."
     ],
     image: "/circuits/madring/hero.jpg",
-    mapImage: "/circuits/madring/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Madring_(2026).svg"
   },
   // ── R17  AZERBAIJAN (Saturday race) ─────────────────────────────────────────
   baku: {
@@ -760,7 +760,7 @@ export const circuitInfo = {
       "Sergio Pérez has achieved such exceptional results at Baku — winning in 2021 and consistently performing near the front — that he earned the informal nickname 'The Prince of Baku' from the Formula 1 community."
     ],
     image: "/circuits/baku/hero.jpg",
-    mapImage: "/circuits/baku/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Baku_Formula_One_circuit_map.svg"
   },
 
   // ── R18  SINGAPORE ───────────────────────────────────────────────────────────
@@ -804,7 +804,7 @@ export const circuitInfo = {
       "Singapore has on multiple occasions recorded 100% safety car deployment rate across consecutive seasons — a statistic that underlines more than any other single fact the extreme demands and incident-prone character of the Marina Bay Street Circuit."
     ],
     image: "/circuits/marina_bay/hero.jpg",
-    mapImage: "/circuits/marina_bay/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Marina_Bay_circuit_2023.svg"
   },
   // ── R19  USA (Austin) ────────────────────────────────────────────────────────
   americas: {
@@ -848,7 +848,7 @@ export const circuitInfo = {
       "The persistent bumpiness of the COTA surface — caused by the movement of the limestone bedrock beneath the asphalt — has been a frequent driver complaint since the circuit's opening, and multiple repaving attempts have only temporarily resolved the problem before the bedrock movement resumes."
     ],
     image: "/circuits/americas/hero.jpg",
-    mapImage: "/circuits/americas/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Austin_circuit.svg"
   },
 
   // ── R20  MEXICO ──────────────────────────────────────────────────────────────
@@ -892,7 +892,7 @@ export const circuitInfo = {
       "The concrete surface inside the Foro Sol stadium has a measurably different friction coefficient from the asphalt that makes up the rest of the circuit — drivers must manage the transition between grip levels at a point in the lap where they are already at racing speed."
     ],
     image: "/circuits/rodriguez/hero.jpg",
-    mapImage: "/circuits/rodriguez/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Autódromo_Hermanos_Rodríguez_2015.svg"
   },
 
   // ── R21  BRAZIL ──────────────────────────────────────────────────────────────
@@ -937,7 +937,7 @@ export const circuitInfo = {
       "The Brazilian Grand Prix has produced more different race winners in the past two decades than almost any other circuit on the calendar, as the combination of tropical weather variability, tyre degradation, and safety car timing creates strategic unpredictability that regularly upsets the expected order."
     ],
     image: "/circuits/interlagos/hero.jpg",
-    mapImage: "/circuits/interlagos/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Autódromo_José_Carlos_Pace_(AKA_Interlagos)_track_map.svg"
   },
   // ── R22  LAS VEGAS (Saturday night) ──────────────────────────────────────────
   vegas: {
@@ -981,7 +981,7 @@ export const circuitInfo = {
       "The previous Formula 1 races in Las Vegas in 1981 and 1982, held in a hotel car park, are universally cited as the worst-conceived Grands Prix in the sport's history, making the transformation into the modern spectacle one of Formula 1's most dramatic reversals of fortune."
     ],
     image: "/circuits/vegas/hero.jpg",
-    mapImage: "/circuits/vegas/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Las_Vegas_Strip_Circuit_2023.png"
   },
 
   // ── R23  QATAR ───────────────────────────────────────────────────────────────
@@ -1026,7 +1026,7 @@ export const circuitInfo = {
       "Qatar's 2022 FIFA World Cup made Lusail — the city in which the circuit is located — globally recognisable as the site of the World Cup Final itself, placing Formula 1's race in a city of recent extraordinary sporting history."
     ],
     image: "/circuits/losail/hero.jpg",
-    mapImage: "/circuits/losail/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Losail.svg"
   },
 
   // ── R24  ABU DHABI (Season Finale) ───────────────────────────────────────────
@@ -1071,7 +1071,7 @@ export const circuitInfo = {
       "Jenson Button clinched his 2009 World Championship at Yas Marina by finishing fifth while his rivals failed to score enough points — a title decided by the cold logic of mathematics rather than the drama of a wheel-to-wheel battle, making Abu Dhabi the venue for one of Formula 1's most understated championship conclusions."
     ],
     image: "/circuits/yas_marina/hero.jpg",
-    mapImage: "/circuits/yas_marina/map.png"
+    mapImage: "https://commons.wikimedia.org/wiki/Special:FilePath/Yas_Marina_Circuit.png"
   }
 
 };

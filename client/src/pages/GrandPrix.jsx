@@ -21,7 +21,7 @@ import { formatSessionTime } from "../utils/timeUtils";
 import {
     getWeekendSessions,
     formatWeekendRange,
-    circuitMapSrc,
+    circuitMapCandidates,
 } from "../utils/landingHelpers";
 import "./RaceWeekend.css";
 
@@ -57,16 +57,17 @@ function BlueprintFallback() {
 }
 
 function CircuitMap({ circuitId, alt }) {
-    const [failed, setFailed] = useState(false);
-    const src = circuitMapSrc(circuitId);
-    if (!src || failed) return <BlueprintFallback />;
+    const [tier, setTier] = useState(0);
+    const candidates = circuitMapCandidates(circuitId);
+    const src = candidates[tier];
+    if (!src) return <BlueprintFallback />;
     return (
         <img
             src={src}
             alt={alt}
             loading="lazy"
             className="rw-circuit-img"
-            onError={() => setFailed(true)}
+            onError={() => setTier((t) => t + 1)}
         />
     );
 }

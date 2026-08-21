@@ -1,16 +1,7 @@
-/*
- * Local, dependency-free side view of an F1 car (nose pointing right).
- * Used by the intro animation and the garage footer so the "same car"
- * opens and closes the page.
- *
- * If you add a real transparent render at client/public/images/car-side.png
- * (see ASSETS_REQUIRED.md), set CAR_IMAGE_SRC to "/images/car-side.png" and
- * every usage upgrades automatically. Keeping it null avoids a 404 request
- * while the asset does not exist.
- */
 import { useState } from "react";
 
-export const CAR_IMAGE_SRC = null;
+export const CAR_IMAGE_SRC =
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari_SF-26_-_Charles_Leclerc_approaches_Spoon_Curve_at_Suzuka_during_the_2026_Japanese_GP_(55194289242).jpg";
 
 export function F1CarSilhouette({ className = "" }) {
     return (

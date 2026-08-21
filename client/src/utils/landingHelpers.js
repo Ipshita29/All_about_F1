@@ -1,5 +1,6 @@
 import teamInfo from "../data/teamInfo";
 import driverInfo from "../data/driverInfo";
+import { circuitInfo } from "../data/circuitInfo";
 
 /* ── Favourite team name (Preferences values) → Jolpica constructorId ── */
 export const FAV_TEAM_TO_CONSTRUCTOR_ID = {
@@ -75,12 +76,28 @@ export function getLocalDriverPortrait(fullName) {
     return null;
 }
 
-/* Helmet/race-suit alternate portrait convention: /drivers/helmets/<same-file> */
-export function getHelmetPortrait(fullName) {
+/* Remote fallback while no local /drivers/helmets/<file> exists yet — see
+   ASSETS_REQUIRED.md section 2. Real on-track cockpit shots, not tight
+   helmet portraits, so framing won't perfectly match the base portrait. */
+const HELMET_REMOTE_FALLBACK = {
+    "Max Verstappen": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_Red_Bull_-_Max_Verstappen_-_Sprint_Qualifying.jpg",
+    "Charles Leclerc": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_Ferrari_-_Charles_Leclerc_-_Qualifying.jpg",
+    "Lewis Hamilton": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_Ferrari_-_Lewis_Hamilton_-_Qualifying.jpg",
+    "George Russell": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_Mercedes_-_George_Russell_-_Qualifying.jpg",
+    "Andrea Kimi Antonelli": "https://commons.wikimedia.org/wiki/Special:FilePath/2025_Japan_GP_-_Mercedes_-_Kimi_Antonelli_-_FP2.jpg",
+    "Lando Norris": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_McLaren_-_Lando_Norris_-_FP1.jpg",
+    "Oscar Piastri": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_McLaren_-_Oscar_Piastri_-_Qualifying.jpg",
+    "Carlos Sainz": "https://commons.wikimedia.org/wiki/Special:FilePath/2026_Chinese_GP_-_Williams_-_Carlos_Sainz_-_FP1.jpg",
+    "Isack Hadjar": "https://commons.wikimedia.org/wiki/Special:FilePath/2025_Japan_GP_-_Racing_Bulls_-_Isack_Hadjar_-_FP2.jpg",
+};
+
+/* Helmet/race-suit alternate portrait convention: /drivers/helmets/<same-file>,
+   then the remote fallback above, walked in order by the caller. */
+export function getHelmetPortraitCandidates(fullName) {
     const portrait = getLocalDriverPortrait(fullName);
-    if (!portrait) return null;
+    if (!portrait) return [];
     const file = portrait.split("/").pop();
-    return `/drivers/helmets/${file}`;
+    return [`/drivers/helmets/${file}`, HELMET_REMOTE_FALLBACK[fullName]].filter(Boolean);
 }
 
 export function driverInitials(givenName = "", familyName = "") {
@@ -199,6 +216,13 @@ export function formatWeekendRange(race) {
 
 export function circuitMapSrc(circuitId) {
     return circuitId ? `/circuits/${circuitId}/map.png` : null;
+}
+
+/* Ordered fallback chain: local canonical file, then the remote map
+   configured in circuitInfo.js, then the caller's blueprint SVG. */
+export function circuitMapCandidates(circuitId) {
+    if (!circuitId) return [];
+    return [circuitMapSrc(circuitId), circuitInfo[circuitId]?.mapImage].filter(Boolean);
 }
 
 /* Gap to championship leader, rendered as timing-style text */

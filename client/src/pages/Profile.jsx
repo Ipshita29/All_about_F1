@@ -1,57 +1,27 @@
-/*
- * MY GARAGE — the account page as the user's personal corner of the paddock.
- *
- * The hero welcomes the user back under garage lights that switch on as the
- * page loads; below, their identity, favourite driver, favourite constructor,
- * learning telemetry and unlocked milestones are arranged as workstation
- * modules. Same /user/profile endpoint and driver/team links as before —
- * only the presentation changed.
- */
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { getProgress } from "../utils/dictionaryHelpers";
-import { getTeamColor } from "../utils/landingHelpers";
+import { getTeamColor, DRIVER_ID_MAP, FAV_TEAM_TO_CONSTRUCTOR_ID } from "../utils/landingHelpers";
 import "./MyGarage.css";
 
 const API = "http://localhost:3000";
 
-const driverIdMap = {
-    "Charles Leclerc": "leclerc",
-    "Lewis Hamilton": "hamilton",
-    "George Russell": "russell",
-    "Kimi Antonelli": "antonelli",
-    "Max Verstappen": "max_verstappen",
-    "Yuki Tsunoda": "tsunoda",
-    "Lando Norris": "norris",
-    "Oscar Piastri": "piastri",
-    "Fernando Alonso": "alonso",
-    "Lance Stroll": "stroll",
-    "Pierre Gasly": "gasly",
-    "Franco Colapinto": "colapinto",
-    "Esteban Ocon": "ocon",
-    "Oliver Bearman": "bearman",
-    "Liam Lawson": "lawson",
-    "Isack Hadjar": "hadjar",
-    "Carlos Sainz": "sainz",
-    "Alexander Albon": "albon",
-    "Nico Hulkenberg": "hulkenberg",
-    "Gabriel Bortoleto": "bortoleto",
-};
+const DRIVERS = Object.keys(DRIVER_ID_MAP).filter((name) => name !== "Andrea Kimi Antonelli");
 
-const teamIdMap = {
-    "Ferrari": "ferrari",
-    "Red Bull": "red_bull",
-    "McLaren": "mclaren",
-    "Mercedes": "mercedes",
-    "Aston Martin": "aston_martin",
-    "Alpine": "alpine",
-    "Williams": "williams",
-    "RB": "rb",
-    "Haas": "haas",
-    "Sauber": "sauber",
-    "Kick Sauber": "sauber",
-};
+const TEAMS = [
+    ["Ferrari", "Scuderia Ferrari HP"],
+    ["Mercedes", "Mercedes-AMG PETRONAS F1 Team"],
+    ["Red Bull", "Oracle Red Bull Racing"],
+    ["McLaren", "McLaren Formula 1 Team"],
+    ["Aston Martin", "Aston Martin Aramco Formula One Team"],
+    ["Alpine", "BWT Alpine Formula One Team"],
+    ["Haas", "MoneyGram Haas F1 Team"],
+    ["Racing Bulls", "Visa Cash App Racing Bulls F1 Team"],
+    ["Williams", "Atlassian Williams Racing"],
+    ["Sauber", "Stake F1 Team Kick Sauber"],
+    ["Cadillac", "Cadillac Formula 1 Team"],
+];
 
 /* a short telemetry trace that draws itself when the garage lights up */
 function TelemetryLine() {
@@ -85,7 +55,21 @@ function Profile() {
     const [lit, setLit] = useState(false);
     const [progress] = useState(getProgress());
 
-    useEffect(() => {
+    const [editingIdentity, setEditingIdentity] = useState(false);
+    const [nameInput, setNameInput] = useState("");
+    const [emailInput, setEmailInput] = useState("");
+    const [identityError, setIdentityError] = useState("");
+    const [savingIdentity, setSavingIdentity] = useState(false);
+
+    const [editingDriver, setEditingDriver] = useState(false);
+    const [driverInput, setDriverInput] = useState("");
+    const [savingDriver, setSavingDriver] = useState(false);
+
+    const [editingTeam, setEditingTeam] = useState(false);
+    const [teamInput, setTeamInput] = useState("");
+    const [savingTeam, setSavingTeam] = useState(false);
+
+    const loadProfile = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
         fetch(`${API}/user/profile`, {
@@ -93,7 +77,9 @@ function Profile() {
         })
             .then((res) => res.json())
             .then((data) => setUser(data));
-    }, []);
+    };
+
+    useEffect(loadProfile, []);
 
     /* garage lights switch on once the page has content */
     useEffect(() => {
@@ -104,6 +90,74 @@ function Profile() {
 
     if (!user) return <div className="mg mg-loading"><LoadingSpinner /></div>;
 
+    const savePatch = async (patch) => {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API}/user/profile`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(patch),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.message || "Could not save. Try again.");
+        }
+        setUser(data);
+        return data;
+    };
+
+    const startEditIdentity = () => {
+        setNameInput(user.name || "");
+        setEmailInput(user.email || "");
+        setIdentityError("");
+        setEditingIdentity(true);
+    };
+
+    const saveIdentity = async () => {
+        setIdentityError("");
+        setSavingIdentity(true);
+        try {
+            await savePatch({ name: nameInput, email: emailInput });
+            setEditingIdentity(false);
+        } catch (e) {
+            setIdentityError(e.message);
+        } finally {
+            setSavingIdentity(false);
+        }
+    };
+
+    const startEditDriver = () => {
+        setDriverInput(user.favoriteDriver || "");
+        setEditingDriver(true);
+    };
+
+    const saveDriver = async () => {
+        setSavingDriver(true);
+        try {
+            await savePatch({ favoriteDriver: driverInput });
+            setEditingDriver(false);
+        } finally {
+            setSavingDriver(false);
+        }
+    };
+
+    const startEditTeam = () => {
+        setTeamInput(user.favoriteTeam || "");
+        setEditingTeam(true);
+    };
+
+    const saveTeam = async () => {
+        setSavingTeam(true);
+        try {
+            await savePatch({ favoriteTeam: teamInput });
+            setEditingTeam(false);
+        } finally {
+            setSavingTeam(false);
+        }
+    };
+
     const initials = user.name
         ?.split(" ")
         .map((n) => n[0])
@@ -113,14 +167,8 @@ function Profile() {
 
     const firstName = user.name?.split(" ")[0] || "Racer";
 
-    const driverId =
-        driverIdMap[user.favoriteDriver] ||
-        user.favoriteDriver?.toLowerCase().replaceAll(" ", "_");
-
-    const teamId =
-        teamIdMap[user.favoriteTeam] ||
-        user.favoriteTeam?.toLowerCase().replaceAll(" ", "_");
-
+    const driverId = DRIVER_ID_MAP[user.favoriteDriver];
+    const teamId = FAV_TEAM_TO_CONSTRUCTOR_ID[user.favoriteTeam];
     const teamColor = getTeamColor(teamId) || "#7f1d1a";
 
     const learnedPct = progress.total > 0
@@ -158,47 +206,120 @@ function Profile() {
                                 <p className="mg-identity-mail mg-mono">{user.email}</p>
                             </div>
                         </div>
-                        <dl className="mg-idrows">
-                            <div className="mg-idrow">
-                                <dt className="mg-mono">NAME</dt>
-                                <dd>{user.name}</dd>
+
+                        {editingIdentity ? (
+                            <div className="mg-tune-field">
+                                <span className="mg-tune-label mg-mono">NAME</span>
+                                <input
+                                    type="text"
+                                    value={nameInput}
+                                    onChange={(e) => setNameInput(e.target.value)}
+                                    placeholder="Your name"
+                                />
+                                <span className="mg-tune-label mg-mono">EMAIL</span>
+                                <input
+                                    type="email"
+                                    value={emailInput}
+                                    onChange={(e) => setEmailInput(e.target.value)}
+                                    placeholder="you@example.com"
+                                />
+                                {identityError && (
+                                    <p className="mg-tune-message mg-tune-message--error mg-mono">
+                                        {identityError.toUpperCase()}
+                                    </p>
+                                )}
+                                <div className="mg-edit-actions">
+                                    <button
+                                        className="mg-save-btn"
+                                        onClick={saveIdentity}
+                                        disabled={savingIdentity || !nameInput.trim() || !emailInput.trim()}
+                                    >
+                                        {savingIdentity ? "SAVING…" : "SAVE"}
+                                    </button>
+                                    <button
+                                        className="mg-cancel-btn"
+                                        onClick={() => setEditingIdentity(false)}
+                                        disabled={savingIdentity}
+                                    >
+                                        CANCEL
+                                    </button>
+                                </div>
                             </div>
-                            <div className="mg-idrow">
-                                <dt className="mg-mono">EMAIL</dt>
-                                <dd>{user.email}</dd>
-                            </div>
-                            <div className="mg-idrow">
-                                <dt className="mg-mono">FAVOURITE TEAM</dt>
-                                <dd>{user.favoriteTeam || "—"}</dd>
-                            </div>
-                            <div className="mg-idrow">
-                                <dt className="mg-mono">FAVOURITE DRIVER</dt>
-                                <dd>{user.favoriteDriver || "—"}</dd>
-                            </div>
-                        </dl>
-                        <Link to="/preferences" className="mg-cta">
-                            TUNE YOUR SETUP <span aria-hidden="true">→</span>
-                        </Link>
+                        ) : (
+                            <>
+                                <dl className="mg-idrows">
+                                    <div className="mg-idrow">
+                                        <dt className="mg-mono">NAME</dt>
+                                        <dd>{user.name}</dd>
+                                    </div>
+                                    <div className="mg-idrow">
+                                        <dt className="mg-mono">EMAIL</dt>
+                                        <dd>{user.email}</dd>
+                                    </div>
+                                    <div className="mg-idrow">
+                                        <dt className="mg-mono">FAVOURITE TEAM</dt>
+                                        <dd>{user.favoriteTeam || "—"}</dd>
+                                    </div>
+                                    <div className="mg-idrow">
+                                        <dt className="mg-mono">FAVOURITE DRIVER</dt>
+                                        <dd>{user.favoriteDriver || "—"}</dd>
+                                    </div>
+                                </dl>
+                                <button className="mg-cta mg-cta--btn" onClick={startEditIdentity}>
+                                    EDIT DETAILS <span aria-hidden="true">→</span>
+                                </button>
+                            </>
+                        )}
                     </section>
 
                     {/* ── Favourite driver workstation ──────────────── */}
                     <section className="mg-module mg-module--driver" aria-label="Favourite driver">
                         <span className="mg-module-label mg-mono">WORKSTATION 01 — DRIVER</span>
-                        {user.favoriteDriver ? (
+                        {editingDriver ? (
+                            <div className="mg-tune-field">
+                                <select value={driverInput} onChange={(e) => setDriverInput(e.target.value)}>
+                                    <option value="">Select Driver</option>
+                                    {DRIVERS.map((d) => (
+                                        <option key={d} value={d}>{d}</option>
+                                    ))}
+                                </select>
+                                <div className="mg-edit-actions">
+                                    <button
+                                        className="mg-save-btn"
+                                        onClick={saveDriver}
+                                        disabled={savingDriver || !driverInput}
+                                    >
+                                        {savingDriver ? "SAVING…" : "SAVE"}
+                                    </button>
+                                    <button
+                                        className="mg-cancel-btn"
+                                        onClick={() => setEditingDriver(false)}
+                                        disabled={savingDriver}
+                                    >
+                                        CANCEL
+                                    </button>
+                                </div>
+                            </div>
+                        ) : user.favoriteDriver ? (
                             <>
                                 <span className="mg-big-pick">{user.favoriteDriver}</span>
                                 <span className="mg-pick-sub mg-mono">YOUR DRIVER OF CHOICE</span>
-                                <Link to={`/drivers/2026/${driverId}`} className="mg-cta" viewTransition>
-                                    OPEN DRIVER DOSSIER <span aria-hidden="true">→</span>
-                                </Link>
+                                <div className="mg-edit-actions">
+                                    <Link to={`/drivers/2026/${driverId}`} className="mg-cta" viewTransition>
+                                        OPEN DRIVER DOSSIER <span aria-hidden="true">→</span>
+                                    </Link>
+                                    <button className="mg-cancel-btn" onClick={startEditDriver}>
+                                        CHANGE
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>
                                 <span className="mg-big-pick mg-big-pick--empty">SEAT OPEN</span>
                                 <span className="mg-pick-sub mg-mono">NO DRIVER SELECTED YET</span>
-                                <Link to="/preferences" className="mg-cta">
+                                <button className="mg-cta mg-cta--btn" onClick={startEditDriver}>
                                     PICK YOUR DRIVER <span aria-hidden="true">→</span>
-                                </Link>
+                                </button>
                             </>
                         )}
                     </section>
@@ -210,21 +331,51 @@ function Profile() {
                         aria-label="Favourite constructor"
                     >
                         <span className="mg-module-label mg-mono">WORKSTATION 02 — CONSTRUCTOR</span>
-                        {user.favoriteTeam ? (
+                        {editingTeam ? (
+                            <div className="mg-tune-field">
+                                <select value={teamInput} onChange={(e) => setTeamInput(e.target.value)}>
+                                    <option value="">Select Team</option>
+                                    {TEAMS.map(([value, label]) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
+                                </select>
+                                <div className="mg-edit-actions">
+                                    <button
+                                        className="mg-save-btn"
+                                        onClick={saveTeam}
+                                        disabled={savingTeam || !teamInput}
+                                    >
+                                        {savingTeam ? "SAVING…" : "SAVE"}
+                                    </button>
+                                    <button
+                                        className="mg-cancel-btn"
+                                        onClick={() => setEditingTeam(false)}
+                                        disabled={savingTeam}
+                                    >
+                                        CANCEL
+                                    </button>
+                                </div>
+                            </div>
+                        ) : user.favoriteTeam ? (
                             <>
                                 <span className="mg-big-pick">{user.favoriteTeam}</span>
                                 <span className="mg-pick-sub mg-mono">YOUR GARAGE COLOURS</span>
-                                <Link to={`/teams/2026/${teamId}`} className="mg-cta" viewTransition>
-                                    ENTER THE GARAGE <span aria-hidden="true">→</span>
-                                </Link>
+                                <div className="mg-edit-actions">
+                                    <Link to={`/teams/2026/${teamId}`} className="mg-cta" viewTransition>
+                                        ENTER THE GARAGE <span aria-hidden="true">→</span>
+                                    </Link>
+                                    <button className="mg-cancel-btn" onClick={startEditTeam}>
+                                        CHANGE
+                                    </button>
+                                </div>
                             </>
                         ) : (
                             <>
                                 <span className="mg-big-pick mg-big-pick--empty">BAY EMPTY</span>
                                 <span className="mg-pick-sub mg-mono">NO CONSTRUCTOR SELECTED YET</span>
-                                <Link to="/preferences" className="mg-cta">
+                                <button className="mg-cta mg-cta--btn" onClick={startEditTeam}>
                                     PICK YOUR TEAM <span aria-hidden="true">→</span>
-                                </Link>
+                                </button>
                             </>
                         )}
                     </section>
