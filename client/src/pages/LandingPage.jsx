@@ -5,16 +5,19 @@
  * previous page used) and passes plain props down to the section components
  * in src/components/landing/. Page order:
  *
- *   HeroReveal (current/next GP, typographic) → GridInvite (delayed,
- *   logged-out only) → PodiumSection → ChampionshipSection → PaddockNews
- *   → ExploreGrid → GarageFooter, with PitWallRadio floating after the hero.
+ *   CurrentRaceHero (current/next GP, typographic) → GridInvite (delayed,
+ *   logged-out only) → PodiumSection → ChampionshipSection →
+ *   RaceIntelligence → SeasonTimeline → PaddockNews → ExploreGrid →
+ *   GarageFooter, with PitWallRadio floating after the hero.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import HeroReveal from "../components/landing/HeroReveal";
+import CurrentRaceHero from "../components/landing/CurrentRaceHero";
 import GridInvite from "../components/landing/GridInvite";
 import PodiumSection from "../components/landing/PodiumSection";
 import ChampionshipSection from "../components/landing/ChampionshipSection";
+import RaceIntelligence from "../components/landing/RaceIntelligence";
+import SeasonTimeline from "../components/landing/SeasonTimeline";
 import PaddockNews from "../components/landing/PaddockNews";
 import PitWallRadio from "../components/landing/PitWallRadio";
 import ExploreGrid from "../components/landing/ExploreGrid";
@@ -111,12 +114,13 @@ function LandingPage() {
         [races, minuteTick]
     );
     const favs = useMemo(() => buildFavourites(user), [user]);
+    const focusRound = (liveSession || nextSession)?.race?.round ?? null;
 
     const isAuthenticated = Boolean(localStorage.getItem("token"));
 
     return (
         <div className="lp">
-            <HeroReveal
+            <CurrentRaceHero
                 liveSession={liveSession}
                 nextSession={nextSession}
                 scheduleError={scheduleError}
@@ -136,6 +140,10 @@ function LandingPage() {
                     constructorStandings={constructorStandings}
                     favs={favs}
                 />
+
+                <RaceIntelligence race={latestRace} />
+
+                <SeasonTimeline races={races} focusRound={focusRound} />
 
                 <PaddockNews articles={newsArticles} favs={favs} error={newsError} />
 

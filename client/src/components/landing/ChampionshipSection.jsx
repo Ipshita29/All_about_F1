@@ -6,12 +6,7 @@
  */
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-    getTeamColor,
-    isFavouriteDriver,
-    isFavouriteTeam,
-    pointsToLeader,
-} from "../../utils/landingHelpers";
+import ChampionshipTable from "./ChampionshipTable";
 
 const VIEWS = [
     { id: "drivers", label: "DRIVERS" },
@@ -71,44 +66,14 @@ export default function ChampionshipSection({ driverStandings, constructorStandi
                 {!hasDrivers && (
                     <p className="lp-inline-state lp-mono">DRIVER STANDINGS UNAVAILABLE</p>
                 )}
-                <ol className="lp-champ-list">
-                    {(driverStandings || []).slice(0, 10).map((s) => {
-                        const fav =
-                            isFavouriteDriver(favs, s.Driver) ||
-                            isFavouriteTeam(favs, s.Constructors?.[0]);
-                        const color = getTeamColor(s.Constructors?.[0]?.constructorId);
-                        return (
-                            <li
-                                key={s.Driver.driverId}
-                                className={`lp-champ-row${fav ? " lp-champ-row--fav" : ""}`}
-                                style={fav && favs.teamColor ? { "--fav-color": favs.teamColor } : undefined}
-                            >
-                                <span className="lp-champ-ghostnum lp-mono" aria-hidden="true">
-                                    {s.Driver.permanentNumber || s.position}
-                                </span>
-                                <span className="lp-champ-pos lp-mono">{s.position}</span>
-                                <span
-                                    className="lp-champ-strip"
-                                    style={color ? { background: color } : undefined}
-                                    aria-hidden="true"
-                                />
-                                <span className="lp-champ-name">
-                                    {s.Driver.givenName}{" "}
-                                    <b>{s.Driver.familyName?.toUpperCase()}</b>
-                                    {fav && <span className="lp-champ-favtag">FAV</span>}
-                                </span>
-                                <span className="lp-champ-team">{s.Constructors?.[0]?.name}</span>
-                                <span className="lp-champ-gap lp-mono">
-                                    {pointsToLeader(s.points, driverLeaderPts)}
-                                </span>
-                                <span className="lp-champ-pts lp-mono">
-                                    {s.points}
-                                    <small> PTS</small>
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ol>
+                {hasDrivers && (
+                    <ChampionshipTable
+                        variant="drivers"
+                        standings={(driverStandings || []).slice(0, 10)}
+                        leaderPts={driverLeaderPts}
+                        favs={favs}
+                    />
+                )}
                 {hasDrivers && (
                     <Link to="/drivers" className="lp-cta lp-champ-more">
                         FULL DRIVER STANDINGS <span aria-hidden="true">→</span>
@@ -125,39 +90,14 @@ export default function ChampionshipSection({ driverStandings, constructorStandi
                 {!hasTeams && (
                     <p className="lp-inline-state lp-mono">CONSTRUCTOR STANDINGS UNAVAILABLE</p>
                 )}
-                <ol className="lp-champ-list">
-                    {(constructorStandings || []).map((s) => {
-                        const fav = isFavouriteTeam(favs, s.Constructor);
-                        const color = getTeamColor(s.Constructor?.constructorId);
-                        return (
-                            <li
-                                key={s.Constructor.constructorId}
-                                className={`lp-champ-row lp-champ-row--team${
-                                    fav ? " lp-champ-row--fav" : ""
-                                }`}
-                                style={fav && favs.teamColor ? { "--fav-color": favs.teamColor } : undefined}
-                            >
-                                <span className="lp-champ-pos lp-mono">{s.position}</span>
-                                <span
-                                    className="lp-champ-strip"
-                                    style={color ? { background: color } : undefined}
-                                    aria-hidden="true"
-                                />
-                                <span className="lp-champ-name">
-                                    <b>{s.Constructor.name?.toUpperCase()}</b>
-                                    {fav && <span className="lp-champ-favtag">FAV</span>}
-                                </span>
-                                <span className="lp-champ-gap lp-mono">
-                                    {pointsToLeader(s.points, teamLeaderPts)}
-                                </span>
-                                <span className="lp-champ-pts lp-mono">
-                                    {s.points}
-                                    <small> PTS</small>
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ol>
+                {hasTeams && (
+                    <ChampionshipTable
+                        variant="constructors"
+                        standings={constructorStandings || []}
+                        leaderPts={teamLeaderPts}
+                        favs={favs}
+                    />
+                )}
                 {hasTeams && (
                     <Link to="/teams" className="lp-cta lp-champ-more">
                         FULL CONSTRUCTOR STANDINGS <span aria-hidden="true">→</span>
