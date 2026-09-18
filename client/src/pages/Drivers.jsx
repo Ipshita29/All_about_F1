@@ -1,42 +1,29 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import GridCarousel from "../components/entity/GridCarousel";
-import DriverPass from "../components/entity/DriverPass";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { getTeamAccent } from "../config/driverAssets";
 import "./EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 /*
- * THE GRID — the drivers page as a starting-grid experience.
- * One centered coverflow of Driver Passes; selecting the focused pass
- * unfolds it into the Driver Details dossier via a shared element
- * transition. The last-viewed driver and season are remembered so
- * returning from a dossier restores the exact grid position.
+ * THE GRID — every driver as one clean, numbered standings list.
+ * Position, number, name, nationality, team and season stats — typography
+ * carries the hierarchy, not photography. Selecting a row opens the Driver
+ * Dossier via a shared-element view transition on the racing number.
  */
 function Drivers() {
-    const navigate = useNavigate();
     const [drivers, setDrivers] = useState([]);
     const [loadedYear, setLoadedYear] = useState(null);
     const [search, setSearch] = useState("");
-    const [year, setYear] = useState(
-        () => sessionStorage.getItem("ex-grid-year") || "2026"
-    );
-    const [active, setActive] = useState(0);
+    const [year, setYear] = useState("2026");
     const loaded = loadedYear === year;
 
     useEffect(() => {
         fetch(`http://localhost:3000/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => {
-                const list = Array.isArray(data) ? data : [];
-                setDrivers(list);
-                /* restore the grid to the driver that was open before */
-                const savedId = sessionStorage.getItem("ex-grid-driver");
-                const idx = savedId
-                    ? list.findIndex((d) => d.Driver.driverId === savedId)
-                    : -1;
-                setActive(idx >= 0 ? idx : 0);
+                setDrivers(Array.isArray(data) ? data : []);
                 setLoadedYear(year);
             });
     }, [year]);
@@ -47,28 +34,12 @@ function Drivers() {
             .includes(search.toLowerCase())
     );
 
-    const activeIdx = Math.min(active, Math.max(0, filtered.length - 1));
-    const focused = filtered[activeIdx];
-
-    const handleSearch = (value) => {
-        setSearch(value);
-        setActive(0);
-    };
-
-    const openDossier = (standing) => {
-        sessionStorage.setItem("ex-grid-driver", standing.Driver.driverId);
-        sessionStorage.setItem("ex-grid-year", year);
-        navigate(`/drivers/${year}/${standing.Driver.driverId}`, {
-            viewTransition: true,
-        });
-    };
-
     return (
-        <div className="ex ex-grid-page">
+        <div className="ex">
             <header className="ex-hero">
                 <span className="ex-hero-eyebrow">Formula 1 · {year} Season</span>
-                <h1 className="ex-hero-title">The Grid</h1>
-                <p className="ex-hero-sub">20 Drivers. 20 Stories. One Championship.</p>
+                <h1 className="ex-hero-title">Drivers</h1>
+                <p className="ex-hero-sub">20 Drivers. One Championship.</p>
                 <div className="ex-hero-rule" aria-hidden="true" />
 
                 <div className="ex-controls">
@@ -86,12 +57,12 @@ function Drivers() {
                             type="text"
                             placeholder="Driver name…"
                             value={search}
-                            onChange={(e) => handleSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </label>
                     <span className="ex-count">{filtered.length} ON GRID</span>
                     <Link to="/compare-drivers" className="ex-cta">
-                        Wheel to Wheel →
+                        Compare Drivers →
                     </Link>
                 </div>
             </header>
@@ -99,32 +70,56 @@ function Drivers() {
             {!loaded ? (
                 <div className="ex-loading"><LoadingSpinner /></div>
             ) : filtered.length === 0 ? (
-                <div className="ex-main">
+                <main className="ex-main">
                     <div className="ex-empty">
                         <span className="ex-empty-title">No driver on this grid</span>
                         <span className="ex-empty-sub">ADJUST THE SEASON OR SEARCH</span>
                     </div>
-                </div>
+                </main>
             ) : (
-                <main className="ex-grid-stage">
-                    <GridCarousel
-                        items={filtered}
-                        active={activeIdx}
-                        onChange={setActive}
-                        onSelect={openDossier}
-                        getKey={(s) => s.Driver.driverId}
-                        statusFor={(s) =>
-                            `${s.Driver.givenName} ${s.Driver.familyName}, P${s.position}`
-                        }
-                        renderItem={(s, i, isCenter) => (
-                            <DriverPass standing={s} isCenter={isCenter} />
-                        )}
-                    />
-                    {focused && (
-                        <p className="ex-hero-sub" style={{ textAlign: "center", marginTop: 18 }}>
-                            SCROLL · DRAG · ARROW KEYS — SELECT THE PASS TO OPEN THE DOSSIER
-                        </p>
-                    )}
+                <main className="ex-main">
+                    <ol className="ex-rows">
+                        {filtered.map((s) => {
+                            const d = s.Driver;
+                            const team = s.Constructors?.[0];
+                            const accent = getTeamAccent(team?.constructorId);
+                            return (
+                                <li key={d.driverId}>
+                                    <Link
+                                        to={`/drivers/${year}/${d.driverId}`}
+                                        viewTransition
+                                        className="ex-row"
+                                        style={{ "--accent": accent }}
+                                    >
+                                        <span className="ex-row-pos">
+                                            {String(s.position).padStart(2, "0")}
+                                        </span>
+                                        <span
+                                            className="ex-row-num"
+                                            style={{ viewTransitionName: "driver-number" }}
+                                        >
+                                            {d.permanentNumber ?? "—"}
+                                        </span>
+                                        <span className="ex-row-name">
+                                            {d.givenName} <b>{d.familyName}</b>
+                                        </span>
+                                        <span className="ex-row-nat">{d.nationality}</span>
+                                        <span className="ex-row-team">
+                                            <i className="ex-row-swatch" aria-hidden="true" />
+                                            {team?.name ?? "—"}
+                                        </span>
+                                        <span className="ex-row-stat">
+                                            <b>{s.points}</b><small>PTS</small>
+                                        </span>
+                                        <span className="ex-row-stat">
+                                            <b>{s.wins}</b><small>WINS</small>
+                                        </span>
+                                        <span className="ex-row-arrow" aria-hidden="true">→</span>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ol>
                 </main>
             )}
         </div>

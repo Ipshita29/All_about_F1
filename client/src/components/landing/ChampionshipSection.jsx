@@ -1,11 +1,8 @@
 /*
  * One spacious championship section with an accessible DRIVERS | CONSTRUCTORS
  * toggle (tab pattern). Hierarchy comes from typography and real data — big
- * ghost driver numbers, points, and the gap to P1 — not progress bars.
- *
- * Constructor rows reserve a slot for a local car asset
- * (/cars/<constructorId>.png, see ASSETS_REQUIRED.md); when the asset is
- * missing the row simply renders without it.
+ * ghost driver numbers, points, and the gap to P1 — not progress bars or
+ * imagery.
  */
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,21 +17,6 @@ const VIEWS = [
     { id: "drivers", label: "DRIVERS" },
     { id: "constructors", label: "CONSTRUCTORS" },
 ];
-
-function TeamCarImage({ constructorId }) {
-    const [failed, setFailed] = useState(false);
-    if (!constructorId || failed) return null;
-    return (
-        <img
-            className="lp-champ-car"
-            src={`/cars/${constructorId}.png`}
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            onError={() => setFailed(true)}
-        />
-    );
-}
 
 export default function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
     const [view, setView] = useState("drivers");
@@ -172,7 +154,6 @@ export default function ChampionshipSection({ driverStandings, constructorStandi
                                     {s.points}
                                     <small> PTS</small>
                                 </span>
-                                <TeamCarImage constructorId={s.Constructor.constructorId} />
                             </li>
                         );
                     })}

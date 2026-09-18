@@ -1,22 +1,18 @@
 /*
- * Landing page — cinematic F1 experience.
+ * Homepage — a premium F1 intelligence dashboard, not a cinematic showcase.
  *
  * This file owns all landing-page data fetching (same backend endpoints the
- * old page used) and passes plain props down to the section components in
- * src/components/landing/. Page order:
+ * previous page used) and passes plain props down to the section components
+ * in src/components/landing/. Page order:
  *
- *   F1Intro → HeroReveal → (GridInvite, delayed, logged-out only)
- *   → LiveRaceCenter → NextGpGarage → PodiumSection → ChampionshipSection
- *   → PaddockNews → ExploreGrid → GarageFooter
- *   + PitWallRadio floating after the hero.
+ *   HeroReveal (current/next GP, typographic) → GridInvite (delayed,
+ *   logged-out only) → PodiumSection → ChampionshipSection → PaddockNews
+ *   → ExploreGrid → GarageFooter, with PitWallRadio floating after the hero.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import F1Intro from "../components/landing/F1Intro";
 import HeroReveal from "../components/landing/HeroReveal";
 import GridInvite from "../components/landing/GridInvite";
-import LiveRaceCenter from "../components/landing/LiveRaceCenter";
-import NextGpGarage from "../components/landing/NextGpGarage";
 import PodiumSection from "../components/landing/PodiumSection";
 import ChampionshipSection from "../components/landing/ChampionshipSection";
 import PaddockNews from "../components/landing/PaddockNews";
@@ -120,23 +116,15 @@ function LandingPage() {
 
     return (
         <div className="lp">
-            <F1Intro />
-
-            <HeroReveal />
+            <HeroReveal
+                liveSession={liveSession}
+                nextSession={nextSession}
+                scheduleError={scheduleError}
+            />
 
             <GridInvite isAuthenticated={isAuthenticated} />
 
             <main className="lp-main">
-                <LiveRaceCenter
-                    liveSession={liveSession}
-                    nextSession={nextSession}
-                    driverStandings={driverStandings}
-                    favs={favs}
-                    scheduleError={scheduleError}
-                />
-
-                <NextGpGarage race={nextSession?.race || null} />
-
                 <PodiumSection
                     completedRaces={completedRaces}
                     latestRace={latestRace}

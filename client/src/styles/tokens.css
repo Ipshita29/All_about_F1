@@ -1,0 +1,95 @@
+/*
+ * DESIGN TOKENS — the single source of truth for the visual system.
+ * Dark, premium, restrained. F1 red is an accent, not a theme.
+ * Every other stylesheet in the app should consume these custom
+ * properties rather than hard-coding colour, type or spacing values.
+ */
+
+:root {
+    /* ── Color — surfaces ───────────────────────────────────────── */
+    --bg: #09090b;
+    --bg-elevated: #0d0d10;
+    --surface: #131316;
+    --surface-2: #1a1a1f;
+    --surface-3: #212127;
+    --surface-glass: rgba(15, 15, 18, 0.72);
+    --surface-glass-strong: rgba(12, 12, 15, 0.88);
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --border-faint: rgba(255, 255, 255, 0.05);
+
+    /* ── Color — text ───────────────────────────────────────────── */
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(245, 245, 247, 0.64);
+    --text-muted: rgba(245, 245, 247, 0.4);
+    --text-faint: rgba(245, 245, 247, 0.24);
+
+    /* ── Color — accent & semantic ──────────────────────────────── */
+    --accent: #e10600;
+    --accent-hover: #ff2318;
+    --accent-dim: rgba(225, 6, 0, 0.14);
+    --accent-border: rgba(225, 6, 0, 0.32);
+    --accent-text: #ff4136;
+
+    --success: #2fbf6a;
+    --success-dim: rgba(47, 191, 106, 0.14);
+    --warning: #e2a63b;
+    --warning-dim: rgba(226, 166, 59, 0.14);
+    --danger: var(--accent);
+    --danger-dim: var(--accent-dim);
+
+    /* ── Typography ─────────────────────────────────────────────── */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --text-display: clamp(2.75rem, 3.2vw + 1.6rem, 5.5rem);
+    --text-h1: clamp(1.9rem, 1.2vw + 1.5rem, 2.75rem);
+    --text-h2: clamp(1.4rem, 0.6vw + 1.2rem, 1.75rem);
+    --text-h3: 1.125rem;
+    --text-body: 0.95rem;
+    --text-small: 0.82rem;
+    --text-micro: 0.72rem;
+
+    /* ── Spacing scale ──────────────────────────────────────────── */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    --space-9: 96px;
+
+    /* ── Radius ─────────────────────────────────────────────────── */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 999px;
+
+    /* ── Shadow — used sparingly, mostly for floating/glass surfaces ── */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+    /* ── Motion ─────────────────────────────────────────────────── */
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --dur-fast: 120ms;
+    --dur-base: 220ms;
+    --dur-slow: 420ms;
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    --content-width: 1180px;
+    --content-width-wide: 1440px;
+    --nav-height: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --dur-fast: 0ms;
+        --dur-base: 0ms;
+        --dur-slow: 0ms;
+    }
+}

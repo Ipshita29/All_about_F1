@@ -47,18 +47,18 @@ export default function GridInvite({ isAuthenticated }) {
             <button className="lp-invite-close" onClick={dismiss} aria-label="Dismiss invitation">
                 <X size={14} />
             </button>
-            <p className="lp-invite-eyebrow">PIT LANE OPEN</p>
-            <h3 className="lp-invite-title">MAKE THE GRID YOURS</h3>
+            <p className="lp-invite-eyebrow">PERSONALIZE</p>
+            <h3 className="lp-invite-title">Make this your grid</h3>
             <p className="lp-invite-copy">
-                Follow your favourite driver and team. Highlight the stories,
-                standings and race updates that matter to you.
+                Follow a driver and a team to surface the stories, standings
+                and results that matter most to you.
             </p>
             <div className="lp-invite-actions">
                 <Link to="/auth" className="lp-invite-primary" onClick={dismiss}>
-                    PERSONALIZE MY FEED
+                    Sign in
                 </Link>
                 <button className="lp-invite-secondary" onClick={dismiss}>
-                    MAYBE LATER
+                    Not now
                 </button>
             </div>
         </aside>

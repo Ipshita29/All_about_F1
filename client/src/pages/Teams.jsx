@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import GarageCard from "../components/entity/GarageCard";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { getTeamAssets } from "../config/teamAssets";
 import "./EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 /*
- * PIT LANE — the teams page as a walk past the garages.
- * Every constructor is a garage bay: the car waits behind a shutter door
- * that winches up on hover, and clicking walks inside (shared element
- * transition into Team Details). Constructor standings supply position and
- * points; driver standings supply each garage's current line-up.
+ * CONSTRUCTORS — every team as one clean, numbered standings list, ordered
+ * by championship position. Team, points, wins and current line-up —
+ * no car photography required.
  */
 function Teams() {
     const [teams, setTeams] = useState([]);
@@ -49,7 +47,6 @@ function Teams() {
         t.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    /* walk the pit lane in championship order when standings are known */
     const positionOf = (t) => {
         const s = standings.find((s) => s.Constructor.constructorId === t.constructorId);
         return s ? Number(s.position) : 99;
@@ -57,13 +54,11 @@ function Teams() {
     const ordered = [...filtered].sort((a, b) => positionOf(a) - positionOf(b));
 
     return (
-        <div className="ex ex-pitlane-page">
+        <div className="ex">
             <header className="ex-hero">
                 <span className="ex-hero-eyebrow">Formula 1 · {year} Season</span>
-                <h1 className="ex-hero-title">Pit Lane</h1>
-                <p className="ex-hero-sub">
-                    10 Constructors. Countless Hours of Engineering. One Goal.
-                </p>
+                <h1 className="ex-hero-title">Constructors</h1>
+                <p className="ex-hero-sub">10 Teams. One Championship.</p>
                 <div className="ex-hero-rule" aria-hidden="true" />
 
                 <div className="ex-controls">
@@ -84,51 +79,64 @@ function Teams() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </label>
-                    <span className="ex-count">
-                        {filtered.length} GARAGE{filtered.length !== 1 ? "S" : ""} OPEN
-                    </span>
+                    <span className="ex-count">{filtered.length} TEAMS</span>
                     <Link to="/compare-teams" className="ex-cta">
-                        Constructor Battle →
+                        Compare Constructors →
                     </Link>
                 </div>
             </header>
 
             {!loaded ? (
                 <div className="ex-loading"><LoadingSpinner /></div>
+            ) : ordered.length === 0 ? (
+                <main className="ex-main">
+                    <div className="ex-empty">
+                        <span className="ex-empty-title">No team matches</span>
+                        <span className="ex-empty-sub">ADJUST THE SEASON OR SEARCH</span>
+                    </div>
+                </main>
             ) : (
                 <main className="ex-main">
-                    {ordered.length === 0 ? (
-                        <div className="ex-empty">
-                            <span className="ex-empty-title">Pit lane is empty</span>
-                            <span className="ex-empty-sub">ADJUST THE SEASON OR SEARCH</span>
-                        </div>
-                    ) : (
-                        <div className="ex-pitlane">
-                            {ordered.map((t) => {
-                                const standing = standings.find(
-                                    (s) => s.Constructor.constructorId === t.constructorId
-                                );
-                                const drivers = driverStandings.filter(
-                                    (d) => d.Constructors?.[0]?.constructorId === t.constructorId
-                                );
-                                return (
+                    <ol className="ex-rows">
+                        {ordered.map((t) => {
+                            const standing = standings.find(
+                                (s) => s.Constructor.constructorId === t.constructorId
+                            );
+                            const drivers = driverStandings.filter(
+                                (d) => d.Constructors?.[0]?.constructorId === t.constructorId
+                            );
+                            const assets = getTeamAssets(t.constructorId);
+                            return (
+                                <li key={t.constructorId}>
                                     <Link
-                                        key={t.constructorId}
                                         to={`/teams/${year}/${t.constructorId}`}
                                         viewTransition
-                                        className="ex-garage-link"
-                                        aria-label={`${t.name} — enter garage`}
+                                        className="ex-row"
+                                        style={{ "--accent": assets.accent }}
                                     >
-                                        <GarageCard
-                                            team={t}
-                                            standing={standing}
-                                            drivers={drivers}
-                                        />
+                                        <span className="ex-row-pos">
+                                            {standing ? String(standing.position).padStart(2, "0") : "—"}
+                                        </span>
+                                        <span className="ex-row-team ex-row-team--main">
+                                            <i className="ex-row-swatch" aria-hidden="true" />
+                                            <b>{t.name}</b>
+                                        </span>
+                                        <span className="ex-row-nat">{t.nationality}</span>
+                                        <span className="ex-row-drivers">
+                                            {drivers.map((d) => d.Driver.familyName).join(" · ") || "—"}
+                                        </span>
+                                        <span className="ex-row-stat">
+                                            <b>{standing?.points ?? "—"}</b><small>PTS</small>
+                                        </span>
+                                        <span className="ex-row-stat">
+                                            <b>{standing?.wins ?? "—"}</b><small>WINS</small>
+                                        </span>
+                                        <span className="ex-row-arrow" aria-hidden="true">→</span>
                                     </Link>
-                                );
-                            })}
-                        </div>
-                    )}
+                                </li>
+                            );
+                        })}
+                    </ol>
                 </main>
             )}
         </div>

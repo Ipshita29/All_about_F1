@@ -1,20 +1,13 @@
 /*
- * Latest Grand Prix podium (P3 — P1 — P2) with a custom, keyboard-accessible
- * race selector to revisit any completed round of the season.
- *
- * Portraits support a second, aligned helmet/race-suit image
- * (/drivers/helmets/<file>, see ASSETS_REQUIRED.md). On desktop hover only a
- * soft circular area around the cursor reveals the helmet layer (CSS mask
- * driven by --px/--py custom properties). On touch, tapping the portrait
- * toggles the full alternate image. If the helmet asset is missing the
- * portrait silently falls back to a plain image with a rim-light hover.
+ * The Podium — latest Grand Prix top 3, told through typography and data
+ * (position, name, team, points, grid delta), not photography. A custom,
+ * keyboard-accessible race selector lets the visitor revisit any completed
+ * round of the season.
  */
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import {
     driverInitials,
-    getHelmetPortraitCandidates,
-    getLocalDriverPortrait,
     getTeamColor,
     isFavouriteDriver,
     isFavouriteTeam,
@@ -92,9 +85,7 @@ function RaceSelector({ options, value, onChange }) {
                 aria-label="Select a Grand Prix"
                 onClick={() => (open ? setOpen(false) : openList())}
             >
-                <span className="lp-raceselect-round lp-mono">
-                    RD {selected?.round ?? "--"}
-                </span>
+                <span className="lp-raceselect-round">RD {selected?.round ?? "--"}</span>
                 <span className="lp-raceselect-name">{selected?.label ?? "SELECT RACE"}</span>
                 <ChevronDown size={14} aria-hidden="true" />
             </button>
@@ -118,7 +109,7 @@ function RaceSelector({ options, value, onChange }) {
                             onPointerEnter={() => setActiveIndex(i)}
                             onClick={() => commit(i)}
                         >
-                            <span className="lp-mono">RD {opt.round}</span> {opt.label}
+                            <span>RD {opt.round}</span> {opt.label}
                         </li>
                     ))}
                 </ul>
@@ -127,86 +118,13 @@ function RaceSelector({ options, value, onChange }) {
     );
 }
 
-/* ── Dual-image portrait with cursor mask reveal ── */
-function PodiumPortrait({ result }) {
-    const fullName = `${result.Driver.givenName} ${result.Driver.familyName}`;
-    const portrait = getLocalDriverPortrait(fullName);
-    const helmetCandidates = portrait ? getHelmetPortraitCandidates(fullName) : [];
-    const [helmetTier, setHelmetTier] = useState(0);
-    const helmetSrc = helmetCandidates[helmetTier] || null;
-    const [helmetOk, setHelmetOk] = useState(false);
-    const [swapped, setSwapped] = useState(false);
-    const wrapRef = useRef(null);
-    const frameRef = useRef(0);
-
-    useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
-
-    const onMove = (e) => {
-        if (!helmetOk || !wrapRef.current || (e.pointerType && e.pointerType !== "mouse")) return;
-        const rect = wrapRef.current.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = requestAnimationFrame(() => {
-            wrapRef.current?.style.setProperty("--px", `${x.toFixed(2)}%`);
-            wrapRef.current?.style.setProperty("--py", `${y.toFixed(2)}%`);
-        });
-    };
-
-    const onTap = (e) => {
-        if (!helmetOk || (e.pointerType && e.pointerType === "mouse")) return;
-        setSwapped((s) => !s);
-    };
-
-    if (!portrait) {
-        return (
-            <div className="lp-podium-portrait lp-podium-portrait--fallback" aria-hidden="true">
-                <span className="lp-podium-monogram">
-                    {driverInitials(result.Driver.givenName, result.Driver.familyName)}
-                </span>
-            </div>
-        );
-    }
-
-    return (
-        <div
-            ref={wrapRef}
-            className={`lp-podium-portrait${helmetOk ? " has-helmet" : ""}${
-                swapped ? " is-swapped" : ""
-            }`}
-            onPointerMove={onMove}
-            onPointerUp={onTap}
-        >
-            <img className="lp-podium-img" src={portrait} alt={fullName} loading="lazy" />
-            {helmetSrc && (
-                <img
-                    className="lp-podium-img lp-podium-img--helmet"
-                    src={helmetSrc}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    onLoad={() => setHelmetOk(true)}
-                    onError={(e) => {
-                        if (helmetTier < helmetCandidates.length - 1) {
-                            setHelmetTier((t) => t + 1);
-                            return;
-                        }
-                        setHelmetOk(false);
-                        e.target.style.display = "none";
-                    }}
-                />
-            )}
-        </div>
-    );
-}
-
 function GainedIndicator({ result }) {
     const delta = positionsGained(result);
     if (delta === null) return null;
-    if (delta === 0) return <span className="lp-podium-delta lp-mono">— HELD POSITION</span>;
+    if (delta === 0) return <span className="lp-podium-delta">— HELD POSITION</span>;
     return (
         <span
-            className={`lp-podium-delta lp-mono ${delta > 0 ? "is-up" : "is-down"}`}
+            className={`lp-podium-delta ${delta > 0 ? "is-up" : "is-down"}`}
             aria-label={`${Math.abs(delta)} positions ${delta > 0 ? "gained" : "lost"} from the starting grid`}
         >
             {delta > 0 ? "▲" : "▼"} {Math.abs(delta)} FROM GRID
@@ -215,9 +133,9 @@ function GainedIndicator({ result }) {
 }
 
 const PODIUM_ORDER = [
-    { index: 2, cls: "lp-podium-step--p3" },
     { index: 0, cls: "lp-podium-step--p1" },
     { index: 1, cls: "lp-podium-step--p2" },
+    { index: 2, cls: "lp-podium-step--p3" },
 ];
 
 export default function PodiumSection({ completedRaces, latestRace, favs }) {
@@ -227,8 +145,6 @@ export default function PodiumSection({ completedRaces, latestRace, favs }) {
         season: race.season,
         label: race.raceName,
     }));
-    /* If the newest finished race isn't in this season's list (e.g. season
-       rollover), still offer it. */
     if (
         latestRace &&
         !options.some((o) => o.key === `${latestRace.season}-${latestRace.round}`)
@@ -245,13 +161,10 @@ export default function PodiumSection({ completedRaces, latestRace, favs }) {
     const defaultKey = latestKey || options[0]?.key || null;
 
     const [selectedKey, setSelectedKey] = useState(null);
-    /* fetched races live in state so results are derived, not synced:
-       { [key]: { status: "ready" | "empty" | "error", data?: Results[] } } */
     const [fetched, setFetched] = useState({});
 
     const activeKey = selectedKey || defaultKey;
 
-    /* results for the active key, derived synchronously */
     let results = null;
     let status = "loading";
     if (!activeKey) {
@@ -298,21 +211,17 @@ export default function PodiumSection({ completedRaces, latestRace, favs }) {
             <header className="lp-section-head lp-podium-head">
                 <div>
                     <span className="lp-section-eyebrow">FINAL CLASSIFICATION — TOP 3</span>
-                    <h2 className="lp-section-title">THE PODIUM</h2>
+                    <h2 className="lp-section-title">The Podium</h2>
                 </div>
                 <RaceSelector options={options} value={activeKey} onChange={setSelectedKey} />
             </header>
 
-            {status === "loading" && (
-                <p className="lp-inline-state lp-mono">LOADING CLASSIFICATION…</p>
-            )}
+            {status === "loading" && <p className="lp-inline-state">LOADING CLASSIFICATION…</p>}
             {status === "error" && (
-                <p className="lp-inline-state lp-mono">
-                    RESULTS UNAVAILABLE — COULD NOT REACH THE TIMING SERVER
-                </p>
+                <p className="lp-inline-state">RESULTS UNAVAILABLE — COULD NOT REACH THE TIMING SERVER</p>
             )}
             {status === "empty" && (
-                <p className="lp-inline-state lp-mono">
+                <p className="lp-inline-state">
                     NO CLASSIFICATION PUBLISHED FOR {selectedOption?.label?.toUpperCase()} YET
                 </p>
             )}
@@ -332,15 +241,13 @@ export default function PodiumSection({ completedRaces, latestRace, favs }) {
                                 className={`lp-podium-step ${cls}${fav ? " lp-podium-step--fav" : ""}`}
                                 style={teamColor ? { "--team-color": teamColor } : undefined}
                             >
-                                <span className="lp-podium-pos" aria-hidden="true">
-                                    {r.position}
+                                <span className="lp-podium-pos">{r.position}</span>
+                                <span className="lp-podium-monogram" aria-hidden="true">
+                                    {driverInitials(r.Driver.givenName, r.Driver.familyName)}
                                 </span>
-                                <PodiumPortrait result={r} />
                                 <div className="lp-podium-info">
-                                    <span className="lp-podium-p lp-mono">P{r.position}</span>
                                     <h3 className="lp-podium-name">
-                                        {r.Driver.givenName}{" "}
-                                        <b>{r.Driver.familyName?.toUpperCase()}</b>
+                                        {r.Driver.givenName} <b>{r.Driver.familyName?.toUpperCase()}</b>
                                     </h3>
                                     <p className="lp-podium-teamline">
                                         <i
@@ -349,11 +256,11 @@ export default function PodiumSection({ completedRaces, latestRace, favs }) {
                                             aria-hidden="true"
                                         />
                                         {r.Constructor?.name}
-                                        <span className="lp-podium-number lp-mono">
+                                        <span className="lp-podium-number">
                                             #{r.number || r.Driver.permanentNumber || "--"}
                                         </span>
                                     </p>
-                                    <p className="lp-podium-points lp-mono">+{r.points} PTS</p>
+                                    <p className="lp-podium-points">+{r.points} PTS</p>
                                     <GainedIndicator result={r} />
                                     {fav && <span className="lp-podium-favtag">YOUR PICK</span>}
                                 </div>

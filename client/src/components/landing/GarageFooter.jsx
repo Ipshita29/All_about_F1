@@ -1,20 +1,16 @@
 /*
- * Garage footer — the car from the intro is parked here, completing the
- * journey. Garage lights switch on once when the footer scrolls into view
- * and the rear light pulses once (CSS, IntersectionObserver).
+ * Site footer. Calm and typographic — no parked car, no light show.
  * Rendered only on the landing page.
  */
 import { Link } from "react-router-dom";
-import CarVisual from "./F1CarSilhouette";
-import useInViewOnce from "../../hooks/useInViewOnce";
 
 const FOOTER_GROUPS = [
     {
         title: "COMPETE",
         links: [
-            { to: "/grandprixdashboard", label: "Race Center" },
+            { to: "/grandprixdashboard", label: "Race Weekend" },
             { to: "/drivers", label: "Drivers" },
-            { to: "/teams", label: "Teams" },
+            { to: "/teams", label: "Constructors" },
             { to: "/circuitmaps", label: "Circuits" },
         ],
     },
@@ -35,36 +31,18 @@ const FOOTER_GROUPS = [
 ];
 
 export default function GarageFooter({ isAuthenticated }) {
-    const [ref, inView] = useInViewOnce({ threshold: 0.2 });
-
     return (
-        <footer
-            ref={ref}
-            className={`lp-footer${inView ? " lp-footer--lit" : ""}`}
-            aria-label="Site footer"
-        >
-            <div className="lp-footer-lights" aria-hidden="true">
-                <span /><span /><span />
-            </div>
-
-            <div className="lp-footer-garage" aria-hidden="true">
-                <div className="lp-footer-car">
-                    <CarVisual className="lp-footer-carvisual" />
-                </div>
-                <div className="lp-footer-floor" />
-                <span className="lp-footer-bay lp-mono">BAY 01 — ALL ABOUT F1</span>
-            </div>
-
+        <footer className="lp-footer" aria-label="Site footer">
             <div className="lp-footer-content">
                 <div className="lp-footer-brand">
                     <p className="lp-footer-logo">ALL ABOUT F1</p>
-                    <p className="lp-footer-line">BUILT FOR THE SPEED. MADE FOR THE STORIES.</p>
+                    <p className="lp-footer-line">A premium Formula 1 intelligence platform.</p>
                 </div>
 
                 <nav className="lp-footer-nav" aria-label="Footer navigation">
                     {FOOTER_GROUPS.map((group) => (
                         <div key={group.title} className="lp-footer-group">
-                            <h3 className="lp-footer-group-title lp-mono">{group.title}</h3>
+                            <h3 className="lp-footer-group-title">{group.title}</h3>
                             <ul>
                                 {group.links.map((l) => (
                                     <li key={l.to + l.label}>
@@ -75,7 +53,7 @@ export default function GarageFooter({ isAuthenticated }) {
                         </div>
                     ))}
                     <div className="lp-footer-group">
-                        <h3 className="lp-footer-group-title lp-mono">GARAGE</h3>
+                        <h3 className="lp-footer-group-title">ACCOUNT</h3>
                         <ul>
                             {isAuthenticated ? (
                                 <>
@@ -91,12 +69,7 @@ export default function GarageFooter({ isAuthenticated }) {
             </div>
 
             <div className="lp-footer-bottom">
-                <span className="lp-mono">
-                    © {new Date().getFullYear()} ALL ABOUT F1 · AN INDEPENDENT FAN PROJECT
-                </span>
-                <span className="lp-footer-signoff lp-mono">
-                    LIGHTS OUT. SEE YOU AT THE NEXT RACE.
-                </span>
+                <span>© {new Date().getFullYear()} All About F1 · An independent fan project</span>
             </div>
         </footer>
     );

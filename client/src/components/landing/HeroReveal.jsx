@@ -1,90 +1,152 @@
 /*
- * Typography-led hero. Three perfectly stacked layers:
- *   1. faint car silhouette (parallax, revealed near the cursor)
- *   2. readable off-white "ALL ABOUT F1" headline (always visible)
- *   3. a red-lit duplicate of the headline, clipped by a radial CSS mask
- *      that follows the cursor
+ * Homepage hero — typography and live data, not an image.
  *
- * The pointer only writes CSS custom properties (--hx/--hy) inside one
- * requestAnimationFrame — no React re-renders while the cursor moves.
- * Touch devices get an automatic slow sweep (CSS @property animation) and
- * reduced motion gets a static partial reveal; both live in LandingPage.css.
+ * Shows whichever session is most relevant right now: LIVE (derived from the
+ * official schedule — see findLiveSession) or the next upcoming session,
+ * with the full weekend schedule and a countdown to lights out. A small
+ * circuit blueprint keeps the "no photography required" data language
+ * consistent with the Race Weekend pages.
  */
-import { useEffect, useRef } from "react";
-import { F1CarSilhouette } from "./F1CarSilhouette";
-import useReducedMotion from "../../hooks/useReducedMotion";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { formatSessionTime } from "../../utils/timeUtils";
+import {
+    circuitMapCandidates,
+    formatWeekendRange,
+    getWeekendSessions,
+} from "../../utils/landingHelpers";
+import useCountdown from "../../hooks/useCountdown";
 
-function HeroWordmark({ ariaHidden = false, className = "" }) {
-    const Tag = ariaHidden ? "div" : "h1";
+function pad(n) {
+    return String(n).padStart(2, "0");
+}
+
+function BlueprintFallback() {
     return (
-        <Tag className={`lp-hero-word ${className}`} aria-hidden={ariaHidden || undefined}>
-            <span className="lp-hero-word-top">ALL ABOUT</span>
-            <span className="lp-hero-word-f1">F1</span>
-        </Tag>
+        <svg viewBox="0 0 300 180" className="lp-hero-blueprint-svg" aria-hidden="true">
+            <path
+                d="M40 140 L60 60 Q64 44 80 44 L150 50 Q170 52 180 38 Q188 26 204 30
+                   L250 44 Q266 49 260 66 L236 120 Q230 136 214 136 L70 152
+                   Q48 154 40 140 Z"
+                fill="none"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray="5 7"
+            />
+        </svg>
     );
 }
 
-export default function HeroReveal() {
-    const sectionRef = useRef(null);
-    const frameRef = useRef(0);
-    const reduced = useReducedMotion();
+function CircuitBlueprint({ circuitId }) {
+    const [tier, setTier] = useState(0);
+    const candidates = circuitMapCandidates(circuitId);
+    const src = candidates[tier];
+    if (!src) return <BlueprintFallback />;
+    return (
+        <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="lp-hero-blueprint-img"
+            onError={() => setTier((t) => t + 1)}
+        />
+    );
+}
 
-    useEffect(() => {
-        const el = sectionRef.current;
-        if (!el || reduced) return undefined;
-
-        const onMove = (e) => {
-            if (e.pointerType && e.pointerType !== "mouse") return;
-            const rect = el.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            cancelAnimationFrame(frameRef.current);
-            frameRef.current = requestAnimationFrame(() => {
-                el.style.setProperty("--hx", `${x.toFixed(2)}%`);
-                el.style.setProperty("--hy", `${y.toFixed(2)}%`);
-                el.style.setProperty("--hshift", `${((x - 50) / 50).toFixed(3)}`);
-                el.classList.add("lp-hero--tracking");
-            });
-        };
-        const onLeave = () => el.classList.remove("lp-hero--tracking");
-
-        el.addEventListener("pointermove", onMove);
-        el.addEventListener("pointerleave", onLeave);
-        return () => {
-            el.removeEventListener("pointermove", onMove);
-            el.removeEventListener("pointerleave", onLeave);
-            cancelAnimationFrame(frameRef.current);
-        };
-    }, [reduced]);
+export default function HeroReveal({ liveSession, nextSession, scheduleError }) {
+    const isLive = Boolean(liveSession);
+    const session = liveSession || nextSession;
+    const race = session?.race || null;
+    const sessions = race ? getWeekendSessions(race) : [];
+    const raceSession = sessions.find((s) => s.key === "Race");
+    const countdown = useCountdown(!isLive && raceSession ? raceSession.start : null);
+    const now = new Date();
 
     return (
-        <section className="lp-hero" ref={sectionRef} aria-label="All About F1">
-            <div className="lp-hero-gridlines" aria-hidden="true" />
+        <section className="lp-hero" aria-label="Current Grand Prix">
+            <div className="lp-hero-grid" aria-hidden="true" />
 
-            <div className="lp-hero-center">
-                <p className="lp-hero-kicker">
-                    <span className="lp-hero-kicker-dot" aria-hidden="true" />
-                    FORMULA 1 · {new Date().getFullYear()} SEASON
-                </p>
+            <div className="lp-hero-inner">
+                <div className="lp-hero-main">
+                    <p className="lp-hero-kicker">
+                        <span className="lp-hero-kicker-dot" aria-hidden="true" />
+                        FORMULA 1 · {race?.season || new Date().getFullYear()} SEASON
+                    </p>
 
-                <div className="lp-hero-stack">
-                    <div className="lp-hero-carlayer" aria-hidden="true">
-                        <F1CarSilhouette className="lp-hero-carsvg" />
-                    </div>
-                    <HeroWordmark />
-                    <HeroWordmark ariaHidden className="lp-hero-word--reveal" />
+                    {!race ? (
+                        <>
+                            <h1 className="lp-hero-title">ALL ABOUT F1</h1>
+                            <p className="lp-hero-sub">
+                                {scheduleError
+                                    ? "Season schedule unavailable right now."
+                                    : "Loading the season schedule…"}
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <span className={`lp-hero-status${isLive ? " is-live" : ""}`}>
+                                <i aria-hidden="true" />
+                                {isLive ? `LIVE — ${session.label.toUpperCase()}` : "NEXT GRAND PRIX"}
+                            </span>
+
+                            <h1 className="lp-hero-title">{race.raceName}</h1>
+
+                            <p className="lp-hero-meta">
+                                ROUND {race.round} · {race.Circuit?.circuitName?.toUpperCase()} ·{" "}
+                                {race.Circuit?.Location?.country?.toUpperCase()} ·{" "}
+                                {formatWeekendRange(race)}
+                            </p>
+
+                            {!isLive && raceSession && countdown.total > 0 && (
+                                <div
+                                    className="lp-hero-countdown"
+                                    role="timer"
+                                    aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes`}
+                                >
+                                    {[
+                                        [countdown.days, "D"],
+                                        [countdown.hours, "H"],
+                                        [countdown.minutes, "M"],
+                                        [countdown.seconds, "S"],
+                                    ].map(([val, lbl]) => (
+                                        <span key={lbl}>
+                                            <b>{pad(val)}</b>
+                                            <small>{lbl}</small>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            <Link
+                                to={`/grandprixdashboard/${race.season}/${race.round}`}
+                                className="lp-hero-cta"
+                            >
+                                {isLive ? "Follow the session" : "Enter race weekend"}
+                                <span aria-hidden="true">→</span>
+                            </Link>
+                        </>
+                    )}
                 </div>
 
-                <p className="lp-hero-tagline">THE GRID. THE SPEED. THE STORIES.</p>
-            </div>
-
-            <div className="lp-hero-foot">
-                <span className="lp-hero-foot-item">SECTOR 01 — WELCOME</span>
-                <a href="#race-center" className="lp-hero-scrollcue">
-                    LIVE RACE CENTER
-                    <span className="lp-hero-scrollcue-arrow" aria-hidden="true">↓</span>
-                </a>
-                <span className="lp-hero-foot-item lp-hero-foot-item--right">EST. LAP 00:00.000</span>
+                {race && (
+                    <aside className="lp-hero-side">
+                        <div className="lp-hero-blueprint">
+                            <CircuitBlueprint circuitId={race.Circuit?.circuitId} />
+                        </div>
+                        <div className="lp-hero-schedule">
+                            <span className="lp-hero-schedule-label">WEEKEND SCHEDULE</span>
+                            <ul>
+                                {sessions.map((s) => (
+                                    <li key={s.key} className={s.start < now ? "is-done" : ""}>
+                                        <span>{s.label}</span>
+                                        <span>{formatSessionTime(s.date, s.time)}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </aside>
+                )}
             </div>
         </section>
     );

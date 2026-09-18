@@ -90,15 +90,12 @@ export default function PaddockNews({ articles, favs, error }) {
                             rel="noreferrer"
                             className="lp-news-item"
                         >
-                            <ArticleImage article={article} className="lp-news-item-img" />
-                            <div className="lp-news-item-body">
-                                <p className="lp-news-meta lp-mono">
-                                    {article.source?.toUpperCase()} ·{" "}
-                                    {formatArticleTime(article.publishedAt)}
-                                    {articleIsForYou(article, favs) && <ForYouTag />}
-                                </p>
-                                <h3 className="lp-news-item-title">{article.title}</h3>
-                            </div>
+                            <p className="lp-news-meta lp-mono">
+                                {article.source?.toUpperCase()} ·{" "}
+                                {formatArticleTime(article.publishedAt)}
+                                {articleIsForYou(article, favs) && <ForYouTag />}
+                            </p>
+                            <h3 className="lp-news-item-title">{article.title}</h3>
                         </a>
                     ))}
                 </div>
