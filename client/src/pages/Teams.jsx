@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
+import SearchControls from "../components/entity/SearchControls";
+import ComparisonCTA from "../components/entity/ComparisonCTA";
+import ConstructorRoster from "../components/entity/ConstructorRoster";
+import ConstructorProfile from "../components/entity/ConstructorProfile";
 import { getTeamAssets } from "../config/teamAssets";
 import "./EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 /*
- * CONSTRUCTORS — every team as one clean, numbered standings list, ordered
- * by championship position. Team, points, wins and current line-up —
- * no car photography required.
+ * THE CONSTRUCTORS — a championship dossier, not a database table. Each
+ * team is an entity: position, nationality, current line-up (by driver
+ * number), points and wins as statistics, and a proportional bar showing
+ * real standing relative to the championship leader.
  */
 function Teams() {
     const [teams, setTeams] = useState([]);
@@ -52,39 +56,29 @@ function Teams() {
         return s ? Number(s.position) : 99;
     };
     const ordered = [...filtered].sort((a, b) => positionOf(a) - positionOf(b));
+    const leaderPts = standings[0]?.points;
 
     return (
         <div className="ex">
-            <header className="ex-hero">
-                <span className="ex-hero-eyebrow">Formula 1 · {year} Season</span>
-                <h1 className="ex-hero-title">Constructors</h1>
-                <p className="ex-hero-sub">10 Teams. One Championship.</p>
-                <div className="ex-hero-rule" aria-hidden="true" />
-
-                <div className="ex-controls">
-                    <label className="ex-field">
-                        <span className="ex-field-label">SEASON</span>
-                        <select value={year} onChange={(e) => setYear(e.target.value)}>
-                            {YEARS.map((y) => (
-                                <option key={y} value={y}>{y}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label className="ex-field">
-                        <span className="ex-field-label">LOCATE</span>
-                        <input
-                            type="text"
-                            placeholder="Team name…"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </label>
-                    <span className="ex-count">{filtered.length} TEAMS</span>
-                    <Link to="/compare-teams" className="ex-cta">
-                        Compare Constructors →
-                    </Link>
-                </div>
+            <header className="dr-hero">
+                <span className="dr-hero-year">{year} SEASON</span>
+                <h1 className="dr-hero-title">The Constructors</h1>
+                <p className="dr-hero-sub">
+                    {loaded ? teams.length : "10"} teams. One championship.
+                </p>
             </header>
+
+            <SearchControls
+                year={year}
+                years={YEARS}
+                onYearChange={setYear}
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="SEARCH TEAMS"
+                count={`${filtered.length} TEAMS`}
+            >
+                <ComparisonCTA to="/compare-teams" label="Compare Constructors" />
+            </SearchControls>
 
             {!loaded ? (
                 <div className="ex-loading"><LoadingSpinner /></div>
@@ -97,7 +91,7 @@ function Teams() {
                 </main>
             ) : (
                 <main className="ex-main">
-                    <ol className="ex-rows">
+                    <ConstructorRoster>
                         {ordered.map((t) => {
                             const standing = standings.find(
                                 (s) => s.Constructor.constructorId === t.constructorId
@@ -105,38 +99,19 @@ function Teams() {
                             const drivers = driverStandings.filter(
                                 (d) => d.Constructors?.[0]?.constructorId === t.constructorId
                             );
-                            const assets = getTeamAssets(t.constructorId);
                             return (
-                                <li key={t.constructorId}>
-                                    <Link
-                                        to={`/teams/${year}/${t.constructorId}`}
-                                        viewTransition
-                                        className="ex-row"
-                                        style={{ "--accent": assets.accent }}
-                                    >
-                                        <span className="ex-row-pos">
-                                            {standing ? String(standing.position).padStart(2, "0") : "—"}
-                                        </span>
-                                        <span className="ex-row-team ex-row-team--main">
-                                            <i className="ex-row-swatch" aria-hidden="true" />
-                                            <b>{t.name}</b>
-                                        </span>
-                                        <span className="ex-row-nat">{t.nationality}</span>
-                                        <span className="ex-row-drivers">
-                                            {drivers.map((d) => d.Driver.familyName).join(" · ") || "—"}
-                                        </span>
-                                        <span className="ex-row-stat">
-                                            <b>{standing?.points ?? "—"}</b><small>PTS</small>
-                                        </span>
-                                        <span className="ex-row-stat">
-                                            <b>{standing?.wins ?? "—"}</b><small>WINS</small>
-                                        </span>
-                                        <span className="ex-row-arrow" aria-hidden="true">→</span>
-                                    </Link>
-                                </li>
+                                <ConstructorProfile
+                                    key={t.constructorId}
+                                    team={t}
+                                    standing={standing}
+                                    drivers={drivers}
+                                    year={year}
+                                    accent={getTeamAssets(t.constructorId).accent}
+                                    leaderPts={leaderPts}
+                                />
                             );
                         })}
-                    </ol>
+                    </ConstructorRoster>
                 </main>
             )}
         </div>
