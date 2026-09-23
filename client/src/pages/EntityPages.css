@@ -7,69 +7,10 @@
 
 .ex { background: var(--bg); }
 
-/* ── Shared hero (list + comparison pages) ── */
-
-.ex-hero {
-    max-width: var(--content-width-wide);
-    margin: 0 auto;
-    padding: var(--space-9) var(--space-6) var(--space-6);
-}
-
-.ex-hero-eyebrow {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    letter-spacing: 0.14em;
-    color: var(--accent-text);
-    margin-bottom: var(--space-3);
-}
-
-.ex-hero-title {
-    font-size: var(--text-display);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: var(--text-primary);
-    margin: 0 0 var(--space-2);
-}
-
-.ex-hero-sub { font-size: 0.86rem; color: var(--text-secondary); margin-bottom: var(--space-5); }
-.ex-hero-rule { height: 1px; background: var(--border-faint); margin-bottom: var(--space-5); }
-
-.ex-controls { display: flex; align-items: flex-end; gap: var(--space-6); flex-wrap: wrap; }
-
-.ex-field { display: flex; flex-direction: column; gap: 6px; }
-
+/* .ex-field-label is still used by EntitySelect's trigger (see .ex-combo
+   below); the rest of the old shared hero/controls block was exclusive to
+   the pre-Phase-5 Comparison pages and is now superseded by Comparison.css */
 .ex-field-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; color: var(--text-muted); }
-
-.ex-field select,
-.ex-field input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    border-radius: 0;
-    padding: 6px 0;
-    min-width: 160px;
-    font-size: 0.9rem;
-}
-
-.ex-field select:focus,
-.ex-field input:focus { box-shadow: none; border-color: var(--accent); }
-
-.ex-count {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    align-self: center;
-}
-
-.ex-cta {
-    margin-left: auto;
-    align-self: center;
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    color: var(--accent-text);
-}
 
 .ex-loading { display: flex; justify-content: center; padding: var(--space-9) 0; }
 
@@ -498,25 +439,6 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-stat-meter { display: block; height: 2px; background: var(--border); border-radius: 2px; margin-top: 4px; overflow: hidden; }
 .ex-stat-meter-fill { display: block; height: 100%; background: var(--accent); transition: width 0.6s var(--ease); }
 
-/* ── Duel meter (comparison) ── */
-
-.ex-duel-block { display: flex; flex-direction: column; gap: var(--space-5); }
-
-.ex-duel-vals { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-2); }
-
-.ex-duel-val { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 600; color: var(--text-secondary); }
-.ex-duel-val--right { text-align: right; }
-.ex-duel-val.is-ahead { color: var(--text-primary); }
-.ex-duel-val.is-behind { color: var(--text-faint); }
-
-.ex-duel-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; color: var(--text-muted); text-align: center; white-space: nowrap; }
-
-.ex-duel-track { position: relative; display: flex; align-items: center; height: 4px; background: var(--border-faint); border-radius: 2px; }
-.ex-duel-spine { position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--border-strong); transform: translateX(-50%); }
-.ex-duel-fill { display: block; height: 100%; transition: width 0.6s var(--ease); }
-.ex-duel-fill--left { margin-left: auto; background: var(--duel-accent, var(--accent)); border-radius: 2px 0 0 2px; }
-.ex-duel-fill--right { background: var(--duel-accent, var(--accent)); border-radius: 0 2px 2px 0; }
-
 /* ── Searchable combobox (EntitySelect) ── */
 
 .ex-combo { position: relative; }
@@ -721,99 +643,6 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-tg-statline { display: flex; justify-content: center; gap: var(--space-7); flex-wrap: wrap; }
 
 /* ══════════════════════════════════════════════════════════════════
-   COMPARISON — Wheel to Wheel (drivers) / Constructor Battle (teams)
-   ══════════════════════════════════════════════════════════════════ */
-
-.ex-w2w-hero,
-.ex-battle-hero {
-    max-width: var(--content-width);
-    margin: 0 auto;
-    padding: var(--space-7) var(--space-6);
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: var(--space-6);
-    align-items: center;
-    border-bottom: 1px solid var(--border-faint);
-}
-
-.ex-w2w-side,
-.ex-battle-side {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.ex-w2w-side--right,
-.ex-battle-side--right { align-items: flex-end; text-align: right; }
-
-.ex-w2w-portrait {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: var(--space-3);
-}
-
-.ex-w2w-side--right .ex-w2w-portrait { align-self: flex-end; }
-
-.ex-w2w-num {
-    position: absolute;
-    bottom: -4px;
-    right: -4px;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--bg);
-    background: var(--accent, var(--text-primary));
-    padding: 2px 6px;
-    border-radius: var(--radius-full);
-    z-index: 2;
-}
-
-.ex-w2w-img { width: 100%; height: 100%; object-fit: cover; }
-
-.ex-w2w-id-given { font-size: 0.9rem; color: var(--text-secondary); }
-.ex-w2w-id-family { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
-.ex-w2w-id-team { font-size: 0.78rem; color: var(--text-muted); }
-
-.ex-w2w-center { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ex-w2w-vs { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-faint); }
-.ex-w2w-season { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted); }
-
-.ex-battle-carbox {
-    width: 100%;
-    height: 90px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
-    margin-bottom: var(--space-3);
-}
-
-.ex-battle-side--right .ex-battle-carbox { justify-content: flex-end; }
-
-.ex-battle-car { max-width: 100%; max-height: 100%; object-fit: contain; filter: grayscale(1) opacity(0.85); }
-
-.ex-battle-name { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
-.ex-battle-sub { font-size: 0.78rem; color: var(--text-muted); }
-
-.ex-battle-champs { display: flex; align-items: baseline; gap: 8px; margin-top: var(--space-2); }
-.ex-battle-champs-num { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 700; color: var(--accent-text); }
-.ex-battle-champs-label { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.06em; color: var(--text-muted); line-height: 1.3; }
-
-.ex-battle-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-7); }
-.ex-battle-col-team { font-size: 0.98rem; font-weight: 700; color: var(--accent, var(--text-primary)); margin-bottom: var(--space-3); }
-
-/* ══════════════════════════════════════════════════════════════════
    CIRCUIT ROSTER — .cr-*
    ══════════════════════════════════════════════════════════════════ */
 
@@ -857,22 +686,15 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 @media (max-width: 900px) {
     .ex-dossier-hero { grid-template-columns: 1fr; }
     .ex-dossier-visual { flex-direction: row; justify-content: flex-start; }
-    .ex-w2w-hero,
-    .ex-battle-hero { grid-template-columns: 1fr; text-align: center; }
-    .ex-w2w-side--right,
-    .ex-battle-side--right { align-items: center; text-align: center; }
-    .ex-w2w-side--right .ex-w2w-portrait,
-    .ex-battle-side--right .ex-battle-carbox { align-self: center; justify-content: center; }
     .ex-cols,
-    .ex-about-cols,
-    .ex-battle-cols { grid-template-columns: 1fr; }
+    .ex-about-cols { grid-template-columns: 1fr; }
 
     .dp-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
     .cc-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
 
 @media (max-width: 700px) {
-    .ex-hero, .ex-main, .ex-dossier-hero, .ex-tg-hero, .ex-w2w-hero, .ex-battle-hero,
+    .ex-main, .ex-dossier-hero, .ex-tg-hero,
     .dr-hero, .gr-overview-inner, .gr-cta-inner {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
