@@ -1,38 +1,72 @@
 /*
  * DESIGN TOKENS — the single source of truth for the visual system.
- * Three deliberate colours: black, white, F1 red — not a black-and-gray
- * scale with red sprinkled on top. White is a real, confident presence
- * (true-white text, visible hairlines), black stays near-pure, red stays
- * an accent. Every other stylesheet consumes these custom properties
- * rather than hard-coding colour, type or spacing values.
+ *
+ * PREMIUM F1 EDITORIAL × DATA INTELLIGENCE
+ *
+ * A five-colour palette (Milano Red, Cararra, Chalk, Slate, Carbon Black)
+ * rather than a black-and-red scale. The page canvas stays a dark Carbon
+ * Black surface — that is what today's pages are built on and this phase
+ * does not touch page layouts — but every token needed for LIGHT surfaces
+ * (Cararra / Chalk / Slate cards, panels, buttons) now exists alongside
+ * it, ready for later phases to actually create the dark → light → dark
+ * rhythm the brief calls for. Milano Red is a small accent, not a theme.
+ *
+ * Every stylesheet in the app consumes these custom properties rather
+ * than hard-coding colour, type or spacing values — so updating a value
+ * here reaches every page without editing page code.
  */
 
 :root {
-    /* ── Color — surfaces ───────────────────────────────────────── */
-    --bg: #060606;
-    --bg-elevated: #0a0a0a;
-    --surface: #0f0f0f;
-    --surface-2: #161616;
-    --surface-3: #1e1e1e;
-    --surface-glass: rgba(10, 10, 10, 0.72);
-    --surface-glass-strong: rgba(6, 6, 6, 0.9);
+    /* ── Raw palette — the five-colour source of truth ────────────── */
+    --color-red: #b0080b;
+    --color-red-bright: #e5342d;
+    --color-cararra: #f0ede8;
+    --color-chalk: #e8e5df;
+    --color-slate: #c9c5be;
+    --color-carbon: #191919;
 
-    --border: rgba(255, 255, 255, 0.15);
-    --border-strong: rgba(255, 255, 255, 0.28);
-    --border-faint: rgba(255, 255, 255, 0.09);
+    /* ── Color — dark canvas (the page background system) ─────────── */
+    --bg: var(--color-carbon);
+    --bg-elevated: #1f1f1f;
+    --surface: #1f1f1f;
+    --surface-2: #262626;
+    --surface-3: #2e2e2e;
+    --surface-glass: rgba(25, 25, 25, 0.72);
+    --surface-glass-strong: rgba(20, 20, 20, 0.9);
 
-    /* ── Color — text ───────────────────────────────────────────── */
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-muted: rgba(255, 255, 255, 0.46);
-    --text-faint: rgba(255, 255, 255, 0.28);
+    --border: rgba(240, 237, 232, 0.14);
+    --border-strong: rgba(240, 237, 232, 0.26);
+    --border-faint: rgba(240, 237, 232, 0.08);
 
-    /* ── Color — accent & semantic ──────────────────────────────── */
-    --accent: #e10600;
-    --accent-hover: #ff2318;
-    --accent-dim: rgba(225, 6, 0, 0.14);
-    --accent-border: rgba(225, 6, 0, 0.4);
-    --accent-text: #ff3b30;
+    /* ── Color — text on the dark canvas ───────────────────────────── */
+    --text-primary: var(--color-cararra);
+    --text-secondary: rgba(240, 237, 232, 0.72);
+    --text-muted: rgba(240, 237, 232, 0.48);
+    --text-faint: rgba(240, 237, 232, 0.3);
+
+    /* ── Color — light surfaces (Cararra / Chalk / Slate) ──────────── */
+    /* For the light Card/Button/Input variants — premium high-contrast
+       panels that break up the dark canvas in later phases. */
+    --surface-light-1: var(--color-cararra);
+    --surface-light-2: var(--color-chalk);
+    --surface-light-3: var(--color-slate);
+
+    --text-on-light-primary: var(--color-carbon);
+    --text-on-light-secondary: rgba(25, 25, 25, 0.66);
+    --text-on-light-muted: rgba(25, 25, 25, 0.46);
+
+    --border-on-light: rgba(25, 25, 25, 0.12);
+    --border-on-light-strong: rgba(25, 25, 25, 0.22);
+
+    /* ── Color — accent & semantic ──────────────────────────────────
+       Milano Red. Used selectively: primary actions, active/selected
+       states, focus rings, important data points — never as a fill for
+       every button, border, icon and heading. ── */
+    --accent: var(--color-red);
+    --accent-hover: #c8100f;
+    --accent-dim: rgba(176, 8, 11, 0.16);
+    --accent-border: rgba(176, 8, 11, 0.42);
+    --accent-text: var(--color-red-bright);
 
     --success: #2fbf6a;
     --success-dim: rgba(47, 191, 106, 0.14);
@@ -41,19 +75,32 @@
     --danger: var(--accent);
     --danger-dim: var(--accent-dim);
 
-    /* ── Typography ─────────────────────────────────────────────── */
+    /* ── Typography ──────────────────────────────────────────────────
+       Inter for everything editorial (titles, nav, buttons, names, body).
+       JetBrains Mono selectively for technical/data reads (rounds,
+       dates, lap times, telemetry, stat labels) — never for everything. */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-    --text-display: clamp(2.75rem, 3.2vw + 1.6rem, 5.5rem);
-    --text-h1: clamp(1.9rem, 1.2vw + 1.5rem, 2.75rem);
-    --text-h2: clamp(1.4rem, 0.6vw + 1.2rem, 1.75rem);
-    --text-h3: 1.125rem;
-    --text-body: 0.95rem;
-    --text-small: 0.82rem;
-    --text-micro: 0.72rem;
+    /* Existing scale (kept name-compatible with every page stylesheet) */
+    --text-display: clamp(3rem, 3.4vw + 1.8rem, 6rem);
+    --text-h1: clamp(2rem, 1.4vw + 1.6rem, 3.25rem);
+    --text-h2: clamp(1.5rem, 0.7vw + 1.3rem, 2rem);
+    --text-h3: 1.25rem;
+    --text-body: 1rem;
+    --text-small: 0.875rem;
+    --text-micro: 0.75rem;
 
-    /* ── Spacing scale ──────────────────────────────────────────── */
+    /* Explicit aliases matching the brief's named scale, for new
+       components (SectionHeader, Stat, Card titles, …) */
+    --text-hero: clamp(3.5rem, 4vw + 2rem, 6rem);
+    --text-page-title: var(--text-display);
+    --text-section-title: var(--text-h1);
+    --text-card-title: var(--text-h3);
+    --text-body-lg: 1.125rem;
+    --text-meta: var(--text-micro);
+
+    /* ── Spacing scale ──────────────────────────────────────────────── */
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -63,28 +110,31 @@
     --space-7: 48px;
     --space-8: 64px;
     --space-9: 96px;
+    --space-10: 128px;
 
-    /* ── Radius ─────────────────────────────────────────────────── */
+    /* ── Radius ───────────────────────────────────────────────────── */
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 999px;
 
-    /* ── Shadow — used sparingly, mostly for floating/glass surfaces ── */
+    /* ── Shadow — used sparingly, mostly for floating/glass surfaces and
+       light cards lifted off the dark canvas ── */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
 
-    /* ── Motion ─────────────────────────────────────────────────── */
+    /* ── Motion ───────────────────────────────────────────────────── */
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --dur-fast: 120ms;
     --dur-base: 220ms;
     --dur-slow: 420ms;
 
-    /* ── Layout ─────────────────────────────────────────────────── */
+    /* ── Layout ───────────────────────────────────────────────────── */
     --content-width: 1180px;
-    --content-width-wide: 1440px;
+    --content-width-wide: 1380px;
     --nav-height: 64px;
 }
 
