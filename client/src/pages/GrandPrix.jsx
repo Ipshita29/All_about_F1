@@ -14,15 +14,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
+import CircuitVisualization from "../components/CircuitVisualization";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { circuitInfo } from "../data/circuitInfo";
 import { formatSessionTime } from "../utils/timeUtils";
-import {
-    getWeekendSessions,
-    formatWeekendRange,
-    circuitMapCandidates,
-} from "../utils/landingHelpers";
+import { getWeekendSessions, formatWeekendRange } from "../utils/landingHelpers";
 import "./RaceWeekend.css";
 
 const API = "http://localhost:3000";
@@ -37,39 +34,6 @@ function raceStart(race) {
     return race.time
         ? new Date(`${race.date}T${race.time}`)
         : new Date(`${race.date}T00:00:00`);
-}
-
-/* Dashed blueprint outline drawn when no circuit map asset exists */
-function BlueprintFallback() {
-    return (
-        <svg viewBox="0 0 300 180" className="rw-blueprint-fallback" aria-hidden="true">
-            <path
-                d="M40 140 L60 60 Q64 44 80 44 L150 50 Q170 52 180 38 Q188 26 204 30
-                   L250 44 Q266 49 260 66 L236 120 Q230 136 214 136 L70 152
-                   Q48 154 40 140 Z"
-                fill="none"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray="6 8"
-            />
-        </svg>
-    );
-}
-
-function CircuitMap({ circuitId, alt }) {
-    const [tier, setTier] = useState(0);
-    const candidates = circuitMapCandidates(circuitId);
-    const src = candidates[tier];
-    if (!src) return <BlueprintFallback />;
-    return (
-        <img
-            src={src}
-            alt={alt}
-            loading="lazy"
-            className="rw-circuit-img"
-            onError={() => setTier((t) => t + 1)}
-        />
-    );
 }
 
 /* ── Season focus module: the current / next race weekend ─────────── */
@@ -171,14 +135,12 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
                     </Link>
                 </div>
 
-                <div className="rw-focus-map" aria-hidden="true">
-                    <CircuitMap
+                <div className="rw-focus-map">
+                    <CircuitVisualization
                         circuitId={race.Circuit?.circuitId}
-                        alt={`${race.Circuit?.circuitName} layout`}
+                        circuitName={race.Circuit?.circuitName}
+                        info={circuit}
                     />
-                    <span className="rw-focus-map-label rw-mono">
-                        CIRCUIT BLUEPRINT — {race.Circuit?.circuitId?.toUpperCase()}
-                    </span>
                 </div>
             </div>
         </section>
@@ -231,9 +193,10 @@ function DestinationPeek({ race }) {
     return (
         <div className="rw-peek-future">
             <div className="rw-peek-map">
-                <CircuitMap
+                <CircuitVisualization
                     circuitId={race.Circuit?.circuitId}
-                    alt={`${race.Circuit?.circuitName} layout`}
+                    compact
+                    showMeta={false}
                 />
             </div>
             <ul className="rw-peek-sessions">

@@ -380,198 +380,6 @@ button:active { transform: scale(0.98); }
     .navbar-mobile-menu { display: none; }
 }
 
-/* ── Generic page shell (Circuit Maps / Circuit Details / simple pages) ── */
-
-.page {
-    max-width: var(--content-width);
-    margin: 0 auto;
-    padding: var(--space-8) var(--space-6) var(--space-9);
-}
-
-.page > h1 {
-    font-size: var(--text-display);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    margin-bottom: var(--space-2);
-}
-
-.page-eyebrow {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent-text);
-    margin-bottom: var(--space-3);
-}
-
-.page-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--border-faint);
-    border-bottom: 1px solid var(--border-faint);
-    margin: var(--space-6) 0 var(--space-6);
-}
-
-.page-controls input {
-    flex: 1;
-    min-width: 200px;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 6px 0;
-    font-size: var(--text-body);
-}
-
-.page-controls input:focus { box-shadow: none; border-color: transparent; }
-
-.page-controls p {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-/* ── Row list (replaces card grids everywhere generic) ── */
-
-.list-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: var(--space-6) var(--space-5);
-    padding: 0;
-}
-
-a.list-card,
-.list-card {
-    display: block;
-    padding: 0;
-    color: var(--text-primary);
-}
-
-a.list-card:hover,
-.list-card:hover {
-    color: var(--accent-text);
-}
-
-.list-card h3 {
-    font-size: 0.98rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: var(--space-1);
-}
-
-.list-card p {
-    font-size: var(--text-small);
-    color: var(--text-muted);
-    margin: 0 0 4px;
-    line-height: 1.5;
-}
-
-.list-date {
-    font-family: var(--font-mono);
-    font-size: 0.68rem !important;
-    color: var(--text-faint) !important;
-    margin-top: var(--space-2) !important;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-/* ── Stat blocks ── */
-
-.stat-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
-    margin: 0 0 var(--space-5);
-}
-
-.stat-box {
-    padding-left: var(--space-6);
-    border-left: 1px solid var(--border-faint);
-    text-align: left;
-}
-
-.stat-row .stat-box:first-child {
-    padding-left: 0;
-    border-left: none;
-}
-
-.stat-value {
-    font-family: var(--font-mono);
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: block;
-    line-height: 1;
-    margin-bottom: var(--space-2);
-    font-variant-numeric: tabular-nums;
-}
-
-.stat-label {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    font-weight: 500;
-    display: block;
-}
-
-/* ── Detail page (Circuit Details) ── */
-
-.detail-page > h1 {
-    font-size: var(--text-display);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    margin-bottom: var(--space-2);
-}
-
-.detail-page > h2 {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent-text);
-    margin: var(--space-7) 0 var(--space-4);
-}
-
-.detail-page > p,
-.detail-page > ul {
-    color: var(--text-secondary);
-    line-height: 1.7;
-    font-size: var(--text-body);
-    max-width: 68ch;
-}
-
-.detail-page a { color: var(--accent-text); font-weight: 500; }
-.detail-page a:hover { text-decoration: underline; }
-
-.detail-page > ul { list-style: none; margin-left: 0; padding-left: 0; }
-
-.detail-page > ul li {
-    padding: var(--space-2) 0 var(--space-2) var(--space-4);
-    border-left: 2px solid var(--border-strong);
-    margin-bottom: var(--space-1);
-    font-size: var(--text-small);
-    color: var(--text-secondary);
-}
-
-.info-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-5);
-    margin-top: var(--space-4);
-}
 
 /* ── Profile card (also used by Preferences fallback) ── */
 
@@ -670,110 +478,73 @@ td {
 
 tr:hover td { background: var(--surface-2); }
 
-/* ── Circuit-specific bits reused directly on Circuit Maps / Details ── */
+/* ── Circuit visualization (.cv-*) — a technical drawing on its own white
+   plate, shared by the homepage hero and the Circuits pages. Real map
+   images are never grayscale-inverted (that produced inconsistent, muddy
+   results across different source images) — they sit on white, as-is. ── */
 
-.circuit-map {
-    width: 100%;
-    max-width: 520px;
-    height: auto;
+.cv-drawing {
+    background: #ffffff;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    padding: var(--space-4);
-}
-
-a.list-card.circuit-card,
-.list-card.circuit-card { padding: 0; }
-
-.circuit-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-
-.circuit-card-img {
-    height: 130px;
-    background: var(--surface-2);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    aspect-ratio: 4 / 3;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: var(--space-4);
     overflow: hidden;
-    border-bottom: 1px solid var(--border-faint);
 }
 
-.circuit-card-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: var(--space-3);
-    filter: grayscale(1) invert(1) opacity(0.85);
+.cv--compact .cv-drawing { aspect-ratio: 3 / 2; padding: var(--space-3); }
+
+.cv-img { width: 100%; height: 100%; object-fit: contain; }
+
+.cv-blueprint-svg { width: 100%; height: 100%; color: rgba(6, 6, 6, 0.8); overflow: visible; }
+
+.cv-marker {
+    fill: var(--accent);
+    offset-path: path("M40 140 L60 60 Q64 44 80 44 L150 50 Q170 52 180 38 Q188 26 204 30 L250 44 Q266 49 260 66 L236 120 Q230 136 214 136 L70 152 Q48 154 40 140 Z");
+    animation: cvMarkerTravel 7s linear infinite;
 }
 
-.circuit-card-body { padding: var(--space-4); }
-
-.circuit-card-body h3 {
-    margin-bottom: 3px;
-    font-size: 0.9rem;
-    line-height: 1.3;
+@keyframes cvMarkerTravel {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
 }
 
-.circuit-card-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: var(--space-2);
-    min-height: 20px;
+.cv-meta { border-top: 1px solid var(--border-faint); padding-top: var(--space-3); margin-top: var(--space-3); }
+
+.cv-meta-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
 }
+
+.cv-stats { display: flex; gap: var(--space-5); }
+
+.cv-stats span { display: flex; flex-direction: column; gap: 1px; }
+.cv-stats b { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-primary); }
+.cv-stats small { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--text-faint); }
+
+/* ── Circuit badge — reused on the Circuits roster ── */
 
 .circuit-badge {
     font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 600;
+    font-size: 0.6rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 3px 8px;
-    border-radius: var(--radius-full);
-    background: var(--surface-2) !important;
-    color: var(--text-secondary) !important;
-    border: 1px solid var(--border);
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
 }
 
 .circuit-since {
     font-family: var(--font-mono);
     font-size: 0.68rem;
     color: var(--text-faint);
-}
-
-.entity-placeholder {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.img-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-2);
-}
-
-.img-placeholder--circuit {
-    background: var(--surface-2);
-}
-
-.ph-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    opacity: 0.4;
-}
-
-.ph-icon { width: 28px; height: 28px; color: var(--text-secondary); }
-
-.ph-initials {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
 }
 
 /* ── Modal ── */
@@ -845,11 +616,6 @@ a.list-card.circuit-card,
     text-transform: uppercase;
 }
 
-@media (max-width: 700px) {
-    .page { padding: var(--space-6) var(--space-4) var(--space-8); }
-    .list-grid { grid-template-columns: repeat(2, 1fr); }
-    .stat-row { grid-template-columns: 1fr; }
-}
 
 /* ── Loading indicator ── */
 

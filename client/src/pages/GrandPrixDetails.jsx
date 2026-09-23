@@ -15,10 +15,11 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
+import CircuitVisualization from "../components/CircuitVisualization";
 import { formatSessionTime } from "../utils/timeUtils";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
-import { getWeekendSessions, circuitMapCandidates } from "../utils/landingHelpers";
+import { getWeekendSessions } from "../utils/landingHelpers";
 import "./RaceWeekend.css";
 
 const API = "http://localhost:3000";
@@ -70,29 +71,12 @@ function CountUp({ value }) {
     return <span ref={ref}>{shown}</span>;
 }
 
-function BlueprintFallback() {
-    return (
-        <svg viewBox="0 0 300 180" className="rw-blueprint-fallback" aria-hidden="true">
-            <path
-                d="M40 140 L60 60 Q64 44 80 44 L150 50 Q170 52 180 38 Q188 26 204 30
-                   L250 44 Q266 49 260 66 L236 120 Q230 136 214 136 L70 152
-                   Q48 154 40 140 Z"
-                fill="none"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray="6 8"
-            />
-        </svg>
-    );
-}
-
 function GrandPrixDetails() {
     const { year, id } = useParams();
     const [race, setRace] = useState(null);
     const [results, setResults] = useState([]);
     const [qualifying, setQualifying] = useState([]);
     const [selectedTerm, setSelectedTerm] = useState(null);
-    const [mapTier, setMapTier] = useState(0);
 
     useEffect(() => {
         fetch(`${API}/grandprixdashboard/${year}`)
@@ -171,8 +155,6 @@ function GrandPrixDetails() {
         .slice(0, 3);
 
     const circuitData = circuitInfo[race?.Circuit?.circuitId];
-    const mapCandidates = circuitMapCandidates(race.Circuit?.circuitId);
-    const mapSrc = mapCandidates[mapTier];
 
     const podiumOrder = [1, 0, 2]; // P2 · P1 · P3 plinth arrangement
 
@@ -241,20 +223,12 @@ function GrandPrixDetails() {
                         </p>
                     </div>
 
-                    <div className="rw-hq-hero-map" aria-hidden="true">
-                        {mapSrc ? (
-                            <img
-                                src={mapSrc}
-                                alt=""
-                                className="rw-circuit-img"
-                                onError={() => setMapTier((t) => t + 1)}
-                            />
-                        ) : (
-                            <BlueprintFallback />
-                        )}
-                        <span className="rw-focus-map-label rw-mono">
-                            CIRCUIT BLUEPRINT — {race.Circuit?.circuitId?.toUpperCase()}
-                        </span>
+                    <div className="rw-hq-hero-map">
+                        <CircuitVisualization
+                            circuitId={race.Circuit?.circuitId}
+                            circuitName={race.Circuit?.circuitName}
+                            info={circuitData}
+                        />
                     </div>
                 </div>
             </header>

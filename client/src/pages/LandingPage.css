@@ -196,49 +196,8 @@
     gap: var(--space-5);
 }
 
-/* ── Circuit visualization (.cv-*) ── */
-
-.cv-drawing {
-    aspect-ratio: 4 / 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.cv-img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(1) invert(1) opacity(0.72); }
-
-.cv-blueprint-svg { width: 100%; height: 100%; color: var(--text-secondary); overflow: visible; }
-
-.cv-marker {
-    fill: var(--accent);
-    offset-path: path("M40 140 L60 60 Q64 44 80 44 L150 50 Q170 52 180 38 Q188 26 204 30 L250 44 Q266 49 260 66 L236 120 Q230 136 214 136 L70 152 Q48 154 40 140 Z");
-    animation: cvMarkerTravel 7s linear infinite;
-}
-
-@keyframes cvMarkerTravel {
-    from { offset-distance: 0%; }
-    to { offset-distance: 100%; }
-}
-
-.cv-meta {
-    border-top: 1px solid var(--border-faint);
-    padding-top: var(--space-3);
-}
-
-.cv-meta-label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    margin-bottom: var(--space-2);
-}
-
-.cv-stats { display: flex; gap: var(--space-5); }
-
-.cv-stats span { display: flex; flex-direction: column; gap: 1px; }
-.cv-stats b { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-primary); }
-.cv-stats small { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--text-faint); }
+/* Circuit visualization (.cv-*) now lives in App.css — shared with the
+   Circuits pages. */
 
 /* ── Weekend schedule (.ws-*) ── */
 

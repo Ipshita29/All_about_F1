@@ -1,25 +1,38 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { circuitInfo } from "../data/circuitInfo";
-import ImagePlaceholder from "../components/ImagePlaceholder";
+import CircuitVisualization from "../components/CircuitVisualization";
+import LoadingSpinner from "../components/LoadingSpinner";
+import SearchControls from "../components/entity/SearchControls";
+import "./EntityPages.css";
 
-function getTrackBadge(trackType) {
+function trackTypeLabel(trackType) {
     if (!trackType) return null;
     const t = trackType.toLowerCase();
-    if (t.includes("hybrid"))    return { label: "Mixed",     bg: "#f3e8fd", color: "#7c3aed" };
-    if (t.includes("temporary")) return { label: "Temporary", bg: "#fff3e0", color: "#bf6000" };
-    if (t.includes("street"))    return { label: "Street",    bg: "#e8f4fd", color: "#0369a1" };
-    return                              { label: "Permanent", bg: "#f0f0f4", color: "#4b5563" };
+    if (t.includes("hybrid")) return "Mixed";
+    if (t.includes("temporary")) return "Temporary";
+    if (t.includes("street")) return "Street";
+    return "Permanent";
 }
 
+/*
+ * THE CIRCUITS — every track as a technical drawing, not a photo card.
+ * Each blueprint sits on its own white plate (see CircuitVisualization);
+ * nothing is grayscale-inverted, so every circuit reads consistently
+ * next to the others instead of some looking clean and others muddy.
+ */
 function CircuitMaps() {
     const [circuits, setCircuits] = useState([]);
+    const [loaded, setLoaded] = useState(false);
     const [search, setSearch] = useState("");
 
     useEffect(() => {
         fetch("http://localhost:3000/circuitmaps")
             .then((res) => res.json())
-            .then((data) => setCircuits(data));
+            .then((data) => {
+                setCircuits(Array.isArray(data) ? data : []);
+                setLoaded(true);
+            });
     }, []);
 
     const filtered = circuits.filter((c) =>
@@ -28,58 +41,66 @@ function CircuitMaps() {
     );
 
     return (
-        <div className="page">
-            <h1>Circuits</h1>
-            <div className="page-controls">
-                <input
-                    type="text"
-                    placeholder="Search by name or country..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <p>{filtered.length} circuit{filtered.length !== 1 ? "s" : ""}</p>
-            </div>
+        <div className="ex">
+            <header className="dr-hero">
+                <span className="dr-hero-year">FORMULA 1</span>
+                <h1 className="dr-hero-title">The Circuits</h1>
+                <p className="dr-hero-sub">
+                    {loaded ? circuits.length : "—"} tracks. Every layout, drawn to scale.
+                </p>
+            </header>
 
-            <div className="list-grid circuit-grid">
-                {filtered.map((c) => {
-                    const info = circuitInfo[c.circuitId];
-                    const badge = getTrackBadge(info?.trackType);
-                    return (
-                        <Link
-                            to={`/circuitmaps/${c.circuitId}`}
-                            key={c.circuitId}
-                            className="list-card circuit-card"
-                        >
-                            {info?.mapImage ? (
-                                <div className="circuit-card-img">
-                                    <img src={info.mapImage} alt={c.circuitName} />
-                                </div>
-                            ) : (
-                                <div className="circuit-card-img">
-                                    <ImagePlaceholder name={c.circuitName} type="circuit" className="entity-placeholder" />
-                                </div>
-                            )}
-                            <div className="circuit-card-body">
-                                <h3>{c.circuitName}</h3>
-                                <p>{c.Location.locality}, {c.Location.country}</p>
-                                <div className="circuit-card-meta">
-                                    {badge && (
-                                        <span
-                                            className="circuit-badge"
-                                            style={{ background: badge.bg, color: badge.color }}
-                                        >
-                                            {badge.label}
+            <SearchControls
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="SEARCH CIRCUITS"
+                count={`${filtered.length} CIRCUIT${filtered.length !== 1 ? "S" : ""}`}
+            />
+
+            {!loaded ? (
+                <div className="ex-loading"><LoadingSpinner /></div>
+            ) : filtered.length === 0 ? (
+                <main className="ex-main">
+                    <div className="ex-empty">
+                        <span className="ex-empty-title">No circuit matches</span>
+                        <span className="ex-empty-sub">ADJUST YOUR SEARCH</span>
+                    </div>
+                </main>
+            ) : (
+                <main className="ex-main">
+                    <div className="cr-grid">
+                        {filtered.map((c) => {
+                            const info = circuitInfo[c.circuitId];
+                            const type = trackTypeLabel(info?.trackType);
+                            return (
+                                <Link
+                                    to={`/circuitmaps/${c.circuitId}`}
+                                    key={c.circuitId}
+                                    className="cr-item"
+                                >
+                                    <CircuitVisualization
+                                        circuitId={c.circuitId}
+                                        compact
+                                        showMeta={false}
+                                    />
+                                    <div className="cr-body">
+                                        <div className="cr-top">
+                                            {type && <span className="circuit-badge">{type}</span>}
+                                            {info?.firstGrandPrix && (
+                                                <span className="circuit-since">SINCE {info.firstGrandPrix}</span>
+                                            )}
+                                        </div>
+                                        <h3 className="cr-name">{c.circuitName}</h3>
+                                        <span className="cr-loc">
+                                            {c.Location.locality}, {c.Location.country}
                                         </span>
-                                    )}
-                                    {info?.firstGrandPrix && (
-                                        <span className="circuit-since">Since {info.firstGrandPrix}</span>
-                                    )}
-                                </div>
-                            </div>
-                        </Link>
-                    );
-                })}
-            </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </main>
+            )}
         </div>
     );
 }

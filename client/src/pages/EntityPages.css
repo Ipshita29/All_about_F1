@@ -745,6 +745,43 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-battle-col-team { font-size: 0.98rem; font-weight: 700; color: var(--accent, var(--text-primary)); margin-bottom: var(--space-3); }
 
 /* ══════════════════════════════════════════════════════════════════
+   CIRCUIT ROSTER — .cr-*
+   ══════════════════════════════════════════════════════════════════ */
+
+.cr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-7) var(--space-5);
+}
+
+.cr-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    color: var(--text-primary);
+}
+
+.cr-item:hover { color: var(--text-primary); }
+.cr-item:hover .cv-drawing { border-color: var(--accent-border); }
+
+.cr-body { display: flex; flex-direction: column; gap: 4px; }
+
+.cr-top { display: flex; align-items: center; gap: var(--space-3); }
+
+.cr-name {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--text-primary);
+    margin: 0;
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.cr-item:hover .cr-name { color: var(--accent-text); }
+
+.cr-loc { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
 

@@ -180,18 +180,7 @@
 
 .rw-cta:hover { gap: 12px; }
 
-.rw-focus-map {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.rw-circuit-img { width: 100%; max-height: 160px; object-fit: contain; filter: grayscale(1) invert(1) opacity(0.55); }
-.rw-blueprint-fallback { width: 100%; height: 140px; color: var(--text-faint); }
-.rw-blueprint-fallback path { stroke: currentColor; }
-
-.rw-focus-map-label { font-size: 0.58rem; letter-spacing: 0.08em; color: var(--text-faint); text-align: center; }
+.rw-focus-map { width: 100%; }
 
 /* ── Season journey — plain single-column list ── */
 

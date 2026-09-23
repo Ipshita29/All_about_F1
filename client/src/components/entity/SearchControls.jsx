@@ -15,14 +15,16 @@ export default function SearchControls({
 }) {
     return (
         <div className="sc">
-            <label className="sc-field sc-field--year">
-                <span className="sc-label">SEASON</span>
-                <select value={year} onChange={(e) => onYearChange(e.target.value)}>
-                    {years.map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                    ))}
-                </select>
-            </label>
+            {years && (
+                <label className="sc-field sc-field--year">
+                    <span className="sc-label">SEASON</span>
+                    <select value={year} onChange={(e) => onYearChange(e.target.value)}>
+                        {years.map((y) => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                </label>
+            )}
 
             <label className="sc-field sc-field--search">
                 <span className="sc-label">{searchPlaceholder}</span>

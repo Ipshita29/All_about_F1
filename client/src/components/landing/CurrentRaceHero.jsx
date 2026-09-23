@@ -14,7 +14,7 @@ import {
     getWeekendSessions,
 } from "../../utils/landingHelpers";
 import useCountdown from "../../hooks/useCountdown";
-import CircuitVisualization from "./CircuitVisualization";
+import CircuitVisualization from "../CircuitVisualization";
 import WeekendSchedule from "./WeekendSchedule";
 
 function pad(n) {
