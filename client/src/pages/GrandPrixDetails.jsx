@@ -1,12 +1,12 @@
 /*
  * GRAND PRIX DETAILS — the race weekend as an operational headquarters.
  *
- * The hero is a command-room wall: circuit blueprint, race branding, weekend
- * status and countdown. Below it the user is guided through the session
- * plan, qualifying, race classification, team performance and the circuit
- * dossier. All data comes from the same endpoints as before and every
- * KnowMore term / modal is preserved; only the presentation changed.
- * Shares RaceWeekend.css (.rw namespace) with the Race Weekend journey.
+ * DARK hero (identity, countdown, next session, weekend timeline) →
+ * LIGHT circuit intelligence (blueprint, stats, conditions brief, track
+ * guide) → DARK championship progress → DARK results. All data comes
+ * from the same endpoints as before and every KnowMore term / modal is
+ * preserved; only the presentation changed. Shares RaceWeekend.css
+ * (.rw namespace) with the Race Weekend journey.
  */
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -29,12 +29,12 @@ function pad(n) {
 }
 
 /* Section wrapper: eyebrow heading + one-time reveal on scroll */
-function HqSection({ eyebrow, title, children, wide = false }) {
+function HqSection({ eyebrow, title, children, wide = false, onLight = false }) {
     const [ref, inView] = useInViewOnce({ threshold: 0.12 });
     return (
         <section
             ref={ref}
-            className={`rw-hq-section${inView ? " rw-hq-section--in" : ""}${wide ? " rw-hq-section--wide" : ""}`}
+            className={`rw-hq-section${inView ? " rw-hq-section--in" : ""}${wide ? " rw-hq-section--wide" : ""}${onLight ? " rw-hq-section--on-light" : ""}`}
         >
             <header className="rw-hq-section-head">
                 {eyebrow && <span className="rw-hq-eyebrow rw-mono">{eyebrow}</span>}
@@ -73,6 +73,7 @@ function CountUp({ value }) {
 
 function GrandPrixDetails() {
     const { year, id } = useParams();
+    const [season, setSeason] = useState([]);
     const [race, setRace] = useState(null);
     const [results, setResults] = useState([]);
     const [qualifying, setQualifying] = useState([]);
@@ -82,8 +83,9 @@ function GrandPrixDetails() {
         fetch(`${API}/grandprixdashboard/${year}`)
             .then((res) => { if (!res.ok) return []; return res.json(); })
             .then((data) => {
-                const selected = data.find((ele) => ele.round === id);
-                setRace(selected);
+                const list = Array.isArray(data) ? data : [];
+                setSeason(list);
+                setRace(list.find((ele) => ele.round === id));
             });
     }, [year, id]);
 
@@ -158,117 +160,264 @@ function GrandPrixDetails() {
 
     const podiumOrder = [1, 0, 2]; // P2 · P1 · P3 plinth arrangement
 
+    /* Championship progress — same "rounds already underway" logic as the
+       Race Weekend journey page, derived from the same season list. */
+    const totalRounds = season.length;
+    const completedRounds = season.filter((r) => {
+        const start = r.time ? new Date(`${r.date}T${r.time}`) : new Date(`${r.date}T00:00:00`);
+        return start < now;
+    }).length;
+    const progressPct = totalRounds > 0 ? Math.round((completedRounds / totalRounds) * 100) : 0;
+
     return (
         <div className="rw rw-hq">
-            {/* ── Command-room hero ─────────────────────────────────── */}
+            {/* ── Hero: identity, countdown, next session, weekend plan ── */}
             <header className={`rw-hq-hero${raceNotStarted ? "" : " rw-hq-hero--complete"}`}>
-                <div className="rw-hq-hero-grid" aria-hidden="true" />
-
                 <div className="rw-hq-hero-inner">
-                    <div className="rw-hq-hero-info">
-                        <Link to="/grandprixdashboard" className="rw-back rw-mono" viewTransition>
-                            ← CHAMPIONSHIP JOURNEY
-                        </Link>
+                    <Link to="/grandprixdashboard" className="rw-back rw-mono" viewTransition>
+                        ← CHAMPIONSHIP JOURNEY
+                    </Link>
 
-                        <span className="rw-hq-status rw-mono">
-                            <span className={`rw-focus-dot${raceNotStarted ? "" : " rw-focus-dot--done"}`} aria-hidden="true" />
-                            {raceNotStarted ? "WEEKEND STATUS — UPCOMING" : "WEEKEND STATUS — COMPLETE"}
-                            {" · "}ROUND {race.round} · {year} SEASON
-                        </span>
+                    <span className="rw-hq-status rw-mono">
+                        <span className={`rw-focus-dot${raceNotStarted ? "" : " rw-focus-dot--done"}`} aria-hidden="true" />
+                        {raceNotStarted ? "WEEKEND STATUS — UPCOMING" : "WEEKEND STATUS — COMPLETE"}
+                        {" · "}FORMULA 1 · {year} SEASON · ROUND {race.round}
+                    </span>
 
-                        <h1
-                            className="rw-hq-title"
-                            style={{ viewTransitionName: `gp-title-${year}-${race.round}` }}
-                        >
-                            {race.raceName}
-                        </h1>
+                    <h1
+                        className="rw-hq-title"
+                        style={{ viewTransitionName: `gp-title-${year}-${race.round}` }}
+                    >
+                        {race.raceName}
+                    </h1>
 
-                        <p className="rw-hq-meta rw-mono">
-                            {race.Circuit.circuitName?.toUpperCase()} ·{" "}
-                            {race.Circuit.Location.locality?.toUpperCase()},{" "}
-                            {race.Circuit.Location.country?.toUpperCase()} · {formattedDate.toUpperCase()}
-                        </p>
+                    <p className="rw-hq-meta rw-mono">
+                        {race.Circuit.circuitName?.toUpperCase()} ·{" "}
+                        {race.Circuit.Location.locality?.toUpperCase()},{" "}
+                        {race.Circuit.Location.country?.toUpperCase()} · {formattedDate.toUpperCase()}
+                    </p>
 
-                        {raceNotStarted && countdown.total > 0 && (
-                            <div
-                                className="rw-focus-countdown rw-mono"
-                                role="timer"
-                                aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
-                            >
-                                {[
-                                    [countdown.days, "DAYS"],
-                                    [countdown.hours, "HRS"],
-                                    [countdown.minutes, "MIN"],
-                                    [countdown.seconds, "SEC"],
-                                ].map(([val, lbl]) => (
-                                    <span className="rw-count-unit" key={lbl}>
-                                        <b>{pad(val)}</b>
-                                        <small>{lbl}</small>
+                    <div className="rw-hq-hero-cols">
+                        <div className="rw-hq-hero-main">
+                            {raceNotStarted && countdown.total > 0 && (
+                                <div
+                                    className="rw-countdown"
+                                    role="timer"
+                                    aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
+                                >
+                                    {[
+                                        [countdown.days, "DAYS"],
+                                        [countdown.hours, "HRS"],
+                                        [countdown.minutes, "MIN"],
+                                        [countdown.seconds, "SEC"],
+                                    ].map(([val, lbl]) => (
+                                        <span className="rw-countdown-unit" key={lbl}>
+                                            <b className="rw-mono">{pad(val)}</b>
+                                            <small>{lbl}</small>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {nextSession && (
+                                <p className="rw-focus-session rw-hq-next-session">
+                                    <span className="rw-mono rw-focus-session-label">
+                                        {raceNotStarted ? "NEXT SESSION" : "FINAL SESSION"}
                                     </span>
-                                ))}
-                            </div>
-                        )}
+                                    <span className="rw-focus-session-value">
+                                        {nextSession.label}{" "}
+                                        <span className="rw-mono">— {formatSessionTime(nextSession.date, nextSession.time)}</span>
+                                    </span>
+                                </p>
+                            )}
 
-                        {circuitData?.weatherImpact && (
-                            <p className="rw-focus-weather rw-hq-weather">
-                                <span className="rw-mono rw-focus-session-label">CONDITIONS BRIEF</span>
-                                {circuitData.weatherImpact.split(". ")[0]}.
+                            <p className="rw-hq-wiki">
+                                <a href={race.url} target="_blank" rel="noreferrer">
+                                    {race.raceName} — Wikipedia dossier ↗
+                                </a>
                             </p>
-                        )}
+                        </div>
 
-                        <p className="rw-hq-wiki">
-                            <a href={race.url} target="_blank" rel="noreferrer">
-                                {race.raceName} — Wikipedia dossier ↗
-                            </a>
-                        </p>
-                    </div>
-
-                    <div className="rw-hq-hero-map">
-                        <CircuitVisualization
-                            circuitId={race.Circuit?.circuitId}
-                            circuitName={race.Circuit?.circuitName}
-                            info={circuitData}
-                        />
+                        <ol className="rw-rail">
+                            {sessions.map((s) => {
+                                const isNext = nextSession?.key === s.key;
+                                const isPast = s.start <= now && !isNext;
+                                const term = sessionTermFor(s.key);
+                                return (
+                                    <li
+                                        key={s.key}
+                                        className={`rw-rail-stop${isNext ? " rw-rail-stop--next" : ""}${isPast ? " rw-rail-stop--past" : ""}${s.key === "Race" ? " rw-rail-stop--race" : ""}`}
+                                    >
+                                        <span className="rw-rail-dot" aria-hidden="true" />
+                                        <span className="rw-rail-name">
+                                            {term ? (
+                                                <KnowMoreTerm
+                                                    term={term}
+                                                    setSelectedTerm={setSelectedTerm}
+                                                    knowMoreInfo={knowMoreInfo}
+                                                >
+                                                    {s.label}
+                                                </KnowMoreTerm>
+                                            ) : (
+                                                s.label
+                                            )}
+                                            {isNext && <span className="rw-rail-next rw-mono">NEXT</span>}
+                                        </span>
+                                        <span className="rw-rail-time rw-mono">
+                                            {formatSessionTime(s.date, s.time)}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+                        </ol>
                     </div>
                 </div>
             </header>
 
             <main className="rw-hq-main">
-                {/* ── Session plan ──────────────────────────────────── */}
-                <HqSection eyebrow="OPERATIONS" title="Weekend Session Plan">
-                    <ol className="rw-rail">
-                        {sessions.map((s) => {
-                            const isNext = nextSession?.key === s.key;
-                            const isPast = s.start <= now && !isNext;
-                            const term = sessionTermFor(s.key);
-                            return (
-                                <li
-                                    key={s.key}
-                                    className={`rw-rail-stop${isNext ? " rw-rail-stop--next" : ""}${isPast ? " rw-rail-stop--past" : ""}${s.key === "Race" ? " rw-rail-stop--race" : ""}`}
-                                >
-                                    <span className="rw-rail-dot" aria-hidden="true" />
-                                    <span className="rw-rail-name">
-                                        {term ? (
-                                            <KnowMoreTerm
-                                                term={term}
-                                                setSelectedTerm={setSelectedTerm}
-                                                knowMoreInfo={knowMoreInfo}
-                                            >
-                                                {s.label}
-                                            </KnowMoreTerm>
-                                        ) : (
-                                            s.label
-                                        )}
-                                        {isNext && <span className="rw-rail-next rw-mono">NEXT</span>}
-                                    </span>
-                                    <span className="rw-rail-time rw-mono">
-                                        {formatSessionTime(s.date, s.time)}
-                                    </span>
-                                </li>
-                            );
-                        })}
-                    </ol>
-                </HqSection>
+                {/* ── Circuit intelligence (light) ───────────────────── */}
+                {circuitData && (
+                    <section className="rw-hq-circuit">
+                        <div className="rw-hq-circuit-inner">
+                            <div className="rw-hq-circuit-visual">
+                                <CircuitVisualization
+                                    circuitId={race.Circuit?.circuitId}
+                                    circuitName={race.Circuit?.circuitName}
+                                    info={circuitData}
+                                />
+                            </div>
+
+                            <div className="rw-hq-circuit-body">
+                                <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">ENGINEERING</span>
+                                <h2 className="rw-hq-section-title rw-hq-section-title--on-light">Circuit Intelligence</h2>
+
+                                {circuitData.summary && <p className="rw-hq-prose rw-hq-prose--on-light">{circuitData.summary}</p>}
+
+                                <div className="rw-circuit-stats">
+                                    <div className="rw-cstat">
+                                        <span className="rw-cstat-value rw-mono"><CountUp value={circuitData.laps} /></span>
+                                        <span className="rw-cstat-label rw-mono">LAPS</span>
+                                    </div>
+                                    <div className="rw-cstat">
+                                        <span className="rw-cstat-value rw-mono"><CountUp value={circuitData.turns} /></span>
+                                        <span className="rw-cstat-label rw-mono">TURNS</span>
+                                    </div>
+                                    {circuitData.drsZones != null && (
+                                        <div className="rw-cstat">
+                                            <span className="rw-cstat-value rw-mono"><CountUp value={circuitData.drsZones} /></span>
+                                            <span className="rw-cstat-label rw-mono">
+                                                <KnowMoreTerm term="drs" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>DRS</KnowMoreTerm> ZONES
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <dl className="rw-records rw-records--on-light">
+                                    {circuitData.length && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">TRACK LENGTH</dt>
+                                            <dd>{circuitData.length}</dd>
+                                        </div>
+                                    )}
+                                    {circuitData.raceDistance && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">RACE DISTANCE</dt>
+                                            <dd>{circuitData.raceDistance}</dd>
+                                        </div>
+                                    )}
+                                    {circuitData.lapRecord && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">
+                                                <KnowMoreTerm term="fastest_lap" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>LAP RECORD</KnowMoreTerm>
+                                            </dt>
+                                            <dd>{circuitData.lapRecord} — {circuitData.lapRecordHolder} ({circuitData.lapRecordYear})</dd>
+                                        </div>
+                                    )}
+                                    {circuitData.firstGrandPrix && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">FIRST GRAND PRIX</dt>
+                                            <dd>{circuitData.firstGrandPrix}</dd>
+                                        </div>
+                                    )}
+                                    {circuitData.trackType && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">TRACK TYPE</dt>
+                                            <dd>{circuitData.trackType}</dd>
+                                        </div>
+                                    )}
+                                </dl>
+
+                                {circuitData.weatherImpact && (
+                                    <p className="rw-focus-weather rw-focus-weather--on-light">
+                                        <span className="rw-mono rw-focus-session-label">CONDITIONS BRIEF</span>
+                                        {circuitData.weatherImpact}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {(circuitData.famousFor || circuitData.keyCorners?.length > 0 || circuitData.funFacts?.length > 0) && (
+                            <div className="rw-hq-circuit-extra">
+                                {circuitData.famousFor && (
+                                    <div className="rw-hq-circuit-extra-block">
+                                        <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">REPUTATION</span>
+                                        <p className="rw-hq-prose rw-hq-prose--on-light">{circuitData.famousFor}</p>
+                                    </div>
+                                )}
+                                {circuitData.keyCorners?.length > 0 && (
+                                    <div className="rw-hq-circuit-extra-block">
+                                        <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">TRACK GUIDE</span>
+                                        <ul className="rw-corners rw-corners--on-light">
+                                            {circuitData.keyCorners.map((corner, i) => (
+                                                <li key={i} className="rw-corner">
+                                                    <span className="rw-corner-apex rw-mono">{pad(i + 1)}</span>
+                                                    <p>{corner}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                {circuitData.funFacts?.length > 0 && (
+                                    <div className="rw-hq-circuit-extra-block">
+                                        <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">PADDOCK NOTES</span>
+                                        <ul className="rw-facts rw-facts--on-light">
+                                            {circuitData.funFacts.map((fact, i) => (
+                                                <li key={i} className="rw-fact rw-fact--on-light">{fact}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {/* ── Championship progress ──────────────────────────── */}
+                {totalRounds > 0 && (
+                    <HqSection eyebrow="THE SEASON" title="Championship Progress">
+                        <span className="rw-mono rw-focus-progress-label">
+                            {completedRounds} OF {totalRounds} ROUNDS COMPLETE
+                        </span>
+                        <div className="rw-progress-track rw-progress-track--wide">
+                            <div className="rw-progress-fill" style={{ width: `${progressPct}%` }} />
+                            <div className="rw-progress-marker" style={{ left: `${progressPct}%` }} />
+                        </div>
+                        <div className="rw-progress-stats">
+                            <div>
+                                <span className="rw-cstat-value rw-mono">{race.round}</span>
+                                <span className="rw-cstat-label rw-mono">THIS ROUND</span>
+                            </div>
+                            <div>
+                                <span className="rw-cstat-value rw-mono">{completedRounds}</span>
+                                <span className="rw-cstat-label rw-mono">COMPLETED</span>
+                            </div>
+                            <div>
+                                <span className="rw-cstat-value rw-mono">{Math.max(0, totalRounds - completedRounds)}</span>
+                                <span className="rw-cstat-label rw-mono">REMAINING</span>
+                            </div>
+                        </div>
+                    </HqSection>
+                )}
 
                 {raceNotStarted && (
                     <HqSection eyebrow="STANDBY" title="Awaiting Green Light">
@@ -431,104 +580,6 @@ function GrandPrixDetails() {
                                 ))}
                             </div>
                         </HqSection>
-                    </>
-                )}
-
-                {/* ── Circuit dossier ───────────────────────────────── */}
-                {circuitData && (
-                    <>
-                        <HqSection eyebrow="ENGINEERING" title="Circuit Dossier" wide>
-                            <p className="rw-hq-prose">{circuitData.summary}</p>
-
-                            <div className="rw-circuit-stats">
-                                <div className="rw-cstat">
-                                    <span className="rw-cstat-value rw-mono">
-                                        <CountUp value={circuitData.laps} />
-                                    </span>
-                                    <span className="rw-cstat-label rw-mono">LAPS</span>
-                                </div>
-                                <div className="rw-cstat">
-                                    <span className="rw-cstat-value rw-mono">
-                                        <CountUp value={circuitData.turns} />
-                                    </span>
-                                    <span className="rw-cstat-label rw-mono">TURNS</span>
-                                </div>
-                                <div className="rw-cstat">
-                                    <span className="rw-cstat-value rw-mono">
-                                        <CountUp value={circuitData.drsZones} />
-                                    </span>
-                                    <span className="rw-cstat-label rw-mono">
-                                        <KnowMoreTerm term="drs" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>
-                                            DRS
-                                        </KnowMoreTerm>{" "}
-                                        ZONES
-                                    </span>
-                                </div>
-                            </div>
-
-                            <dl className="rw-records">
-                                <div className="rw-record-row">
-                                    <dt className="rw-mono">TRACK LENGTH</dt>
-                                    <dd>{circuitData.length}</dd>
-                                </div>
-                                <div className="rw-record-row">
-                                    <dt className="rw-mono">RACE DISTANCE</dt>
-                                    <dd>{circuitData.raceDistance}</dd>
-                                </div>
-                                {circuitData.lapRecord && (
-                                    <div className="rw-record-row">
-                                        <dt className="rw-mono">
-                                            <KnowMoreTerm term="fastest_lap" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>
-                                                LAP RECORD
-                                            </KnowMoreTerm>
-                                        </dt>
-                                        <dd>
-                                            {circuitData.lapRecord} — {circuitData.lapRecordHolder} (
-                                            {circuitData.lapRecordYear})
-                                        </dd>
-                                    </div>
-                                )}
-                                <div className="rw-record-row">
-                                    <dt className="rw-mono">FIRST GRAND PRIX</dt>
-                                    <dd>{circuitData.firstGrandPrix}</dd>
-                                </div>
-                                {circuitData.trackType && (
-                                    <div className="rw-record-row">
-                                        <dt className="rw-mono">TRACK TYPE</dt>
-                                        <dd>{circuitData.trackType}</dd>
-                                    </div>
-                                )}
-                            </dl>
-                        </HqSection>
-
-                        {circuitData.famousFor && (
-                            <HqSection eyebrow="REPUTATION" title="Famous For">
-                                <p className="rw-hq-prose">{circuitData.famousFor}</p>
-                            </HqSection>
-                        )}
-
-                        {circuitData.keyCorners?.length > 0 && (
-                            <HqSection eyebrow="TRACK GUIDE" title="Key Corners">
-                                <ul className="rw-corners">
-                                    {circuitData.keyCorners.map((corner, i) => (
-                                        <li key={i} className="rw-corner">
-                                            <span className="rw-corner-apex rw-mono">{pad(i + 1)}</span>
-                                            <p>{corner}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </HqSection>
-                        )}
-
-                        {circuitData.funFacts?.length > 0 && (
-                            <HqSection eyebrow="PADDOCK NOTES" title="Fun Facts">
-                                <ul className="rw-facts">
-                                    {circuitData.funFacts.map((fact, i) => (
-                                        <li key={i} className="rw-fact">{fact}</li>
-                                    ))}
-                                </ul>
-                            </HqSection>
-                        )}
                     </>
                 )}
             </main>

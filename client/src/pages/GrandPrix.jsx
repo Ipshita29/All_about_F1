@@ -1,20 +1,20 @@
 /*
- * RACE WEEKEND — the championship season as a journey.
+ * RACE WEEKEND — the championship season as a chronological journey.
  *
- * Instead of a calendar of identical cards, the season is a route travelled
- * top-to-bottom: completed Grands Prix are stamped checkpoints (hover loads
- * and reveals the podium + fastest lap lazily from the existing results
- * endpoint), the current weekend is a large cinematic focus module with
- * countdown / session / championship progress / circuit blueprint, and
- * future races are destinations whose blueprint + schedule unfold on hover.
- * Clicking a checkpoint flies into Grand Prix Details via a shared-element
- * view transition. Same backend endpoints as before; year select and search
- * are preserved.
+ * A dark hero + focus module (the current/next race weekend, with a real
+ * countdown and championship-progress readout) leads into a light Cararra
+ * season timeline: every round, its winner (once run), and — on hover —a
+ * concise podium + fastest-lap preview. Same backend endpoints as before;
+ * year select and search are preserved. Winners are now fetched eagerly
+ * for every completed round (not just on hover) so the timeline reads
+ * chronologically without an interaction first — same existing results
+ * endpoint, just called proactively instead of lazily.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import LoadingSpinner from "../components/LoadingSpinner";
 import CircuitVisualization from "../components/CircuitVisualization";
+import Button from "../components/ui/Button";
+import LoadingSpinner from "../components/LoadingSpinner";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { circuitInfo } from "../data/circuitInfo";
@@ -58,8 +58,6 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
             className={`rw-focus${inView ? " rw-focus--lit" : ""}${isLive ? " rw-focus--live" : ""}`}
             aria-label="Current race weekend"
         >
-            <div className="rw-focus-glow" aria-hidden="true" />
-
             <div className="rw-focus-head">
                 <span className="rw-focus-status rw-mono">
                     <span className="rw-focus-dot" aria-hidden="true" />
@@ -82,7 +80,7 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
 
                     {raceSession && countdown.total > 0 && (
                         <div
-                            className="rw-focus-countdown rw-mono"
+                            className="rw-countdown"
                             role="timer"
                             aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
                         >
@@ -92,8 +90,8 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
                                 [countdown.minutes, "MIN"],
                                 [countdown.seconds, "SEC"],
                             ].map(([val, lbl]) => (
-                                <span className="rw-count-unit" key={lbl}>
-                                    <b>{pad(val)}</b>
+                                <span className="rw-countdown-unit" key={lbl}>
+                                    <b className="rw-mono">{pad(val)}</b>
                                     <small>{lbl}</small>
                                 </span>
                             ))}
@@ -105,7 +103,9 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
                             <span className="rw-mono rw-focus-session-label">
                                 {isLive ? "CURRENT / NEXT SESSION" : "NEXT SESSION"}
                             </span>
-                            {nextUp.label} — {formatSessionTime(nextUp.date, nextUp.time)}
+                            <span className="rw-focus-session-value">
+                                {nextUp.label} <span className="rw-mono">— {formatSessionTime(nextUp.date, nextUp.time)}</span>
+                            </span>
                         </p>
                     )}
 
@@ -126,13 +126,15 @@ function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
                         </p>
                     )}
 
-                    <Link
+                    <Button
+                        variant="primary"
                         to={`/grandprixdashboard/${year}/${race.round}`}
-                        className="rw-cta"
                         viewTransition
+                        arrow
+                        className="rw-focus-cta"
                     >
-                        ENTER RACE HQ <span aria-hidden="true">→</span>
-                    </Link>
+                        Enter Race HQ
+                    </Button>
                 </div>
 
                 <div className="rw-focus-map">
@@ -192,13 +194,6 @@ function DestinationPeek({ race }) {
 
     return (
         <div className="rw-peek-future">
-            <div className="rw-peek-map">
-                <CircuitVisualization
-                    circuitId={race.Circuit?.circuitId}
-                    compact
-                    showMeta={false}
-                />
-            </div>
             <ul className="rw-peek-sessions">
                 {sessions.map((s) => (
                     <li key={s.key}>
@@ -216,34 +211,29 @@ function DestinationPeek({ race }) {
     );
 }
 
-/* ── One checkpoint on the season route ───────────────────────────── */
+/* ── One round on the season timeline ─────────────────────────────── */
 
-function Checkpoint({ race, state, year, index, results, winner, onPeek }) {
+function Checkpoint({ race, state, year, results, winner, onPeek }) {
     const [ref, inView] = useInViewOnce({ threshold: 0.18 });
-    const side = index % 2 === 0 ? "left" : "right";
     const hasSprint = Boolean(race.Sprint);
 
     const stateLabel =
-        state === "done" ? "FINISHED" : state === "focus" ? "YOU ARE HERE" : "AWAITS";
+        state === "done" ? "FINISHED" : state === "focus" ? "YOU ARE HERE" : "UPCOMING";
 
     return (
         <li
             ref={ref}
-            className={`rw-stop rw-stop--${side} rw-stop--${state}${inView ? " rw-stop--in" : ""}`}
+            className={`rw-stop rw-stop--${state}${inView ? " rw-stop--in" : ""}`}
         >
-            <span className="rw-stop-marker" aria-hidden="true">
-                <b className="rw-mono">{pad(Number(race.round))}</b>
-            </span>
-
             <Link
                 to={`/grandprixdashboard/${year}/${race.round}`}
-                className="rw-stop-card"
                 viewTransition
+                className="rw-stop-card"
                 onMouseEnter={state === "done" ? onPeek : undefined}
                 onFocus={state === "done" ? onPeek : undefined}
             >
                 <div className="rw-stop-top rw-mono">
-                    <span className="rw-stop-round">ROUND {race.round}</span>
+                    <span className="rw-stop-round">ROUND {pad(Number(race.round))}</span>
                     <span className="rw-stop-badges">
                         {hasSprint && <span className="rw-badge rw-badge--sprint">SPRINT</span>}
                         <span className={`rw-badge rw-badge--${state}`}>{stateLabel}</span>
@@ -356,8 +346,8 @@ function GrandPrix() {
         return start && start < new Date() ? "done" : "future";
     };
 
-    /* podium data is fetched lazily, the first time a finished checkpoint
-       is hovered/focused, and cached per year+round */
+    /* podium data is fetched per round (year+round), cached so a round is
+       only ever requested once */
     const peekResults = (round) => {
         const key = `${year}-${round}`;
         if (resultsCache[key] !== undefined) return;
@@ -369,6 +359,20 @@ function GrandPrix() {
             )
             .catch(() => setResultsCache((c) => ({ ...c, [key]: [] })));
     };
+
+    /* Winners are fetched eagerly for every completed round once the season
+       loads, so the timeline shows "WINNER" without requiring a hover
+       first — same results endpoint as the hover peek, just called
+       proactively. */
+    useEffect(() => {
+        if (!loaded) return;
+        const now = new Date();
+        grandprix.forEach((race) => {
+            const start = raceStart(race);
+            if (start && start < now) peekResults(race.round);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loaded, grandprix]);
 
     const winnerFor = (round) => {
         const cached = resultsCache[`${year}-${round}`];
@@ -414,50 +418,57 @@ function GrandPrix() {
             {!loaded ? (
                 <div className="rw-loading"><LoadingSpinner /></div>
             ) : (
-                <main className="rw-main">
+                <>
                     {focusRace && !search && (
-                        <FocusModule
-                            race={focusRace}
-                            year={year}
-                            isLive={Boolean(liveLabel)}
-                            liveLabel={liveLabel}
-                            doneCount={doneCount}
-                            totalCount={grandprix.length}
-                        />
+                        <div className="rw-main">
+                            <FocusModule
+                                race={focusRace}
+                                year={year}
+                                isLive={Boolean(liveLabel)}
+                                liveLabel={liveLabel}
+                                doneCount={doneCount}
+                                totalCount={grandprix.length}
+                            />
+                        </div>
                     )}
 
-                    {filtered.length === 0 ? (
-                        <div className="rw-empty">
-                            <span className="rw-empty-title">NO DESTINATION FOUND</span>
-                            <span className="rw-empty-sub rw-mono">
-                                ADJUST THE SEASON OR SEARCH
-                            </span>
-                        </div>
-                    ) : (
-                        <section className="rw-journey" aria-label="Season calendar">
+                    <section className="rw-journey" aria-label="Season calendar">
+                        <div className="rw-journey-inner">
                             <span className="rw-journey-start rw-mono" aria-hidden="true">
                                 SEASON START
                             </span>
-                            <ol className="rw-route">
-                                {filtered.map((race, i) => (
-                                    <Checkpoint
-                                        key={race.round}
-                                        race={race}
-                                        state={stateFor(race)}
-                                        year={year}
-                                        index={i}
-                                        results={resultsCache[`${year}-${race.round}`]}
-                                        winner={winnerFor(race.round)}
-                                        onPeek={() => peekResults(race.round)}
-                                    />
-                                ))}
-                            </ol>
-                            <span className="rw-journey-finish rw-mono" aria-hidden="true">
-                                <span className="rw-chequer" /> CHAMPIONSHIP DECIDED
-                            </span>
-                        </section>
-                    )}
-                </main>
+
+                            {filtered.length === 0 ? (
+                                <div className="rw-empty">
+                                    <span className="rw-empty-title">NO DESTINATION FOUND</span>
+                                    <span className="rw-empty-sub rw-mono">
+                                        ADJUST THE SEASON OR SEARCH
+                                    </span>
+                                </div>
+                            ) : (
+                                <ol className="rw-route">
+                                    {filtered.map((race) => (
+                                        <Checkpoint
+                                            key={race.round}
+                                            race={race}
+                                            state={stateFor(race)}
+                                            year={year}
+                                            results={resultsCache[`${year}-${race.round}`]}
+                                            winner={winnerFor(race.round)}
+                                            onPeek={() => peekResults(race.round)}
+                                        />
+                                    ))}
+                                </ol>
+                            )}
+
+                            {filtered.length > 0 && (
+                                <span className="rw-journey-finish rw-mono" aria-hidden="true">
+                                    CHAMPIONSHIP DECIDED
+                                </span>
+                            )}
+                        </div>
+                    </section>
+                </>
             )}
         </div>
     );
