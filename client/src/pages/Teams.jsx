@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SearchControls from "../components/entity/SearchControls";
-import ComparisonCTA from "../components/entity/ComparisonCTA";
 import ConstructorRoster from "../components/entity/ConstructorRoster";
-import ConstructorProfile from "../components/entity/ConstructorProfile";
-import { getTeamAssets } from "../config/teamAssets";
+import ConstructorCard from "../components/entity/ConstructorCard";
+import Stat from "../components/ui/Stat";
+import Button from "../components/ui/Button";
+import EmptyState from "../components/ui/EmptyState";
 import "./EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 /*
- * THE CONSTRUCTORS — a championship dossier, not a database table. Each
- * team is an entity: position, nationality, current line-up (by driver
- * number), points and wins as statistics, and a proportional bar showing
- * real standing relative to the championship leader.
+ * THE CONSTRUCTORS — the paddock, not a copy of the Drivers grid. A light
+ * Cararra hero (the inverse of the Drivers page's dark one) → a dark
+ * championship overview → the team grid → a dark "compare the grid"
+ * close. No car photography (none of the available sources are
+ * consistent or high-quality enough — see config/teamAssets.js); each
+ * card leans on the team's real logo and its actual standings instead.
  */
 function Teams() {
     const [teams, setTeams] = useState([]);
@@ -57,37 +60,43 @@ function Teams() {
     };
     const ordered = [...filtered].sort((a, b) => positionOf(a) - positionOf(b));
     const leaderPts = standings[0]?.points;
+    const totalPoints = standings.reduce((sum, s) => sum + Number(s.points || 0), 0);
 
     return (
         <div className="ex">
-            <header className="dr-hero">
-                <span className="dr-hero-year">{year} SEASON</span>
-                <h1 className="dr-hero-title">The Constructors</h1>
-                <p className="dr-hero-sub">
-                    {loaded ? teams.length : "10"} teams. One championship.
-                </p>
+            <header className="dr-hero dr-hero--on-light">
+                <span className="dr-hero-year">{year} CONSTRUCTORS</span>
+                <h1 className="dr-hero-title">The Teams</h1>
+                <p className="dr-hero-sub">Ten teams. One championship.</p>
             </header>
 
-            <SearchControls
-                year={year}
-                years={YEARS}
-                onYearChange={setYear}
-                search={search}
-                onSearchChange={setSearch}
-                searchPlaceholder="SEARCH TEAMS"
-                count={`${filtered.length} TEAMS`}
-            >
-                <ComparisonCTA to="/compare-teams" label="Compare Constructors" />
-            </SearchControls>
+            <div className="gr-overview gr-overview--dark">
+                <div className="gr-overview-inner">
+                    <div className="stat-row">
+                        <Stat value={loaded ? teams.length : "10"} label="Teams" />
+                        <Stat value={standings[0]?.Constructor?.name ?? "—"} label="Current Leader" accent />
+                        <Stat value={totalPoints || "—"} label="Total Championship Points" />
+                    </div>
+                    <SearchControls
+                        year={year}
+                        years={YEARS}
+                        onYearChange={setYear}
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="SEARCH TEAMS"
+                        count={`${filtered.length} TEAMS`}
+                    />
+                </div>
+            </div>
 
             {!loaded ? (
                 <div className="ex-loading"><LoadingSpinner /></div>
             ) : ordered.length === 0 ? (
                 <main className="ex-main">
-                    <div className="ex-empty">
-                        <span className="ex-empty-title">No team matches</span>
-                        <span className="ex-empty-sub">ADJUST THE SEASON OR SEARCH</span>
-                    </div>
+                    <EmptyState
+                        title="No team matches"
+                        description="Adjust the season or search to find who you're looking for."
+                    />
                 </main>
             ) : (
                 <main className="ex-main">
@@ -100,13 +109,12 @@ function Teams() {
                                 (d) => d.Constructors?.[0]?.constructorId === t.constructorId
                             );
                             return (
-                                <ConstructorProfile
+                                <ConstructorCard
                                     key={t.constructorId}
                                     team={t}
                                     standing={standing}
                                     drivers={drivers}
                                     year={year}
-                                    accent={getTeamAssets(t.constructorId).accent}
                                     leaderPts={leaderPts}
                                 />
                             );
@@ -114,6 +122,17 @@ function Teams() {
                     </ConstructorRoster>
                 </main>
             )}
+
+            <section className="gr-cta gr-cta--dark">
+                <div className="gr-cta-inner">
+                    <div>
+                        <span className="gr-cta-eyebrow">ENGINEERING, BENCHMARKED</span>
+                        <h2 className="gr-cta-title">Compare The Grid</h2>
+                        <p className="gr-cta-copy">Put two constructors head-to-head.</p>
+                    </div>
+                    <Button variant="primary" to="/compare-teams" arrow>Compare Teams</Button>
+                </div>
+            </section>
         </div>
     );
 }

@@ -71,6 +71,13 @@ const DRIVER_ASSETS = {
  * `fullName` is used to bridge into data/driverInfo.js (keyed by name).
  * Returns image candidates ordered best-first; the <LayeredImage> component
  * walks the list until one loads.
+ *
+ * Deliberately NOT included: driverInfo[name]?.image. That field mixes a
+ * handful of local paths (duplicates of `conf.image` below) with remote
+ * press photos of wildly different crops, angles and quality — exactly
+ * the "some drivers get a huge photo, some get a tiny inconsistent one"
+ * problem. Every driver either gets one of the real transparent cutouts
+ * below, or the styled monogram fallback — never a random remote photo.
  */
 export function getDriverAssets(driverId, fullName) {
     const conf = DRIVER_ASSETS[driverId] || {};
@@ -80,7 +87,6 @@ export function getDriverAssets(driverId, fullName) {
         `${DRIVER_CUTOUT_DIR}/${driverId}.webp`,
         `${DRIVER_CUTOUT_DIR}/${driverId}.png`,
         conf.image,
-        info?.image,
     ].filter(Boolean);
 
     const helmetCandidates = [

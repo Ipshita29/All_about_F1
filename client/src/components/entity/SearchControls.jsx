@@ -11,10 +11,11 @@ export default function SearchControls({
     onSearchChange,
     searchPlaceholder,
     count,
+    onLight = false,
     children,
 }) {
     return (
-        <div className="sc">
+        <div className={`sc${onLight ? " sc--on-light" : ""}`}>
             {years && (
                 <label className="sc-field sc-field--year">
                     <span className="sc-label">SEASON</span>

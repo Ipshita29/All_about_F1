@@ -1,19 +1,23 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SearchControls from "../components/entity/SearchControls";
-import ComparisonCTA from "../components/entity/ComparisonCTA";
 import DriverRoster from "../components/entity/DriverRoster";
-import DriverProfileRow from "../components/entity/DriverProfileRow";
-import { getTeamAccent } from "../config/driverAssets";
+import DriverCard from "../components/entity/DriverCard";
+import Stat from "../components/ui/Stat";
+import Button from "../components/ui/Button";
+import EmptyState from "../components/ui/EmptyState";
 import "./EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 /*
- * THE DRIVERS — a championship roster, not a database table. The racing
- * number is each driver's visual identity; team colour is reduced to a
- * hairline accent. Selecting an item opens the Driver Dossier via a
- * shared-element view transition on the racing number.
+ * THE DRIVERS — a premium grid, not a database table. Dark hero → a light
+ * Cararra overview band (grid size, at a glance) → the dark driver grid
+ * itself → a light "compare the grid" close. Every driver's racing
+ * number and championship position are always visible; a real portrait
+ * cutout is used where one genuinely exists (see config/driverAssets.js)
+ * and a bold ghost number stands in where it doesn't — never a random
+ * low-quality photo.
  */
 function Drivers() {
     const [drivers, setDrivers] = useState([]);
@@ -37,51 +41,67 @@ function Drivers() {
             .includes(search.toLowerCase())
     );
 
+    const teamCount = new Set(
+        drivers.map((d) => d.Constructors?.[0]?.constructorId).filter(Boolean)
+    ).size;
+
     return (
         <div className="ex">
             <header className="dr-hero">
-                <span className="dr-hero-year">{year} SEASON</span>
+                <span className="dr-hero-year">FORMULA 1 · {year} GRID</span>
                 <h1 className="dr-hero-title">The Drivers</h1>
-                <p className="dr-hero-sub">
-                    {loaded ? drivers.length : "20"} competitors. One championship.
-                </p>
+                <p className="dr-hero-sub">Twenty drivers. One championship.</p>
             </header>
 
-            <SearchControls
-                year={year}
-                years={YEARS}
-                onYearChange={setYear}
-                search={search}
-                onSearchChange={setSearch}
-                searchPlaceholder="SEARCH DRIVERS"
-                count={`${filtered.length} ON GRID`}
-            >
-                <ComparisonCTA to="/compare-drivers" label="Compare Drivers" />
-            </SearchControls>
+            <div className="gr-overview">
+                <div className="gr-overview-inner">
+                    <div className="stat-row">
+                        <Stat onLight value={loaded ? drivers.length : "20"} label="Drivers" />
+                        <Stat onLight value={loaded ? teamCount : "10"} label="Teams" />
+                        <Stat onLight value={year} label="Season" />
+                    </div>
+                    <SearchControls
+                        year={year}
+                        years={YEARS}
+                        onYearChange={setYear}
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="SEARCH DRIVERS"
+                        count={`${filtered.length} ON GRID`}
+                        onLight
+                    />
+                </div>
+            </div>
 
             {!loaded ? (
                 <div className="ex-loading"><LoadingSpinner /></div>
             ) : filtered.length === 0 ? (
                 <main className="ex-main">
-                    <div className="ex-empty">
-                        <span className="ex-empty-title">No driver on this grid</span>
-                        <span className="ex-empty-sub">ADJUST THE SEASON OR SEARCH</span>
-                    </div>
+                    <EmptyState
+                        title="No driver on this grid"
+                        description="Adjust the season or search to find who you're looking for."
+                    />
                 </main>
             ) : (
                 <main className="ex-main">
                     <DriverRoster>
                         {filtered.map((s) => (
-                            <DriverProfileRow
-                                key={s.Driver.driverId}
-                                standing={s}
-                                year={year}
-                                accent={getTeamAccent(s.Constructors?.[0]?.constructorId)}
-                            />
+                            <DriverCard key={s.Driver.driverId} standing={s} year={year} />
                         ))}
                     </DriverRoster>
                 </main>
             )}
+
+            <section className="gr-cta">
+                <div className="gr-cta-inner">
+                    <div>
+                        <span className="gr-cta-eyebrow">HEAD TO HEAD</span>
+                        <h2 className="gr-cta-title">Compare The Grid</h2>
+                        <p className="gr-cta-copy">Put any two drivers head-to-head, season by season.</p>
+                    </div>
+                    <Button variant="dark" to="/compare-drivers" arrow>Compare Drivers</Button>
+                </div>
+            </section>
         </div>
     );
 }
