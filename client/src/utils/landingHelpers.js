@@ -258,3 +258,18 @@ export function formatArticleTime(publishedAt) {
     if (hours < 24) return `${hours}H AGO`;
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }).toUpperCase();
 }
+
+/* The /news route already queries F1-specific domains and keywords, but
+   several of those domains (motorsport.com, autosport.com) cover other
+   series too. Belt-and-braces client-side filter: keep anything that
+   explicitly mentions F1/Grand Prix, drop anything that only mentions a
+   different series, and default to keeping when neither matches. */
+const F1_MENTION = /formula\s*1|formula\s*one|\bf1\b|grand prix|\bfia\b/i;
+const OTHER_SERIES_ONLY = /\bnascar\b|\bindycar\b|indy\s*500|\bmotogp\b|\bcup series\b|\bxfinity\b|\btruck series\b|\bwrc\b|rally/i;
+
+export function isRelevantF1Article(article) {
+    const text = `${article.title || ""} ${article.description || ""}`;
+    if (F1_MENTION.test(text)) return true;
+    if (OTHER_SERIES_ONLY.test(text)) return false;
+    return true;
+}

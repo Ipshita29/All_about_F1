@@ -1,12 +1,18 @@
 /*
- * One spacious championship section with an accessible DRIVERS | CONSTRUCTORS
- * toggle (tab pattern). Hierarchy comes from typography and real data — big
- * ghost driver numbers, points, and the gap to P1 — not progress bars or
- * imagery.
+ * THE TITLE FIGHT — a curated top 3, not a standings table. An accessible
+ * DRIVERS | CONSTRUCTORS toggle switches which championship is shown;
+ * "View Full Standings" hands off to the real roster page for the rest.
+ *
+ * P1 carries deliberately more visual weight than P2/P3 (a small
+ * "Championship Leader" tag, larger typography, a stronger accent on its
+ * points) — restrained, not a flashy card. No constructor colour bars:
+ * the section follows the global black/white/red system rather than
+ * borrowing team livery colours.
  */
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import ChampionshipTable from "./ChampionshipTable";
+import SectionHeader from "../ui/SectionHeader";
+import Button from "../ui/Button";
+import { isFavouriteDriver, isFavouriteTeam } from "../../utils/landingHelpers";
 
 const VIEWS = [
     { id: "drivers", label: "DRIVERS" },
@@ -16,6 +22,7 @@ const VIEWS = [
 export default function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
     const [view, setView] = useState("drivers");
     const tabRefs = useRef([]);
+    const isDrivers = view === "drivers";
 
     const onTabKeyDown = (e, index) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
@@ -25,29 +32,23 @@ export default function ChampionshipSection({ driverStandings, constructorStandi
         tabRefs.current[next]?.focus();
     };
 
-    const driverLeaderPts = driverStandings?.[0]?.points ?? 0;
-    const teamLeaderPts = constructorStandings?.[0]?.points ?? 0;
-    const hasDrivers = driverStandings?.length > 0;
-    const hasTeams = constructorStandings?.length > 0;
+    const standings = (isDrivers ? driverStandings : constructorStandings) || [];
+    const top3 = standings.slice(0, 3);
+    const hasData = top3.length > 0;
 
     return (
-        <section className="lp-section lp-champ" aria-label="Championship standings">
-            <header className="lp-section-head lp-champ-head">
-                <div>
-                    <span className="lp-section-eyebrow">WORLD CHAMPIONSHIP</span>
-                    <h2 className="lp-section-title">THE TITLE FIGHT</h2>
-                </div>
-                <div className="lp-champ-toggle" role="tablist" aria-label="Championship type">
+        <section className="champ" aria-label="Championship standings">
+            <div className="champ-head">
+                <SectionHeader eyebrow="WORLD CHAMPIONSHIP" title="The Title Fight" />
+                <div className="champ-toggle" role="tablist" aria-label="Championship type">
                     {VIEWS.map((v, i) => (
                         <button
                             key={v.id}
                             ref={(el) => (tabRefs.current[i] = el)}
                             role="tab"
-                            id={`lp-champ-tab-${v.id}`}
                             aria-selected={view === v.id}
-                            aria-controls={`lp-champ-panel-${v.id}`}
                             tabIndex={view === v.id ? 0 : -1}
-                            className={`lp-champ-tab${view === v.id ? " is-active" : ""}`}
+                            className={`champ-tab${view === v.id ? " is-active" : ""}`}
                             onClick={() => setView(v.id)}
                             onKeyDown={(e) => onTabKeyDown(e, i)}
                         >
@@ -55,55 +56,54 @@ export default function ChampionshipSection({ driverStandings, constructorStandi
                         </button>
                     ))}
                 </div>
-            </header>
-
-            <div
-                role="tabpanel"
-                id="lp-champ-panel-drivers"
-                aria-labelledby="lp-champ-tab-drivers"
-                hidden={view !== "drivers"}
-            >
-                {!hasDrivers && (
-                    <p className="lp-inline-state lp-mono">DRIVER STANDINGS UNAVAILABLE</p>
-                )}
-                {hasDrivers && (
-                    <ChampionshipTable
-                        variant="drivers"
-                        standings={(driverStandings || []).slice(0, 10)}
-                        leaderPts={driverLeaderPts}
-                        favs={favs}
-                    />
-                )}
-                {hasDrivers && (
-                    <Link to="/drivers" className="lp-cta lp-champ-more">
-                        FULL DRIVER STANDINGS <span aria-hidden="true">→</span>
-                    </Link>
-                )}
             </div>
 
-            <div
-                role="tabpanel"
-                id="lp-champ-panel-constructors"
-                aria-labelledby="lp-champ-tab-constructors"
-                hidden={view !== "constructors"}
-            >
-                {!hasTeams && (
-                    <p className="lp-inline-state lp-mono">CONSTRUCTOR STANDINGS UNAVAILABLE</p>
-                )}
-                {hasTeams && (
-                    <ChampionshipTable
-                        variant="constructors"
-                        standings={constructorStandings || []}
-                        leaderPts={teamLeaderPts}
-                        favs={favs}
-                    />
-                )}
-                {hasTeams && (
-                    <Link to="/teams" className="lp-cta lp-champ-more">
-                        FULL CONSTRUCTOR STANDINGS <span aria-hidden="true">→</span>
-                    </Link>
-                )}
-            </div>
+            {!hasData ? (
+                <p className="lp-inline-state">STANDINGS UNAVAILABLE</p>
+            ) : (
+                <ol className="champ-podium">
+                    {top3.map((s, i) => {
+                        const driver = isDrivers ? s.Driver : null;
+                        const constructor = isDrivers ? s.Constructors?.[0] : s.Constructor;
+                        const fav = isDrivers
+                            ? isFavouriteDriver(favs, driver) || isFavouriteTeam(favs, constructor)
+                            : isFavouriteTeam(favs, constructor);
+                        const isLeader = i === 0;
+                        return (
+                            <li
+                                key={isDrivers ? driver.driverId : constructor.constructorId}
+                                className={`champ-spot${isLeader ? " champ-spot--leader" : ""}`}
+                            >
+                                <div className="champ-spot-top">
+                                    <span className="champ-spot-pos">P{s.position}</span>
+                                    {isLeader && <span className="champ-spot-tag">CHAMPIONSHIP LEADER</span>}
+                                    {fav && <span className="champ-spot-fav">FAV</span>}
+                                </div>
+
+                                <h3 className="champ-spot-name">
+                                    {isDrivers ? (
+                                        <>{driver.givenName} <b>{driver.familyName}</b></>
+                                    ) : (
+                                        <b>{constructor.name}</b>
+                                    )}
+                                </h3>
+                                <p className="champ-spot-team">
+                                    {isDrivers ? constructor?.name : constructor.nationality}
+                                </p>
+
+                                <div className="champ-spot-pts">
+                                    <span className="champ-spot-pts-value">{s.points}</span>
+                                    <span className="champ-spot-pts-label">POINTS</span>
+                                </div>
+                            </li>
+                        );
+                    })}
+                </ol>
+            )}
+
+            <Button variant="secondary" to={isDrivers ? "/drivers" : "/teams"} arrow className="champ-more">
+                View Full Standings
+            </Button>
         </section>
     );
 }

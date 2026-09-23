@@ -1,101 +1,71 @@
 /*
- * FROM THE PADDOCK — quiet editorial news section: one featured story plus
- * three supporting stories, powered by the existing /news backend route.
- * Articles mentioning the logged-in user's favourite driver or team get a
- * restrained FOR YOU tag.
+ * FROM THE PADDOCK — quiet editorial news section on a light Cararra
+ * surface: one featured story with a fixed-ratio image, three text-only
+ * supporting stories (no random image dimensions dictating layout).
+ * Articles are filtered to exclude stories that are clearly about a
+ * different racing series (see isRelevantF1Article) before display.
  */
-import { Link } from "react-router-dom";
-import { articleIsForYou, formatArticleTime } from "../../utils/landingHelpers";
-
-function ArticleImage({ article, className }) {
-    /* NewsAPI images are external; hide the frame if one fails instead of
-       showing a broken placeholder. */
-    return (
-        <div className={className}>
-            <img
-                src={article.image}
-                alt=""
-                loading="lazy"
-                onError={(e) => {
-                    e.target.closest("div").classList.add("is-imgless");
-                }}
-            />
-        </div>
-    );
-}
+import SectionHeader from "../ui/SectionHeader";
+import Button from "../ui/Button";
+import { articleIsForYou, formatArticleTime, isRelevantF1Article } from "../../utils/landingHelpers";
 
 function ForYouTag() {
     return <span className="lp-news-foryou">FOR YOU</span>;
 }
 
 export default function PaddockNews({ articles, favs, error }) {
+    const relevant = (articles || []).filter(isRelevantF1Article);
+
     if (error) {
         return (
-            <section className="lp-section lp-news" aria-label="Formula 1 news">
-                <header className="lp-section-head">
-                    <span className="lp-section-eyebrow">LATEST STORIES</span>
-                    <h2 className="lp-section-title">FROM THE PADDOCK</h2>
-                </header>
-                <p className="lp-inline-state lp-mono">
-                    NEWS FEED UNAVAILABLE — COULD NOT REACH THE NEWS SERVER
-                </p>
+            <section className="news" aria-label="Formula 1 news">
+                <SectionHeader onLight eyebrow="LATEST STORIES" title="From The Paddock" />
+                <p className="lp-inline-state">NEWS FEED UNAVAILABLE — COULD NOT REACH THE NEWS SERVER</p>
             </section>
         );
     }
 
-    if (!articles?.length) return null;
+    if (!relevant.length) return null;
 
-    const [featured, ...rest] = articles;
+    const [featured, ...rest] = relevant;
     const supporting = rest.slice(0, 3);
 
     return (
-        <section className="lp-section lp-news" aria-label="Formula 1 news">
-            <header className="lp-section-head lp-news-head">
-                <div>
-                    <span className="lp-section-eyebrow">LATEST STORIES</span>
-                    <h2 className="lp-section-title">FROM THE PADDOCK</h2>
-                </div>
-                <Link to="/news" className="lp-cta">
-                    VIEW ALL STORIES <span aria-hidden="true">→</span>
-                </Link>
-            </header>
+        <section className="news" aria-label="Formula 1 news">
+            <div className="news-head">
+                <SectionHeader onLight eyebrow="LATEST STORIES" title="From The Paddock" />
+                <Button variant="secondary" to="/news" arrow>View All Stories</Button>
+            </div>
 
-            <div className="lp-news-grid">
-                <a
-                    href={featured.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="lp-news-featured"
-                >
-                    <ArticleImage article={featured} className="lp-news-featured-img" />
-                    <div className="lp-news-featured-body">
-                        <p className="lp-news-meta lp-mono">
+            <div className="news-grid">
+                <a href={featured.url} target="_blank" rel="noreferrer" className="news-featured">
+                    <div className="news-featured-img">
+                        <img
+                            src={featured.image}
+                            alt=""
+                            loading="lazy"
+                            onError={(e) => { e.target.closest("div").classList.add("is-imgless"); }}
+                        />
+                    </div>
+                    <div className="news-featured-body">
+                        <p className="news-meta">
                             {featured.source?.toUpperCase()} · {formatArticleTime(featured.publishedAt)}
                             {articleIsForYou(featured, favs) && <ForYouTag />}
                         </p>
-                        <h3 className="lp-news-featured-title">{featured.title}</h3>
-                        {featured.description && (
-                            <p className="lp-news-featured-desc">{featured.description}</p>
-                        )}
-                        <span className="lp-news-readmore lp-mono">READ STORY →</span>
+                        <h3 className="news-featured-title">{featured.title}</h3>
+                        {featured.description && <p className="news-featured-desc">{featured.description}</p>}
+                        <span className="news-readmore">READ STORY →</span>
                     </div>
                 </a>
 
-                <div className="lp-news-side">
+                <div className="news-side">
                     {supporting.map((article) => (
-                        <a
-                            key={article.id}
-                            href={article.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="lp-news-item"
-                        >
-                            <p className="lp-news-meta lp-mono">
-                                {article.source?.toUpperCase()} ·{" "}
-                                {formatArticleTime(article.publishedAt)}
+                        <a key={article.id} href={article.url} target="_blank" rel="noreferrer" className="news-item">
+                            <p className="news-meta">
+                                {article.source?.toUpperCase()} · {formatArticleTime(article.publishedAt)}
                                 {articleIsForYou(article, favs) && <ForYouTag />}
                             </p>
-                            <h3 className="lp-news-item-title">{article.title}</h3>
+                            <h3 className="news-item-title">{article.title}</h3>
                         </a>
                     ))}
                 </div>

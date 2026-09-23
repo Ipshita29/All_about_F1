@@ -4,6 +4,7 @@
  * imagery, no per-tile animation gimmicks.
  */
 import { Link } from "react-router-dom";
+import SectionHeader from "../ui/SectionHeader";
 
 const TILES = [
     { to: "/drivers", n: "01", label: "Drivers", copy: "Profiles, careers and stats for the full grid." },
@@ -18,11 +19,8 @@ const TILES = [
 
 export default function ExploreGrid() {
     return (
-        <section className="lp-section lp-explore" aria-label="Explore All About F1">
-            <header className="lp-section-head">
-                <span className="lp-section-eyebrow">EXPLORE</span>
-                <h2 className="lp-section-title">Every Road In</h2>
-            </header>
+        <section className="lp-explore" aria-label="Explore All About F1">
+            <SectionHeader eyebrow="EXPLORE" title="Every Road In" />
 
             <div className="lp-explore-grid">
                 {TILES.map((t) => (

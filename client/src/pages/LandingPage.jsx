@@ -1,34 +1,30 @@
 /*
- * Homepage — a premium F1 intelligence dashboard, not a cinematic showcase.
+ * Homepage — a premium Formula 1 intelligence platform landing page.
  *
- * This file owns all landing-page data fetching (same backend endpoints the
- * previous page used) and passes plain props down to the section components
- * in src/components/landing/. Page order:
+ * This file owns all landing-page data fetching (same backend endpoints as
+ * before — nothing here changed) and passes plain props down to the
+ * section components in src/components/landing/. Page order, alternating
+ * dark and light surfaces per the Phase 1 design system:
  *
- *   CurrentRaceHero (current/next GP, typographic) → GridInvite (delayed,
- *   logged-out only) → PodiumSection → ChampionshipSection →
- *   RaceIntelligence → SeasonTimeline → PaddockNews → ExploreGrid →
- *   GarageFooter, with PitWallRadio floating after the hero.
+ *   Hero (dark) → NextGrandPrix (light) → GridInvite (floating) →
+ *   PlatformOverview (dark) → RaceIntelligence (light) →
+ *   ChampionshipSection (dark) → PaddockNews (light) →
+ *   ExploreGrid (dark) → GarageFooter (dark), with PitWallRadio floating.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import CurrentRaceHero from "../components/landing/CurrentRaceHero";
+import Hero from "../components/landing/Hero";
+import NextGrandPrix from "../components/landing/NextGrandPrix";
 import GridInvite from "../components/landing/GridInvite";
-import PodiumSection from "../components/landing/PodiumSection";
-import ChampionshipSection from "../components/landing/ChampionshipSection";
+import PlatformOverview from "../components/landing/PlatformOverview";
 import RaceIntelligence from "../components/landing/RaceIntelligence";
-import SeasonTimeline from "../components/landing/SeasonTimeline";
+import ChampionshipSection from "../components/landing/ChampionshipSection";
 import PaddockNews from "../components/landing/PaddockNews";
 import PitWallRadio from "../components/landing/PitWallRadio";
 import ExploreGrid from "../components/landing/ExploreGrid";
 import GarageFooter from "../components/landing/GarageFooter";
 
-import {
-    buildFavourites,
-    findLiveSession,
-    findNextSession,
-    getCompletedRaces,
-} from "../utils/landingHelpers";
+import { buildFavourites, findLiveSession, findNextSession } from "../utils/landingHelpers";
 
 import "./LandingPage.css";
 
@@ -104,23 +100,23 @@ function LandingPage() {
 
     /* minuteTick is a deliberate extra dependency: these values depend on
        the current time, so they are re-derived once a minute */
-    const { liveSession, nextSession, completedRaces } = useMemo(
+    const { liveSession, nextSession } = useMemo(
         () => ({
             liveSession: findLiveSession(races),
             nextSession: findNextSession(races),
-            completedRaces: getCompletedRaces(races),
         }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [races, minuteTick]
     );
     const favs = useMemo(() => buildFavourites(user), [user]);
-    const focusRound = (liveSession || nextSession)?.race?.round ?? null;
 
     const isAuthenticated = Boolean(localStorage.getItem("token"));
 
     return (
         <div className="lp">
-            <CurrentRaceHero
+            <Hero />
+
+            <NextGrandPrix
                 liveSession={liveSession}
                 nextSession={nextSession}
                 scheduleError={scheduleError}
@@ -128,27 +124,19 @@ function LandingPage() {
 
             <GridInvite isAuthenticated={isAuthenticated} />
 
-            <main className="lp-main">
-                <PodiumSection
-                    completedRaces={completedRaces}
-                    latestRace={latestRace}
-                    favs={favs}
-                />
+            <PlatformOverview />
 
-                <ChampionshipSection
-                    driverStandings={driverStandings}
-                    constructorStandings={constructorStandings}
-                    favs={favs}
-                />
+            <RaceIntelligence race={latestRace} />
 
-                <RaceIntelligence race={latestRace} />
+            <ChampionshipSection
+                driverStandings={driverStandings}
+                constructorStandings={constructorStandings}
+                favs={favs}
+            />
 
-                <SeasonTimeline races={races} focusRound={focusRound} />
+            <PaddockNews articles={newsArticles} favs={favs} error={newsError} />
 
-                <PaddockNews articles={newsArticles} favs={favs} error={newsError} />
-
-                <ExploreGrid />
-            </main>
+            <ExploreGrid />
 
             <div ref={footerWrapRef}>
                 <GarageFooter isAuthenticated={isAuthenticated} />
