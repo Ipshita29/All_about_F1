@@ -131,7 +131,7 @@ function DriverDetails() {
                             className="ex-dossier-img"
                             fallback={
                                 <div className="ex-entity-fallback" aria-hidden="true">
-                                    <span>{driver.givenName[0]}{driver.familyName[0]}</span>
+                                    <span>{driver.permanentNumber ?? `${driver.givenName[0]}${driver.familyName[0]}`}</span>
                                 </div>
                             }
                         />

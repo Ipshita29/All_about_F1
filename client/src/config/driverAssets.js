@@ -49,10 +49,11 @@ export const TEAM_ACCENTS = {
 export const DEFAULT_ACCENT = "#7F1D1A";
 
 /*
- * Per-driver overrides. `image` points at whatever exists in the repo today
- * (local cutouts for nine drivers, remote press photos for a few more via
- * driverInfo). `objectPosition` and `scale` tune how the cutout sits inside
- * a Driver Pass / hero composition.
+ * Per-driver overrides. `image` points at a local transparent cutout in
+ * /public/drivers — every driver here gets the same consistent treatment;
+ * anyone missing from this map falls back to the styled monogram, never a
+ * random remote photo. `objectPosition` and `scale` tune how the cutout
+ * sits inside a Driver Pass / hero composition.
  */
 const DRIVER_ASSETS = {
     max_verstappen: { image: "/drivers/max.png" },
@@ -64,6 +65,21 @@ const DRIVER_ASSETS = {
     piastri: { image: "/drivers/oscar.png" },
     sainz: { image: "/drivers/carlos.png" },
     hadjar: { image: "/drivers/isaac.png" },
+    albon: { image: "/drivers/alex.png" },
+    alonso: { image: "/drivers/fernando.png" },
+    stroll: { image: "/drivers/lance.png" },
+    gasly: { image: "/drivers/pierre.png" },
+    ocon: { image: "/drivers/esteban.png" },
+    bearman: { image: "/drivers/oliver.png" },
+    tsunoda: { image: "/drivers/yuki.png" },
+    vettel: { image: "/drivers/sebastian.png" },
+    perez: { image: "/drivers/sergio.png" },
+    arvid_lindblad: { image: "/drivers/arvid.png" },
+    colapinto: { image: "/drivers/franco.png" },
+    bortoleto: { image: "/drivers/gabriel.png" },
+    lawson: { image: "/drivers/liam.png" },
+    hulkenberg: { image: "/drivers/nico.png" },
+    bottas: { image: "/drivers/valtteri.png" },
 };
 
 /*
