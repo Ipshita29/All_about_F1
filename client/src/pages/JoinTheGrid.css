@@ -1,42 +1,81 @@
 /*
- * JOIN THE GRID (.jg-*) — authentication as a two-pane console. The
- * starting-lights progress indicator is kept (it's the sport's own
- * universal progress ritual) but rendered as small, restrained dots
- * rather than a glowing gantry.
+ * JOIN THE GRID (.jg-*) — authentication as a two-pane editorial console.
+ * A dark Carbon Black brand panel (identity, starting-lights progress)
+ * sits beside a light Cararra form panel — deliberate editorial contrast
+ * instead of a card floating on an all-black screen. The starting-lights
+ * progress indicator is kept (it's the sport's own universal progress
+ * ritual) but rendered as small, restrained dots.
  */
 
-.jg { min-height: calc(100vh - var(--nav-height)); background: var(--bg); }
+.jg { min-height: 100vh; background: var(--bg); }
 .jg-mono { font-family: var(--font-mono); }
+
+/* ── Minimal auth top bar ── */
+
+.jg-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: var(--content-width-wide);
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-7);
+}
+
+.jg-wordmark {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+}
+
+.jg-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    transition: color var(--dur-fast) var(--ease);
+}
+
+.jg-home-link:hover { color: var(--text-primary); }
 
 .jg-stage {
     max-width: var(--content-width-wide);
     margin: 0 auto;
-    min-height: calc(100vh - var(--nav-height));
+    min-height: calc(100vh - 76px);
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
 
-/* ── Left: procedure ── */
+/* ── Left: brand + starting procedure (dark) ── */
 
 .jg-procedure {
-    padding: var(--space-9) var(--space-7);
+    padding: var(--space-7) var(--space-7) var(--space-9);
     border-right: 1px solid var(--border-faint);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    gap: var(--space-8);
 }
 
-.jg-ring { display: none; }
-
 .jg-eyebrow { display: block; font-size: var(--text-micro); letter-spacing: 0.14em; color: var(--accent-text); margin-bottom: var(--space-3); }
-.jg-title { font-size: var(--text-display); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: 0 0 var(--space-3); }
-.jg-caption { font-size: 0.8rem; letter-spacing: 0.03em; color: var(--text-muted); margin-bottom: var(--space-7); animation: jgFade var(--dur-slow) var(--ease); }
+.jg-title { font-size: clamp(2.4rem, 2.6vw + 1.6rem, 3.4rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: 0 0 var(--space-4); }
+
+.jg-lede { font-size: 1.02rem; line-height: 1.65; color: var(--text-secondary); max-width: 40ch; margin: 0 0 var(--space-6); }
+
+.jg-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.jg-points li { font-size: 0.72rem; letter-spacing: 0.04em; color: var(--text-muted); padding-left: var(--space-4); border-left: 2px solid var(--border-strong); }
+
+.jg-procedure-foot { display: flex; flex-direction: column; }
+
+.jg-caption { font-size: 0.86rem; color: var(--text-secondary); margin: 0 0 var(--space-5); animation: jgFade var(--dur-slow) var(--ease); }
 
 @keyframes jgFade { from { opacity: 0; } to { opacity: 1; } }
 
 /* Starting lights — restrained dots */
-.jg-gantry { margin-bottom: var(--space-7); }
-.jg-gantry-beam { display: none; }
+.jg-gantry { margin-bottom: var(--space-6); }
 .jg-gantry-row { display: flex; gap: var(--space-3); }
 .jg-light-col { display: flex; flex-direction: column; gap: 6px; }
 
@@ -47,88 +86,109 @@
 
 .jg-go { font-size: 0.9rem; font-weight: 700; color: var(--success); margin-bottom: var(--space-6); }
 
-.jg-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.jg-steps { list-style: none; padding: 0; margin: 0 0 var(--space-7); display: flex; flex-direction: column; gap: var(--space-2); }
 
-.jg-steps li { font-size: 0.68rem; letter-spacing: 0.08em; color: var(--text-faint); padding-left: var(--space-4); border-left: 2px solid var(--border-faint); }
+.jg-steps li { font-size: 0.66rem; letter-spacing: 0.08em; color: var(--text-faint); padding-left: var(--space-4); border-left: 2px solid var(--border-faint); }
 .jg-step--now { color: var(--accent-text) !important; border-left-color: var(--accent) !important; }
 
-/* ── Right: console ── */
+/* Technical mark — sector ticks along a lap line */
+.jg-mark { display: block; width: 100%; max-width: 260px; height: auto; color: var(--border-strong); }
+.jg-mark-tag { font-family: var(--font-mono); font-size: 7px; fill: var(--text-faint); letter-spacing: 0.05em; }
+
+/* ── Right: console (light) ── */
 
 .jg-console {
-    padding: var(--space-9) var(--space-7);
+    background: var(--surface-light-1);
+    color: var(--text-on-light-primary);
+    padding: var(--space-7);
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
 .jg-mode-toggle {
-    position: relative;
     display: flex;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-    padding: 3px;
+    height: 48px;
+    border: 1px solid var(--border-on-light-strong);
+    border-radius: var(--radius-md);
+    overflow: hidden;
     margin-bottom: var(--space-7);
     max-width: 420px;
 }
 
 .jg-mode-btn {
-    position: relative;
-    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     flex: 1;
     background: none;
     border: none;
-    padding: 9px 12px;
-    border-radius: var(--radius-full);
     font-family: var(--font-mono);
-    font-size: 0.66rem;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    color: var(--text-on-light-muted);
     cursor: pointer;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.jg-mode-btn--active { color: var(--bg); }
+.jg-mode-btn + .jg-mode-btn { border-left: 1px solid var(--border-on-light-strong); }
 
-.jg-mode-thumb {
-    position: absolute;
-    top: 3px;
-    bottom: 3px;
-    left: 3px;
-    width: calc(50% - 3px);
-    background: var(--text-primary);
-    border-radius: var(--radius-full);
-    transition: transform var(--dur-base) var(--ease);
+.jg-mode-btn--active {
+    background: var(--color-carbon);
+    color: var(--color-cararra);
+    font-weight: 700;
 }
 
-.jg-mode-thumb--right { transform: translateX(100%); }
+.jg-mode-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 
-.jg-panel { max-width: 460px; animation: jgPanelIn var(--dur-slow) var(--ease); }
+.jg-panel { max-width: 440px; animation: jgPanelIn var(--dur-slow) var(--ease); }
 
 @keyframes jgPanelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-.jg-panel-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0 0 var(--space-2); }
-.jg-panel-sub { font-size: 0.74rem; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: var(--space-6); }
+.jg-panel-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.015em; color: var(--text-on-light-primary); margin: 0 0 var(--space-2); }
+.jg-panel-sub { font-size: 0.92rem; color: var(--text-on-light-secondary); margin: 0 0 var(--space-6); }
 
 .jg-form { display: flex; flex-direction: column; gap: var(--space-4); }
 
 .jg-field { display: flex; flex-direction: column; gap: 6px; }
-.jg-field-label { font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted); }
-.jg-field input { width: 100%; padding: 12px 14px; }
+.jg-field-label { font-size: 0.64rem; letter-spacing: 0.08em; color: var(--text-on-light-muted); }
 
-.jg-error { font-size: 0.78rem; color: var(--accent-text); background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--radius-sm); padding: 10px 14px; }
+.jg-field input {
+    width: 100%;
+    height: 48px;
+    padding: 0 var(--space-4);
+    background: var(--surface-light-2);
+    border: 1px solid var(--border-on-light-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-on-light-primary);
+    font-size: 1rem;
+}
 
-.jg-primary-btn { background: var(--text-primary); color: var(--bg); padding: 13px 24px; font-size: 0.86rem; align-self: flex-start; }
-.jg-primary-btn:hover { background: var(--accent); color: #fff; }
-.jg-primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.jg-field input::placeholder { color: var(--text-on-light-muted); }
 
-.jg-ghost-btn { background: none; border: 1px solid var(--border); color: var(--text-secondary); padding: 12px 20px; }
-.jg-ghost-btn:hover { opacity: 1; border-color: var(--border-strong); color: var(--text-primary); }
+.jg-field input:focus {
+    outline: none;
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.jg-error {
+    font-size: 0.84rem;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+}
+
+.jg-submit { align-self: flex-start; margin-top: var(--space-2); }
 
 .jg-row { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
 
-.jg-swap { font-size: 0.84rem; color: var(--text-muted); margin-top: var(--space-2); }
-.jg-swap-link { background: none; border: none; padding: 0; color: var(--accent-text); font-size: inherit; cursor: pointer; }
-.jg-swap-link:hover { text-decoration: underline; opacity: 1; }
+.jg-swap { font-size: 0.88rem; color: var(--text-on-light-secondary); margin: var(--space-2) 0 0; }
+.jg-swap-link { background: none; border: none; padding: 0; color: var(--accent); font-weight: 600; font-size: inherit; cursor: pointer; }
+.jg-swap-link:hover { text-decoration: underline; }
 
 /* ── Pick grids (driver / constructor onboarding) ── */
 
@@ -145,41 +205,61 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: none;
-    border: 1px solid var(--border-faint);
+    background: var(--surface-light-2);
+    border: 1px solid var(--border-on-light);
     border-radius: var(--radius-sm);
     padding: 11px 14px;
-    font-size: 0.84rem;
-    color: var(--text-secondary);
+    font-size: 0.86rem;
+    color: var(--text-on-light-secondary);
     text-align: left;
     cursor: pointer;
     animation: jgFade var(--dur-base) var(--ease) backwards;
 }
 
-.jg-pick:hover { opacity: 1; border-color: var(--border-strong); color: var(--text-primary); }
-.jg-pick--on { border-color: var(--accent-border); color: var(--accent-text); }
+.jg-pick:hover { border-color: var(--border-on-light-strong); color: var(--text-on-light-primary); }
+.jg-pick--on { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-.jg-pick-num { font-size: 0.64rem; color: var(--text-faint); }
-.jg-pick--on .jg-pick-num { color: var(--accent-text); }
+.jg-pick-num { font-size: 0.64rem; color: var(--text-on-light-muted); }
+.jg-pick--on .jg-pick-num { color: var(--accent); }
 
-.jg-pick--team { font-size: 0.8rem; }
-.jg-pick-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--jg-team, var(--text-faint)); flex-shrink: 0; }
+.jg-pick--team { font-size: 0.82rem; }
+.jg-pick-swatch { width: 10px; height: 10px; border-radius: 50%; background: var(--jg-team, var(--text-on-light-muted)); flex-shrink: 0; }
 
 /* ── Launch state ── */
 
 .jg-launch { text-align: center; padding: var(--space-6) 0; }
-.jg-launch-streaks { display: none; }
+.jg-launch .jg-panel-sub { margin-bottom: 0; }
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 900px) {
-    .jg-stage { grid-template-columns: 1fr; }
-    .jg-procedure { border-right: none; border-bottom: 1px solid var(--border-faint); padding: var(--space-7) var(--space-5); }
-    .jg-console { padding: var(--space-7) var(--space-5); }
+    /* form first, brand panel becomes small supporting content below it —
+       DOM stays brand-first for desktop's natural reading order, so the
+       stacking is reordered visually instead of in markup */
+    .jg-stage { grid-template-columns: 1fr; min-height: 0; }
+    .jg-console { order: 1; padding: var(--space-7) var(--space-5); }
+    .jg-procedure {
+        order: 2;
+        border-right: none;
+        border-top: 1px solid var(--border-faint);
+        padding: var(--space-7) var(--space-5);
+        gap: var(--space-6);
+    }
+
+    .jg-lede { max-width: none; }
+    .jg-points { display: none; }
+    .jg-mark { max-width: 180px; }
+}
+
+@media (max-width: 620px) {
+    .jg-topbar { padding: var(--space-4) var(--space-4); }
+    .jg-home-link span { display: inline; }
 }
 
 @media (max-width: 480px) {
     .jg-pick-grid { grid-template-columns: 1fr; }
+    .jg-title { font-size: 2rem; }
+    .jg-panel-title { font-size: 1.5rem; }
 }

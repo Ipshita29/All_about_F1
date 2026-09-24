@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar"
 import CircuitMaps from "./pages/CircuitMaps"
 import CircuitDetails from "./pages/CircuitDetails"
@@ -21,11 +21,15 @@ import NewsPage from "./pages/NewsPage";
 import "./App.css";
 
 
-function App() {
+/* the auth page uses its own minimal top bar (wordmark + back-to-home)
+   instead of the full site navigation, per the auth redesign brief */
+function AppShell() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/auth";
 
   return (
-    <BrowserRouter>
-      <Navbar />
+    <>
+      {!isAuthPage && <Navbar />}
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>
         <Route path="/drivers" element={<Drivers/>}/>
@@ -45,9 +49,16 @@ function App() {
         <Route path="/news" element={<NewsPage />} />
         <Route path="/auth" element={<AuthPage />} />
       </Routes>
-    </BrowserRouter>
-  )
+    </>
+  );
+}
 
+function App() {
+  return (
+    <BrowserRouter>
+      <AppShell />
+    </BrowserRouter>
+  );
 }
 
 export default App

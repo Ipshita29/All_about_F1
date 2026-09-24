@@ -1,19 +1,23 @@
 /*
  * JOIN THE GRID — one authentication journey instead of two forms.
  *
- * The page is staged like the Formula 1 starting procedure: a gantry of
- * five starting lights tracks progress, and the interface physically
- * transforms between states instead of swapping forms. Returning drivers
- * sign in and launch; new drivers create their credentials, then the
- * journey continues straight into choosing a favourite driver and
- * constructor (the same /user/preferences API the Preferences page uses)
- * before the final light goes out and the site opens.
+ * A dark brand panel (identity, starting-lights progress) sits beside a
+ * light Cararra form panel — an editorial two-pane composition instead of
+ * a card centred on a black screen. Returning drivers sign in and launch;
+ * new drivers create their credentials, then the journey continues
+ * straight into choosing a favourite driver and constructor (the same
+ * /user/preferences API the Preferences page uses) before the final light
+ * goes out and the site opens.
  *
- * Business logic is unchanged: same /auth/login and /auth/signup endpoints,
- * same token storage, same destinations. Error alerts became in-page
- * "race control" messages.
+ * Business logic is unchanged: same /auth/login and /auth/signup
+ * endpoints, same token storage, same destinations, same fields, same
+ * validation. Only presentation changed — copy, layout and the shared
+ * Phase 1 Button component in place of bespoke buttons.
  */
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import Button from "../components/ui/Button";
+import AuthMark from "../components/AuthMark";
 import "./JoinTheGrid.css";
 
 const API = "http://localhost:3000";
@@ -52,7 +56,6 @@ const TEAMS = [
 function StartLights({ lit, out }) {
   return (
     <div className={`jg-gantry${out ? " jg-gantry--out" : ""}`} aria-hidden="true">
-      <div className="jg-gantry-beam" />
       <div className="jg-gantry-row">
         {Array.from({ length: 5 }).map((_, i) => (
           <div className="jg-light-col" key={i}>
@@ -96,7 +99,7 @@ function AuthPage() {
       }
     } catch (e) {
       console.log(e);
-      setError("Race control unreachable. Try again.");
+      setError("Server unreachable. Try again.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +123,7 @@ function AuthPage() {
       }
     } catch (e) {
       console.log(e);
-      setError("Race control unreachable. Try again.");
+      setError("Server unreachable. Try again.");
     } finally {
       setLoading(false);
     }
@@ -167,33 +170,54 @@ function AuthPage() {
   const litCount = launching ? 5 : isLogin ? 4 : 2 + step;
 
   const stageCaption = launching
-    ? "LIGHTS OUT — AND AWAY YOU GO"
+    ? "You're in. Opening the paddock."
     : isLogin
-      ? "RETURNING DRIVER — FINAL LIGHT ON LAUNCH"
-      : ["FORMATION LAP — YOUR CREDENTIALS", "GRID SLOT — PICK YOUR DRIVER", "GARAGE COLOURS — PICK YOUR CONSTRUCTOR"][step];
+      ? "Sign in to continue where you left off."
+      : ["Step 1 of 3 — your credentials", "Step 2 of 3 — pick your driver", "Step 3 of 3 — pick your constructor"][step];
 
   const panelKey = launching ? "launch" : `${isLogin ? "login" : "signup"}-${step}`;
 
   return (
     <div className="jg">
+      <header className="jg-topbar">
+        <Link to="/" className="jg-wordmark">ALL ABOUT F1</Link>
+        <Link to="/" className="jg-home-link jg-mono">
+          <span aria-hidden="true">←</span> Back to Home
+        </Link>
+      </header>
+
       <div className="jg-stage">
-        {/* ── Left: the starting procedure ─────────────────────────── */}
+        {/* ── Left: brand + starting procedure ─────────────────────── */}
         <aside className="jg-procedure">
-          <div className="jg-ring" aria-hidden="true" />
-          <span className="jg-eyebrow jg-mono">ALL ABOUT F1 · STARTING PROCEDURE</span>
-          <h1 className="jg-title">JOIN THE GRID</h1>
-          <p className="jg-caption jg-mono" key={stageCaption}>{stageCaption}</p>
+          <div>
+            <span className="jg-eyebrow jg-mono">F1 · MEMBER ACCESS</span>
+            <h1 className="jg-title">Join the grid.</h1>
+            <p className="jg-lede">
+              One account for race data, championship context and every
+              driver &amp; constructor you follow.
+            </p>
 
-          <StartLights lit={litCount} out={launching} />
+            <ul className="jg-points jg-mono">
+              <li>Live standings &amp; race results</li>
+              <li>Driver &amp; constructor intelligence</li>
+              <li>A paddock tuned to your favourites</li>
+            </ul>
+          </div>
 
-          {launching && <p className="jg-go jg-mono">GO GO GO</p>}
+          <div className="jg-procedure-foot">
+            <p className="jg-caption jg-mono" key={stageCaption}>{stageCaption}</p>
+            <StartLights lit={litCount} out={launching} />
+            {launching && <p className="jg-go jg-mono">GO GO GO</p>}
 
-          <ol className="jg-steps jg-mono" aria-label="Onboarding progress">
-            <li className={!isLogin && step === 0 ? "jg-step--now" : ""}>CREDENTIALS</li>
-            <li className={!isLogin && step === 1 ? "jg-step--now" : ""}>DRIVER</li>
-            <li className={!isLogin && step === 2 ? "jg-step--now" : ""}>CONSTRUCTOR</li>
-            <li className={launching ? "jg-step--now" : ""}>LIGHTS OUT</li>
-          </ol>
+            <ol className="jg-steps jg-mono" aria-label="Onboarding progress">
+              <li className={!isLogin && step === 0 ? "jg-step--now" : ""}>CREDENTIALS</li>
+              <li className={!isLogin && step === 1 ? "jg-step--now" : ""}>DRIVER</li>
+              <li className={!isLogin && step === 2 ? "jg-step--now" : ""}>CONSTRUCTOR</li>
+              <li className={launching ? "jg-step--now" : ""}>LIGHTS OUT</li>
+            </ol>
+
+            <AuthMark />
+          </div>
         </aside>
 
         {/* ── Right: the transforming panel ────────────────────────── */}
@@ -207,7 +231,8 @@ function AuthPage() {
                 className={`jg-mode-btn${isLogin ? " jg-mode-btn--active" : ""}`}
                 onClick={() => switchMode(true)}
               >
-                RETURNING DRIVER
+                {isLogin && <span className="jg-mode-dot" aria-hidden="true" />}
+                Sign In
               </button>
               <button
                 type="button"
@@ -216,23 +241,17 @@ function AuthPage() {
                 className={`jg-mode-btn${!isLogin ? " jg-mode-btn--active" : ""}`}
                 onClick={() => switchMode(false)}
               >
-                NEW TO THE GRID
+                {!isLogin && <span className="jg-mode-dot" aria-hidden="true" />}
+                Create Account
               </button>
-              <span
-                className={`jg-mode-thumb${isLogin ? "" : " jg-mode-thumb--right"}`}
-                aria-hidden="true"
-              />
             </div>
           )}
 
           <div className="jg-panel" key={panelKey}>
             {launching ? (
               <div className="jg-launch">
-                <h2 className="jg-panel-title">GRID CONFIRMED</h2>
-                <p className="jg-panel-sub jg-mono">OPENING YOUR PERSONALISED PADDOCK…</p>
-                <div className="jg-launch-streaks" aria-hidden="true">
-                  <span /><span /><span />
-                </div>
+                <h2 className="jg-panel-title">You're all set.</h2>
+                <p className="jg-panel-sub jg-mono">OPENING YOUR PADDOCK…</p>
               </div>
             ) : isLogin ? (
               /* ── LOGIN ─────────────────────────────────────────── */
@@ -240,11 +259,11 @@ function AuthPage() {
                 className="jg-form"
                 onSubmit={(e) => { e.preventDefault(); handleLogin(); }}
               >
-                <h2 className="jg-panel-title">WELCOME BACK TO THE PADDOCK</h2>
-                <p className="jg-panel-sub jg-mono">YOUR SEAT IS WHERE YOU LEFT IT</p>
+                <h2 className="jg-panel-title">Welcome back.</h2>
+                <p className="jg-panel-sub">Continue your F1 experience.</p>
 
                 <label className="jg-field">
-                  <span className="jg-field-label jg-mono">EMAIL ADDRESS</span>
+                  <span className="jg-field-label jg-mono">EMAIL</span>
                   <input
                     type="email"
                     placeholder="you@example.com"
@@ -265,16 +284,16 @@ function AuthPage() {
                   />
                 </label>
 
-                {error && <p className="jg-error jg-mono" role="alert">⚑ RACE CONTROL — {error.toUpperCase()}</p>}
+                {error && <p className="jg-error jg-mono" role="alert">{error}</p>}
 
-                <button type="submit" className="jg-primary-btn" disabled={loading}>
-                  {loading ? "CHECKING TELEMETRY…" : "LAUNCH"}
-                </button>
+                <Button type="submit" variant="primary" arrow disabled={loading} className="jg-submit">
+                  {loading ? "Signing In…" : "Sign In"}
+                </Button>
 
                 <p className="jg-swap">
-                  First time here?{" "}
+                  Don&rsquo;t have an account?{" "}
                   <button type="button" className="jg-swap-link" onClick={() => switchMode(false)}>
-                    Join the grid
+                    Create one →
                   </button>
                 </p>
               </form>
@@ -284,11 +303,11 @@ function AuthPage() {
                 className="jg-form"
                 onSubmit={(e) => { e.preventDefault(); handleSignup(); }}
               >
-                <h2 className="jg-panel-title">EVERY LEGEND STARTS SOMEWHERE</h2>
-                <p className="jg-panel-sub jg-mono">STEP 1 OF 3 — YOUR RACE LICENCE</p>
+                <h2 className="jg-panel-title">Create your account.</h2>
+                <p className="jg-panel-sub">Your F1 dashboard starts here.</p>
 
                 <label className="jg-field">
-                  <span className="jg-field-label jg-mono">FULL NAME</span>
+                  <span className="jg-field-label jg-mono">NAME</span>
                   <input
                     type="text"
                     placeholder="Lewis Hamilton"
@@ -299,7 +318,7 @@ function AuthPage() {
                 </label>
 
                 <label className="jg-field">
-                  <span className="jg-field-label jg-mono">EMAIL ADDRESS</span>
+                  <span className="jg-field-label jg-mono">EMAIL</span>
                   <input
                     type="email"
                     placeholder="you@example.com"
@@ -320,24 +339,24 @@ function AuthPage() {
                   />
                 </label>
 
-                {error && <p className="jg-error jg-mono" role="alert">⚑ RACE CONTROL — {error.toUpperCase()}</p>}
+                {error && <p className="jg-error jg-mono" role="alert">{error}</p>}
 
-                <button type="submit" className="jg-primary-btn" disabled={loading}>
-                  {loading ? "FILING PAPERWORK…" : "SIGN MY RACE LICENCE →"}
-                </button>
+                <Button type="submit" variant="primary" arrow disabled={loading} className="jg-submit">
+                  {loading ? "Creating Account…" : "Create Account"}
+                </Button>
 
                 <p className="jg-swap">
-                  Already on the grid?{" "}
+                  Already have an account?{" "}
                   <button type="button" className="jg-swap-link" onClick={() => switchMode(true)}>
-                    Sign in
+                    Sign in →
                   </button>
                 </p>
               </form>
             ) : step === 1 ? (
               /* ── SIGNUP · DRIVER PICK ──────────────────────────── */
               <div className="jg-form">
-                <h2 className="jg-panel-title">WHO DO YOU RACE FOR?</h2>
-                <p className="jg-panel-sub jg-mono">STEP 2 OF 3 — PICK YOUR DRIVER</p>
+                <h2 className="jg-panel-title">Who do you race for?</h2>
+                <p className="jg-panel-sub">Step 2 of 3 — pick your favourite driver.</p>
 
                 <div className="jg-pick-grid" role="listbox" aria-label="Favourite driver">
                   {DRIVERS.map((driver, i) => (
@@ -357,24 +376,25 @@ function AuthPage() {
                 </div>
 
                 <div className="jg-row">
-                  <button
+                  <Button
                     type="button"
-                    className="jg-primary-btn"
+                    variant="primary"
+                    arrow
                     disabled={!favoriteDriver}
                     onClick={() => setStep(2)}
                   >
-                    CONFIRM DRIVER →
-                  </button>
-                  <button type="button" className="jg-ghost-btn" onClick={skipOnboarding}>
-                    SKIP FOR NOW
-                  </button>
+                    Confirm Driver
+                  </Button>
+                  <Button type="button" variant="dark" onClick={skipOnboarding}>
+                    Skip For Now
+                  </Button>
                 </div>
               </div>
             ) : (
               /* ── SIGNUP · CONSTRUCTOR PICK ─────────────────────── */
               <div className="jg-form">
-                <h2 className="jg-panel-title">CHOOSE YOUR GARAGE</h2>
-                <p className="jg-panel-sub jg-mono">STEP 3 OF 3 — PICK YOUR CONSTRUCTOR</p>
+                <h2 className="jg-panel-title">Choose your garage.</h2>
+                <p className="jg-panel-sub">Step 3 of 3 — pick your favourite constructor.</p>
 
                 <div className="jg-pick-grid jg-pick-grid--teams" role="listbox" aria-label="Favourite constructor">
                   {TEAMS.map(([value, label, color], i) => (
@@ -393,15 +413,15 @@ function AuthPage() {
                   ))}
                 </div>
 
-                {loading && <p className="jg-panel-sub jg-mono">PAINTING YOUR GARAGE…</p>}
+                {loading && <p className="jg-panel-sub jg-mono">Saving your garage…</p>}
 
                 <div className="jg-row">
-                  <button type="button" className="jg-ghost-btn" onClick={() => setStep(1)}>
-                    ← BACK TO DRIVERS
-                  </button>
-                  <button type="button" className="jg-ghost-btn" onClick={skipOnboarding}>
-                    SKIP FOR NOW
-                  </button>
+                  <Button type="button" variant="dark" onClick={() => setStep(1)}>
+                    ← Back
+                  </Button>
+                  <Button type="button" variant="dark" onClick={skipOnboarding}>
+                    Skip For Now
+                  </Button>
                 </div>
               </div>
             )}
