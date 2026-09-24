@@ -13,8 +13,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import CircuitVisualization from "../components/CircuitVisualization";
-import Button from "../components/Button";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { Button, LoadingSpinner } from "../components/UI";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { circuitInfo } from "../data/circuitInfo";

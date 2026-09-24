@@ -1,14 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import driverInfo from "../data/driverInfo";
-import LoadingSpinner from "../components/LoadingSpinner";
-import KnowMoreModal from "../components/KnowMoreModal";
+import { LoadingSpinner } from "../components/UI";
+import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
 import { knowMoreInfo } from "../data/knowMoreInfo";
-import KnowMoreTerm from "../components/KnowMoreTerm";
-import LayeredImage from "../components/LayeredImage";
-import ExSection from "../components/ExSection";
-import TelemetryStat from "../components/TelemetryStat";
-import AnimatedNumber from "../components/AnimatedNumber";
+import { LayeredImage, ExSection, TelemetryStat, AnimatedNumber } from "../components/EntityDetail";
 import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
 

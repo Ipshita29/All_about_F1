@@ -15,9 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
-import { SearchInput } from "../components/Input";
-import EmptyState from "../components/EmptyState";
-import Button from "../components/Button";
+import { SearchInput, EmptyState, Button } from "../components/UI";
 import {
     DRIVER_ID_MAP,
     FAV_TEAM_TO_CONSTRUCTOR_ID,

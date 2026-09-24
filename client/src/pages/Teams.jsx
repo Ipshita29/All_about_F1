@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
-import LoadingSpinner from "../components/LoadingSpinner";
-import SearchControls from "../components/SearchControls";
-import ConstructorRoster from "../components/ConstructorRoster";
-import ConstructorCard from "../components/ConstructorCard";
-import Stat from "../components/Stat";
-import Button from "../components/Button";
-import EmptyState from "../components/EmptyState";
+import { SearchControls, ConstructorRoster, ConstructorCard } from "../components/EntityListing";
+import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import "../styles/pages/EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];

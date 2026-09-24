@@ -12,17 +12,11 @@
  * in-page filter for browsing everything without leaving the hub, so its
  * chips still just narrow the grid in place. Purely data-driven; no AI.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Dices, Sparkles, ArrowRight } from "lucide-react";
-import TermCard from "../components/TermCard";
-import RevealOnScroll from "../components/RevealOnScroll";
-import CategoryIcon from "../components/CategoryIcon";
-import ModeSwitch from "../components/ModeSwitch";
-import SearchPreview from "../components/SearchPreview";
-import HandbookMark from "../components/HandbookMark";
-import { SearchInput } from "../components/Input";
-import EmptyState from "../components/EmptyState";
+import { TermCard, CategoryIcon, ModeSwitch } from "../components/Dictionary";
+import { SearchInput, EmptyState } from "../components/UI";
 import {
   getBriefingMode,
   saveBriefingMode,
@@ -39,6 +33,113 @@ import {
   DID_YOU_KNOW_FACTS,
 } from "../utils/dictionaryHelpers";
 import "../styles/pages/F1Dictionary.css";
+
+/* Fades + lifts children into view the first time they cross the
+   viewport, staggered by `index` so grids reveal sequentially instead of
+   popping in at once. Only used on this page. */
+function RevealOnScroll({ index = 0, className = "", children }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`fd-reveal ${visible ? "fd-reveal-visible" : ""} ${className}`}
+      style={{ transitionDelay: `${Math.min(index, 10) * 40}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* The Dictionary's one recurring visual motif — a technical racing-line
+   annotation, not F1 photography. Only used on this page. */
+function HandbookMark({ className = "" }) {
+  return (
+    <svg
+      className={`fd-mark${className ? ` ${className}` : ""}`}
+      viewBox="0 0 220 220"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        className="fd-mark-line"
+        d="M8 170 Q40 60 96 52 Q140 46 150 90 Q158 126 200 118"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeDasharray="5 6"
+      />
+      <circle cx="96" cy="52" r="3" fill="currentColor" />
+      <circle cx="150" cy="90" r="3" fill="currentColor" />
+      <g stroke="currentColor" strokeWidth="1">
+        <circle cx="200" cy="118" r="14" />
+        <line x1="186" y1="118" x2="214" y2="118" />
+        <line x1="200" y1="104" x2="200" y2="132" />
+      </g>
+      <text x="100" y="42" className="fd-mark-tag">APEX</text>
+      <text x="154" y="112" className="fd-mark-tag">T2</text>
+    </svg>
+  );
+}
+
+/* The live result beneath the hero search field — reads the query and
+   shows the closest real term immediately, in the same simple/technical
+   shape the term page itself uses, entirely from existing dictionary
+   fields (no invented copy). Only used on this page. */
+function SearchPreview({ term, matchCount }) {
+  if (!term) return null;
+
+  return (
+    <div className="fd-preview">
+      <div className="fd-preview-head">
+        <span className="fd-preview-category fd-mono">{term.category}</span>
+        <h2 className="fd-preview-title">{term.title}</h2>
+      </div>
+
+      <p className="fd-preview-meaning">{term.meaning}</p>
+
+      {term.beginnerTip && (
+        <div className="fd-preview-block">
+          <span className="fd-preview-label fd-mono">IN SIMPLE TERMS</span>
+          <p>{term.beginnerTip}</p>
+        </div>
+      )}
+
+      {term.whyItMatters && (
+        <div className="fd-preview-block">
+          <span className="fd-preview-label fd-mono">RACE ENGINEER</span>
+          <p>{term.whyItMatters}</p>
+        </div>
+      )}
+
+      <Link to={`/dictionary/${term.slug}`} className="fd-preview-open fd-mono">
+        OPEN THE FULL FILE <ArrowRight size={13} />
+      </Link>
+
+      {matchCount > 1 && (
+        <p className="fd-preview-more fd-mono">
+          +{matchCount - 1} MORE MATCH{matchCount - 1 === 1 ? "" : "ES"} BELOW
+        </p>
+      )}
+    </div>
+  );
+}
 
 function F1Dictionary() {
   const navigate = useNavigate();

@@ -7,9 +7,8 @@
  */
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import TermCard from "../components/TermCard";
-import CategoryIcon from "../components/CategoryIcon";
-import EmptyState from "../components/EmptyState";
+import { TermCard, CategoryIcon } from "../components/Dictionary";
+import { EmptyState } from "../components/UI";
 import { getCategoryBySlug, getTermsByCategory, CATEGORY_INFO } from "../utils/dictionaryHelpers";
 import "../styles/pages/F1Dictionary.css";
 

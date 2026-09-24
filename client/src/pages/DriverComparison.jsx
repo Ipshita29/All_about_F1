@@ -1,18 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import driverInfo from "../data/driverInfo";
-import KnowMoreModal from "../components/KnowMoreModal";
+import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
 import { knowMoreInfo } from "../data/knowMoreInfo";
-import KnowMoreTerm from "../components/KnowMoreTerm";
-import LayeredImage from "../components/LayeredImage";
-import ExSection from "../components/ExSection";
-import EntitySelect from "../components/EntitySelect";
-import CompareEmptyState from "../components/CompareEmptyState";
-import PendingSlot from "../components/PendingSlot";
-import CompareStat from "../components/CompareStat";
-import CompareBar from "../components/CompareBar";
-import RaceTimeline from "../components/RaceTimeline";
-import HeadToHeadTally from "../components/HeadToHeadTally";
-import { Select } from "../components/Input";
+import { LayeredImage, ExSection } from "../components/EntityDetail";
+import { EntitySelect, CompareEmptyState, PendingSlot, CompareStat, CompareBar, RaceTimeline } from "../components/Compare";
+import { Select } from "../components/UI";
 import useSeasonResults from "../hooks/useSeasonResults";
 import { getDriverAssets } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
@@ -60,6 +52,29 @@ function DriverFace({ side, driver, standing }) {
             </h3>
             <p className="cmp-face-team">{team?.name ?? "—"}</p>
             <p className="cmp-face-nat cmp-mono">{driver.nationality}</p>
+        </div>
+    );
+}
+
+/* The closing statistical summary — directly counted from round-by-round
+   results, never a subjective "overall winner". Ties are shown as their
+   own real number rather than being forced onto one side. Only used on
+   this page, so it lives here rather than in components/. */
+function HeadToHeadTally({ label, unit, a, b, ties }) {
+    return (
+        <div className="cmp-h2h-row">
+            <span className="cmp-h2h-label">{label}</span>
+            <div className="cmp-h2h-cols">
+                <div className="cmp-h2h-col">
+                    <span className="cmp-h2h-name">{a.name}</span>
+                    <span className="cmp-h2h-count">{a.count} {unit}</span>
+                </div>
+                <div className="cmp-h2h-col cmp-h2h-col--b">
+                    <span className="cmp-h2h-name">{b.name}</span>
+                    <span className="cmp-h2h-count">{b.count} {unit}</span>
+                </div>
+            </div>
+            {ties > 0 && <span className="cmp-h2h-ties">{ties} equal result{ties === 1 ? "" : "s"}</span>}
         </div>
     );
 }

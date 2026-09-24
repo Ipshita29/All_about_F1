@@ -1,13 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { circuitInfo } from "../data/circuitInfo";
-import LoadingSpinner from "../components/LoadingSpinner";
-import KnowMoreModal from "../components/KnowMoreModal";
+import { LoadingSpinner } from "../components/UI";
+import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
 import { knowMoreInfo } from "../data/knowMoreInfo";
-import KnowMoreTerm from "../components/KnowMoreTerm";
 import CircuitVisualization from "../components/CircuitVisualization";
-import ExSection from "../components/ExSection";
-import TelemetryStat from "../components/TelemetryStat";
+import { ExSection, TelemetryStat } from "../components/EntityDetail";
 import "../styles/pages/EntityPages.css";
 
 const API = "http://localhost:3000";

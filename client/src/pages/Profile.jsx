@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { LoadingSpinner } from "../components/UI";
 import { getProgress } from "../utils/dictionaryHelpers";
 import { getTeamColor, DRIVER_ID_MAP, FAV_TEAM_TO_CONSTRUCTOR_ID } from "../utils/landingHelpers";
 import "../styles/pages/MyGarage.css";

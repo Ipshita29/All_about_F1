@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { circuitInfo } from "../data/circuitInfo";
 import CircuitVisualization from "../components/CircuitVisualization";
-import LoadingSpinner from "../components/LoadingSpinner";
-import SearchControls from "../components/SearchControls";
+import { LoadingSpinner } from "../components/UI";
+import { SearchControls } from "../components/EntityListing";
 import "../styles/pages/EntityPages.css";
 
 function trackTypeLabel(trackType) {
