@@ -1,19 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import teamInfo from "../data/teamInfo";
-import ExSection from "../components/entity/ExSection";
-import EntitySelect from "../components/entity/EntitySelect";
-import TeamDrivers from "../components/entity/TeamDrivers";
-import CompareEmptyState from "../components/compare/CompareEmptyState";
-import PendingSlot from "../components/compare/PendingSlot";
-import CompareStat from "../components/compare/CompareStat";
-import CompareBar from "../components/compare/CompareBar";
-import RaceTimeline from "../components/compare/RaceTimeline";
-import { Select } from "../components/ui/Input";
+import ExSection from "../components/ExSection";
+import EntitySelect from "../components/EntitySelect";
+import TeamDrivers from "../components/TeamDrivers";
+import CompareEmptyState from "../components/CompareEmptyState";
+import PendingSlot from "../components/PendingSlot";
+import CompareStat from "../components/CompareStat";
+import CompareBar from "../components/CompareBar";
+import RaceTimeline from "../components/RaceTimeline";
+import { Select } from "../components/Input";
 import useSeasonResults from "../hooks/useSeasonResults";
 import { getTeamAssets } from "../config/teamAssets";
-import "./EntityPages.css";
-import "./Comparison.css";
+import "../styles/pages/EntityPages.css";
+import "../styles/pages/Comparison.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 

@@ -12,13 +12,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import DifficultyBadge from "../components/dictionary/DifficultyBadge";
-import AICoach from "../components/dictionary/AICoach";
-import TermCard from "../components/dictionary/TermCard";
-import CategoryIcon from "../components/dictionary/CategoryIcon";
-import TermAnimation from "../components/dictionary/TermAnimation";
-import ModeSwitch from "../components/dictionary/ModeSwitch";
-import EmptyState from "../components/ui/EmptyState";
+import DifficultyBadge from "../components/DifficultyBadge";
+import AICoach from "../components/AICoach";
+import TermCard from "../components/TermCard";
+import CategoryIcon from "../components/CategoryIcon";
+import TermAnimation from "../components/TermAnimation";
+import ModeSwitch from "../components/ModeSwitch";
+import EmptyState from "../components/EmptyState";
 import {
   getBriefingMode,
   saveBriefingMode,
@@ -29,7 +29,7 @@ import {
   getCategoryIcon,
   POPULAR_SLUGS,
 } from "../utils/dictionaryHelpers";
-import "./F1Dictionary.css";
+import "../styles/pages/F1Dictionary.css";
 
 function TermNotFound({ slug }) {
   const suggestions = POPULAR_SLUGS.slice(0, 3).map(getTermBySlug).filter(Boolean);

@@ -5,12 +5,12 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
-import LayeredImage from "../components/entity/LayeredImage";
-import ExSection from "../components/entity/ExSection";
-import TelemetryStat from "../components/entity/TelemetryStat";
-import AnimatedNumber from "../components/entity/AnimatedNumber";
+import LayeredImage from "../components/LayeredImage";
+import ExSection from "../components/ExSection";
+import TelemetryStat from "../components/TelemetryStat";
+import AnimatedNumber from "../components/AnimatedNumber";
 import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
-import "./EntityPages.css";
+import "../styles/pages/EntityPages.css";
 
 /*
  * DRIVER DOSSIER — the editorial profile a Driver Pass unfolds into.

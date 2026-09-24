@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { circuitInfo } from "../data/circuitInfo";
 import CircuitVisualization from "../components/CircuitVisualization";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SearchControls from "../components/entity/SearchControls";
-import "./EntityPages.css";
+import SearchControls from "../components/SearchControls";
+import "../styles/pages/EntityPages.css";
 
 function trackTypeLabel(trackType) {
     if (!trackType) return null;

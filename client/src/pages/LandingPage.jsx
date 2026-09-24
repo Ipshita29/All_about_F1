@@ -3,7 +3,7 @@
  *
  * This file owns all landing-page data fetching (same backend endpoints as
  * before — nothing here changed) and passes plain props down to the
- * section components in src/components/landing/. Page order, alternating
+ * section components in src/components/. Page order, alternating
  * dark and light surfaces per the Phase 1 design system:
  *
  *   Hero (dark) → NextGrandPrix (light) → GridInvite (floating) →
@@ -13,20 +13,20 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import Hero from "../components/landing/Hero";
-import NextGrandPrix from "../components/landing/NextGrandPrix";
-import GridInvite from "../components/landing/GridInvite";
-import PlatformOverview from "../components/landing/PlatformOverview";
-import RaceIntelligence from "../components/landing/RaceIntelligence";
-import ChampionshipSection from "../components/landing/ChampionshipSection";
-import PaddockNews from "../components/landing/PaddockNews";
-import PitWallRadio from "../components/landing/PitWallRadio";
-import ExploreGrid from "../components/landing/ExploreGrid";
-import GarageFooter from "../components/landing/GarageFooter";
+import Hero from "../components/Hero";
+import NextGrandPrix from "../components/NextGrandPrix";
+import GridInvite from "../components/GridInvite";
+import PlatformOverview from "../components/PlatformOverview";
+import RaceIntelligence from "../components/RaceIntelligence";
+import ChampionshipSection from "../components/ChampionshipSection";
+import PaddockNews from "../components/PaddockNews";
+import PitWallRadio from "../components/PitWallRadio";
+import ExploreGrid from "../components/ExploreGrid";
+import GarageFooter from "../components/GarageFooter";
 
 import { buildFavourites, findLiveSession, findNextSession } from "../utils/landingHelpers";
 
-import "./LandingPage.css";
+import "../styles/pages/LandingPage.css";
 
 const SEASON = 2026;
 const API = "http://localhost:3000";

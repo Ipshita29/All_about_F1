@@ -12,14 +12,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Dices, Sparkles, ArrowRight } from "lucide-react";
-import TermCard from "../components/dictionary/TermCard";
-import RevealOnScroll from "../components/dictionary/RevealOnScroll";
-import CategoryIcon from "../components/dictionary/CategoryIcon";
-import ModeSwitch from "../components/dictionary/ModeSwitch";
-import SearchPreview from "../components/dictionary/SearchPreview";
-import HandbookMark from "../components/dictionary/HandbookMark";
-import { SearchInput } from "../components/ui/Input";
-import EmptyState from "../components/ui/EmptyState";
+import TermCard from "../components/TermCard";
+import RevealOnScroll from "../components/RevealOnScroll";
+import CategoryIcon from "../components/CategoryIcon";
+import ModeSwitch from "../components/ModeSwitch";
+import SearchPreview from "../components/SearchPreview";
+import HandbookMark from "../components/HandbookMark";
+import { SearchInput } from "../components/Input";
+import EmptyState from "../components/EmptyState";
 import {
   getBriefingMode,
   saveBriefingMode,
@@ -35,7 +35,7 @@ import {
   SEARCH_PLACEHOLDERS,
   DID_YOU_KNOW_FACTS,
 } from "../utils/dictionaryHelpers";
-import "./F1Dictionary.css";
+import "../styles/pages/F1Dictionary.css";
 
 function F1Dictionary() {
   const navigate = useNavigate();

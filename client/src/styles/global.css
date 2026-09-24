@@ -1,0 +1,571 @@
+/*
+ * GLOBAL STYLES — fonts, design tokens, reset, and the shared UI
+ * component system (Button, Card, Input, Stat, SectionHeader,
+ * EmptyState). Single source of truth for the visual system: every page
+ * stylesheet in the app consumes these custom properties and classes
+ * rather than hard-coding colour, type or spacing values.
+ *
+ * PREMIUM F1 EDITORIAL × DATA INTELLIGENCE
+ *
+ * A five-colour palette (Milano Red, Cararra, Chalk, Slate, Carbon Black)
+ * rather than a black-and-red scale. The page canvas is a dark Carbon
+ * Black surface; light surfaces (Cararra / Chalk / Slate) break it up
+ * deliberately on most pages. Milano Red is a small accent, not a theme.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Raw palette — the five-colour source of truth ────────────── */
+    --color-red: #b0080b;
+    --color-red-bright: #e5342d;
+    --color-cararra: #f0ede8;
+    --color-chalk: #e8e5df;
+    --color-slate: #c9c5be;
+    --color-carbon: #191919;
+
+    /* ── Color — dark canvas (the page background system) ─────────── */
+    --bg: var(--color-carbon);
+    --bg-elevated: #1f1f1f;
+    --surface: #1f1f1f;
+    --surface-2: #262626;
+    --surface-3: #2e2e2e;
+    --surface-glass: rgba(25, 25, 25, 0.72);
+    --surface-glass-strong: rgba(20, 20, 20, 0.9);
+
+    --border: rgba(240, 237, 232, 0.14);
+    --border-strong: rgba(240, 237, 232, 0.26);
+    --border-faint: rgba(240, 237, 232, 0.08);
+
+    /* ── Color — text on the dark canvas ───────────────────────────── */
+    --text-primary: var(--color-cararra);
+    --text-secondary: rgba(240, 237, 232, 0.72);
+    --text-muted: rgba(240, 237, 232, 0.48);
+    --text-faint: rgba(240, 237, 232, 0.3);
+
+    /* ── Color — light surfaces (Cararra / Chalk / Slate) ──────────── */
+    /* For the light Card/Button/Input variants and the light editorial
+       bands used across most pages. */
+    --surface-light-1: var(--color-cararra);
+    --surface-light-2: var(--color-chalk);
+    --surface-light-3: var(--color-slate);
+
+    --text-on-light-primary: var(--color-carbon);
+    --text-on-light-secondary: rgba(25, 25, 25, 0.66);
+    --text-on-light-muted: rgba(25, 25, 25, 0.46);
+
+    --border-on-light: rgba(25, 25, 25, 0.12);
+    --border-on-light-strong: rgba(25, 25, 25, 0.22);
+
+    /* ── Color — accent & semantic ──────────────────────────────────
+       Milano Red. Used selectively: primary actions, active/selected
+       states, focus rings, important data points — never as a fill for
+       every button, border, icon and heading. ── */
+    --accent: var(--color-red);
+    --accent-hover: #c8100f;
+    --accent-dim: rgba(176, 8, 11, 0.16);
+    --accent-border: rgba(176, 8, 11, 0.42);
+    --accent-text: var(--color-red-bright);
+
+    --success: #2fbf6a;
+    --success-dim: rgba(47, 191, 106, 0.14);
+    --warning: #e2a63b;
+    --warning-dim: rgba(226, 166, 59, 0.14);
+    --danger: var(--accent);
+    --danger-dim: var(--accent-dim);
+
+    /* ── Typography ──────────────────────────────────────────────────
+       Inter for everything editorial (titles, nav, buttons, names, body).
+       JetBrains Mono selectively for technical/data reads (rounds,
+       dates, lap times, telemetry, stat labels) — never for everything. */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --text-display: clamp(3rem, 3.4vw + 1.8rem, 6rem);
+    --text-h1: clamp(2rem, 1.4vw + 1.6rem, 3.25rem);
+    --text-h2: clamp(1.5rem, 0.7vw + 1.3rem, 2rem);
+    --text-h3: 1.25rem;
+    --text-body: 1rem;
+    --text-small: 0.875rem;
+    --text-micro: 0.75rem;
+
+    /* Explicit aliases matching the named scale used by SectionHeader,
+       Stat, Card titles, … */
+    --text-hero: clamp(3.5rem, 4vw + 2rem, 6rem);
+    --text-page-title: var(--text-display);
+    --text-section-title: var(--text-h1);
+    --text-card-title: var(--text-h3);
+    --text-body-lg: 1.125rem;
+    --text-meta: var(--text-micro);
+
+    /* ── Spacing scale ──────────────────────────────────────────────── */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    --space-9: 96px;
+    --space-10: 128px;
+
+    /* ── Radius ───────────────────────────────────────────────────── */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 999px;
+
+    /* ── Shadow — used sparingly, mostly for floating/glass surfaces and
+       light cards lifted off the dark canvas ── */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+    /* ── Motion ───────────────────────────────────────────────────── */
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --dur-fast: 120ms;
+    --dur-base: 220ms;
+    --dur-slow: 420ms;
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    --content-width: 1180px;
+    --content-width-wide: 1380px;
+    --nav-height: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --dur-fast: 0ms;
+        --dur-base: 0ms;
+        --dur-slow: 0ms;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESET + BASE ELEMENTS
+   ══════════════════════════════════════════════════════════════════ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: dark;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    color: inherit;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+::selection {
+    background: var(--accent-dim);
+    color: var(--text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BUTTON — .btn
+   ══════════════════════════════════════════════════════════════════ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 52px;
+    padding: 0 var(--space-6);
+    border: none;
+    border-radius: var(--radius-full);
+    background: none;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: var(--text-small);
+    letter-spacing: 0.01em;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease),
+        opacity var(--dur-fast) var(--ease);
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Compact size, for toolbars / inline actions */
+.btn-sm { height: 40px; padding: 0 var(--space-5); gap: var(--space-2); }
+
+/* Trailing circular arrow badge — always the inverse colour of its button */
+.btn-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-left: var(--space-2);
+    margin-right: calc(var(--space-6) * -1 + 6px);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: transform var(--dur-fast) var(--ease);
+}
+
+.btn-sm .btn-arrow {
+    width: 26px;
+    height: 26px;
+    margin-right: calc(var(--space-5) * -1 + 5px);
+}
+
+.btn:hover .btn-arrow { transform: translateX(3px); }
+
+/* Primary — Milano Red solid fill, the one truly "loud" button */
+.btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary .btn-arrow { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+
+/* Secondary — outline only, sits quietly on the dark canvas */
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover { border-color: var(--accent-border); background: var(--surface); }
+.btn-secondary .btn-arrow { background: var(--surface-3); color: var(--text-primary); }
+
+/* Light — Cararra fill with dark text, for use on the dark canvas or a
+   dark card (the "light button" half of the reference pair) */
+.btn-light {
+    background: var(--surface-light-1);
+    color: var(--text-on-light-primary);
+}
+
+.btn-light:hover { background: var(--surface-light-2); }
+.btn-light .btn-arrow { background: var(--color-carbon); color: var(--color-cararra); }
+
+/* Dark — Carbon Black fill with light text, for use on a light card (the
+   "dark button" half of the reference pair) */
+.btn-dark {
+    background: var(--color-carbon);
+    color: var(--color-cararra);
+}
+
+.btn-dark:hover { background: var(--surface-2); }
+.btn-dark .btn-arrow { background: var(--color-cararra); color: var(--color-carbon); }
+
+/* Icon-only — circular, for a single glyph action */
+.btn-icon {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    justify-content: center;
+}
+
+.btn-icon:hover { border-color: var(--accent-border); color: var(--accent-text); }
+.btn-icon.btn-sm { width: 34px; height: 34px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   CARD — .card
+   ══════════════════════════════════════════════════════════════════ */
+
+.card {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.card-dark {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.card-dark:hover { border-color: var(--border-strong); }
+
+.card-light {
+    background: var(--surface-light-1);
+    border: 1px solid var(--border-on-light);
+    color: var(--text-on-light-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-light:hover { box-shadow: var(--shadow-md); }
+
+.card-minimal {
+    background: transparent;
+    border: 1px solid var(--border-faint);
+    color: var(--text-primary);
+}
+
+.card-body { padding: var(--space-6); }
+
+.card-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--surface-2);
+}
+
+.card-media img { width: 100%; height: 100%; object-fit: cover; }
+
+.card-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-card-title);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    margin: 0 0 var(--space-2);
+}
+
+.card-desc {
+    font-size: var(--text-small);
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.card-light .card-desc { color: var(--text-on-light-secondary); }
+
+/* ══════════════════════════════════════════════════════════════════
+   INPUT — .input / .select, plus a search-field composition
+   ══════════════════════════════════════════════════════════════════ */
+
+.input,
+.select {
+    display: block;
+    width: 100%;
+    height: 48px;
+    padding: 0 var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-small);
+    transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.input::placeholder { color: var(--text-muted); }
+
+.input:hover,
+.select:hover { border-color: var(--border-strong); }
+
+.input:focus,
+.select:focus {
+    outline: none;
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.input-field { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.input-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Search field — input with a leading icon slot */
+.input-search { position: relative; }
+.input-search .input { padding-left: var(--space-8); }
+
+.input-search-icon {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    display: flex;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STAT — .stat
+   ══════════════════════════════════════════════════════════════════ */
+
+.stat { display: flex; flex-direction: column; gap: 4px; }
+
+.stat-value {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 1vw + 1.25rem, 2.25rem);
+    line-height: 1;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.stat--accent .stat-value { color: var(--accent-text); }
+
+.stat--on-light .stat-value { color: var(--text-on-light-primary); }
+.stat--on-light .stat-label { color: var(--text-on-light-muted); }
+.stat--on-light.stat--accent .stat-value { color: var(--accent); }
+
+.stat-row { display: flex; gap: var(--space-7); flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════════════════════════
+   SECTION HEADER — .section-header
+   ══════════════════════════════════════════════════════════════════ */
+
+.section-header { max-width: 68ch; }
+
+.section-header-eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
+}
+
+.section-header-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-section-title);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.section-header-desc {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-body-lg);
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.section-header--on-light .section-header-eyebrow { color: var(--accent); }
+.section-header--on-light .section-header-title { color: var(--text-on-light-primary); }
+.section-header--on-light .section-header-desc { color: var(--text-on-light-secondary); }
+
+/* ══════════════════════════════════════════════════════════════════
+   EMPTY STATE — .empty-state
+   ══════════════════════════════════════════════════════════════════ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-4);
+    padding: var(--space-9) var(--space-6);
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.empty-state-title {
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.empty-state-desc {
+    font-size: var(--text-small);
+    line-height: 1.55;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.empty-state-action { margin-top: var(--space-2); }
+
+.empty-state--on-light .empty-state-icon { background: var(--surface-light-2); border-color: var(--border-on-light-strong); color: var(--text-on-light-muted); }
+.empty-state--on-light .empty-state-title { color: var(--text-on-light-primary); }
+.empty-state--on-light .empty-state-desc { color: var(--text-on-light-secondary); }
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+    .btn { height: 48px; padding: 0 var(--space-5); }
+    .stat-row { gap: var(--space-5); }
+}

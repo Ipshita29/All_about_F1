@@ -15,15 +15,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
-import { SearchInput } from "../components/ui/Input";
-import EmptyState from "../components/ui/EmptyState";
-import Button from "../components/ui/Button";
+import { SearchInput } from "../components/Input";
+import EmptyState from "../components/EmptyState";
+import Button from "../components/Button";
 import {
     DRIVER_ID_MAP,
     FAV_TEAM_TO_CONSTRUCTOR_ID,
     formatArticleTime,
 } from "../utils/landingHelpers";
-import "./Paddock.css";
+import "../styles/pages/NewsPage.css";
 
 const API = "http://localhost:3000";
 

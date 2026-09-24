@@ -4,7 +4,7 @@
  * before; restyled to live inside the My Garage experience (.mg).
  */
 import { useState, useEffect } from "react";
-import "./MyGarage.css";
+import "../styles/pages/MyGarage.css";
 
 const API = "http://localhost:3000";
 

@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SearchControls from "../components/entity/SearchControls";
-import DriverRoster from "../components/entity/DriverRoster";
-import DriverCard from "../components/entity/DriverCard";
-import Stat from "../components/ui/Stat";
-import Button from "../components/ui/Button";
-import EmptyState from "../components/ui/EmptyState";
-import "./EntityPages.css";
+import SearchControls from "../components/SearchControls";
+import DriverRoster from "../components/DriverRoster";
+import DriverCard from "../components/DriverCard";
+import Stat from "../components/Stat";
+import Button from "../components/Button";
+import EmptyState from "../components/EmptyState";
+import "../styles/pages/EntityPages.css";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 

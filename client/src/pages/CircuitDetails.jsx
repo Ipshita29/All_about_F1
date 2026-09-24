@@ -6,9 +6,9 @@ import KnowMoreModal from "../components/KnowMoreModal";
 import { knowMoreInfo } from "../data/knowMoreInfo";
 import KnowMoreTerm from "../components/KnowMoreTerm";
 import CircuitVisualization from "../components/CircuitVisualization";
-import ExSection from "../components/entity/ExSection";
-import TelemetryStat from "../components/entity/TelemetryStat";
-import "./EntityPages.css";
+import ExSection from "../components/ExSection";
+import TelemetryStat from "../components/TelemetryStat";
+import "../styles/pages/EntityPages.css";
 
 const API = "http://localhost:3000";
 
