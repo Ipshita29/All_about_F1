@@ -8,7 +8,7 @@
 .mg-loading { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
 
 .mg-hero {
-    max-width: var(--content-width);
+    max-width: var(--content-width-wide);
     margin: 0 auto;
     padding: var(--space-9) var(--space-6) var(--space-6);
     opacity: 0;
@@ -26,7 +26,7 @@
 .mg-hero-title { font-size: var(--text-display); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: 0 0 var(--space-2); }
 .mg-hero-sub { font-size: 0.8rem; letter-spacing: 0.02em; color: var(--text-muted); }
 
-.mg-main { max-width: var(--content-width); margin: 0 auto; padding: 0 var(--space-6) var(--space-9); }
+.mg-main { max-width: var(--content-width-wide); margin: 0 auto; padding: 0 var(--space-6) var(--space-9); }
 
 /* ── Module grid (Profile) ── */
 

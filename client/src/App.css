@@ -101,10 +101,6 @@ button:active { transform: scale(0.98); }
     white-space: nowrap;
 }
 
-.navbar-divider {
-    display: none;
-}
-
 .navbar-links {
     display: flex;
     align-items: center;
@@ -129,7 +125,7 @@ button:active { transform: scale(0.98); }
 
 .navbar-link:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(240, 237, 232, 0.05);
 }
 
 .navbar-link-active {
@@ -198,7 +194,7 @@ button:active { transform: scale(0.98); }
 }
 
 .navbar-explore-item:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(240, 237, 232, 0.06);
     color: var(--text-primary);
 }
 
@@ -212,22 +208,6 @@ button:active { transform: scale(0.98); }
     gap: var(--space-2);
     margin-left: auto;
     flex-shrink: 0;
-}
-
-.navbar-icon-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
-}
-
-.navbar-icon-btn:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.06);
 }
 
 .navbar-profile-btn {
@@ -303,7 +283,7 @@ button:active { transform: scale(0.98); }
     flex-shrink: 0;
 }
 
-.navbar-hamburger:hover { background: rgba(255, 255, 255, 0.06); opacity: 1; }
+.navbar-hamburger:hover { background: rgba(240, 237, 232, 0.06); opacity: 1; }
 
 .navbar-hamburger span {
     display: block;
@@ -338,7 +318,7 @@ button:active { transform: scale(0.98); }
     display: block;
 }
 
-.navbar-mobile-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.04); }
+.navbar-mobile-link:hover { color: var(--text-primary); background: rgba(240, 237, 232, 0.04); }
 
 .navbar-mobile-link-active {
     color: var(--text-primary) !important;
@@ -380,68 +360,6 @@ button:active { transform: scale(0.98); }
     .navbar-mobile-menu { display: none; }
 }
 
-
-/* ── Profile card (also used by Preferences fallback) ── */
-
-.profile-card {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    max-width: 460px;
-    border: 1px solid var(--border);
-    margin: var(--space-8) auto;
-}
-
-.profile-card h1 {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 var(--space-5);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--border-faint);
-}
-
-.profile-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--border-faint);
-}
-
-.profile-row:last-child { border-bottom: none; }
-
-.profile-label {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.profile-value { font-weight: 500; color: var(--text-primary); font-size: var(--text-body); }
-
-.profile-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-    margin: 0 auto var(--space-4);
-}
-
-.profile-picks { max-width: 460px; margin: var(--space-6) auto 0; }
-.profile-picks .stat-row { grid-template-columns: 1fr 1fr; }
-
-.profile-card select { width: 100%; display: block; margin: 6px 0 var(--space-5); }
-.profile-card button { width: 100%; padding: 11px; margin-top: var(--space-2); font-size: 0.92rem; }
 
 /* ── Tables ── */
 
@@ -487,7 +405,7 @@ tr:hover td { background: var(--surface-2); }
     background: #ffffff;
     border-radius: var(--radius-md);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
     aspect-ratio: 4 / 3;
     display: flex;
     align-items: center;
@@ -589,33 +507,6 @@ tr:hover td { background: var(--surface-2); }
 }
 
 .know-more:hover { color: var(--accent-hover); }
-
-.team-colors { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
-
-.color-box {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-}
-
-/* ── Loading state ── */
-
-.loading,
-.landing-loading {
-    min-height: 50vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    letter-spacing: 0.14em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-}
-
 
 /* ── Loading indicator ── */
 

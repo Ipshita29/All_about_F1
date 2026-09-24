@@ -8,8 +8,6 @@
 
 .lp { background: var(--bg); overflow-x: clip; }
 
-.lp-mono { font-family: var(--font-mono); }
-
 .lp-cta {
     display: inline-flex;
     align-items: center;
@@ -607,7 +605,7 @@
     border: 1px solid var(--border-on-light);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    background: #ffffff;
+    background: var(--surface-light-2);
     color: var(--text-on-light-primary);
     transition: box-shadow var(--dur-fast) var(--ease);
 }

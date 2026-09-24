@@ -499,7 +499,7 @@ a.ex-spec-value:hover { color: var(--accent-text); }
     text-align: left;
 }
 
-.ex-combo-option.is-highlight { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); }
+.ex-combo-option.is-highlight { background: rgba(240, 237, 232, 0.06); color: var(--text-primary); }
 .ex-combo-option.is-selected { color: var(--accent-text); }
 .ex-combo-option-sub { font-size: 0.72rem; color: var(--text-muted); }
 .ex-combo-empty { padding: var(--space-3); font-size: 0.8rem; color: var(--text-muted); }

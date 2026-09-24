@@ -103,7 +103,7 @@
     color: var(--color-cararra);
 }
 
-.btn-dark:hover { background: #262626; }
+.btn-dark:hover { background: var(--surface-2); }
 .btn-dark .btn-arrow { background: var(--color-cararra); color: var(--color-carbon); }
 
 /* Icon-only — circular, for a single glyph action */

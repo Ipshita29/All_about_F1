@@ -483,7 +483,7 @@
 
 /* Tyre wear */
 .fd-anim-tyre-tread { animation: fdTyreTread 4.5s ease-in-out infinite; }
-@keyframes fdTyreTread { 0%, 15% { stroke: #2fbf6a; stroke-width: 3; } 45%, 60% { stroke: #e2a63b; stroke-width: 2; } 85%, 100% { stroke: #e10600; stroke-width: 1.2; } }
+@keyframes fdTyreTread { 0%, 15% { stroke: var(--success); stroke-width: 3; } 45%, 60% { stroke: var(--warning); stroke-width: 2; } 85%, 100% { stroke: var(--danger); stroke-width: 1.2; } }
 .fd-anim-tyre-life { animation: fdTyreLife 4.5s ease-in-out infinite; }
 @keyframes fdTyreLife { 0%, 15% { width: 50px; } 45%, 60% { width: 26px; } 85%, 100% { width: 6px; } }
 .fd-anim-tyre-label-new, .fd-anim-tyre-label-mid, .fd-anim-tyre-label-old { opacity: 0; animation: fdTyreLabel 4.5s ease-in-out infinite; }
