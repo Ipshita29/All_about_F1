@@ -4,12 +4,15 @@
  * surfaces a real preview as you type; a proper segmented control (not a
  * floating pill) sets the explanation depth; popular terms and categories
  * sit on a light editorial band; the term archive and Word of the Day
- * close the page. All previous functionality is preserved — search with
- * rotating placeholders, easter eggs, popular terms, category filters,
- * learning progress, did-you-know facts and the random term — only the
- * presentation changes.
+ * close the page.
+ *
+ * Category cards navigate to a dedicated /dictionary/category/:slug page
+ * (see DictionaryCategory.jsx) instead of scrolling to a section further
+ * down — the "Filter the Archive" band below is a separate, complementary
+ * in-page filter for browsing everything without leaving the hub, so its
+ * chips still just narrow the grid in place. Purely data-driven; no AI.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Dices, Sparkles, ArrowRight } from "lucide-react";
 import TermCard from "../components/TermCard";
@@ -39,7 +42,6 @@ import "../styles/pages/F1Dictionary.css";
 
 function F1Dictionary() {
   const navigate = useNavigate();
-  const gridRef = useRef(null);
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -78,15 +80,6 @@ function F1Dictionary() {
     () => (search.trim() ? allTerms.filter((term) => matchesSearch(term, search)) : []),
     [allTerms, search]
   );
-
-  const scrollToGrid = () => {
-    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const handleCategorySelect = (name) => {
-    setActiveCategory(name);
-    scrollToGrid();
-  };
 
   const handleRandomTerm = () => {
     navigate(`/dictionary/${getRandomTerm().slug}`);
@@ -178,14 +171,14 @@ function F1Dictionary() {
           <div className="fd-category-grid">
             {categories.map((cat, i) => (
               <RevealOnScroll key={cat.name} index={i}>
-                <button
+                <Link
+                  to={`/dictionary/category/${cat.slug}`}
                   className={`fd-category-card${i % 2 === 1 ? " fd-category-card--dark" : ""}`}
-                  onClick={() => handleCategorySelect(cat.name)}
                 >
                   <span className="fd-category-icon">
                     <CategoryIcon name={cat.icon} size={22} />
                   </span>
-                  <h3>{cat.chip}</h3>
+                  <h3 className="fd-category-title">{cat.chip}</h3>
                   <p>{cat.description}</p>
                   <div className="fd-category-footer">
                     <span className="fd-category-count fd-mono">{cat.count} TERMS</span>
@@ -193,7 +186,7 @@ function F1Dictionary() {
                       EXPLORE <ArrowRight size={13} />
                     </span>
                   </div>
-                </button>
+                </Link>
               </RevealOnScroll>
             ))}
           </div>
@@ -253,13 +246,13 @@ function F1Dictionary() {
       </section>
 
       {/* ── Filters + term archive (light band) ─────────────────────── */}
-      <section className="fd-band fd-band--light" ref={gridRef}>
+      <section className="fd-band fd-band--light">
         <div className="fd-band-inner">
           <p className="fd-section-title fd-mono">FILTER THE ARCHIVE</p>
           <div className="fd-chip-row">
             <button
               className={`fd-chip${activeCategory === "All" ? " fd-chip-active" : ""}`}
-              onClick={() => handleCategorySelect("All")}
+              onClick={() => setActiveCategory("All")}
             >
               All
             </button>
@@ -267,7 +260,7 @@ function F1Dictionary() {
               <button
                 key={cat.name}
                 className={`fd-chip${activeCategory === cat.name ? " fd-chip-active" : ""}`}
-                onClick={() => handleCategorySelect(cat.name)}
+                onClick={() => setActiveCategory(cat.name)}
               >
                 {cat.chip}
               </button>
@@ -293,6 +286,7 @@ function F1Dictionary() {
             </div>
           ) : (
             <EmptyState
+              onLight
               title="No term found"
               description={
                 search.trim()

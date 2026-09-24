@@ -1,20 +1,28 @@
 import { knowMoreInfo } from "../data/knowMoreInfo";
 export const CATEGORY_INFO = [
-  { name: "Race Terms", chip: "Flags & Race", icon: "Flag", description: "Flags, safety cars, and the language of race day." },
-  { name: "Strategy Terms", chip: "Strategy", icon: "Brain", description: "Undercuts, overcuts, and the pit-wall chess match." },
-  { name: "Tyres", chip: "Tyres", icon: "Disc", description: "Compounds, degradation, and tyre pit strategy." },
-  { name: "Car & Aerodynamics", chip: "Car", icon: "Car", description: "Downforce, drag, and the engineering behind the speed." },
-  { name: "Weekend Format", chip: "Race Weekend", icon: "Calendar", description: "Practice, qualifying, and how a race weekend unfolds." },
-  { name: "Timing & Gaps", chip: "Timing", icon: "Timer", description: "Sectors, deltas, and reading the timing screens." },
-  { name: "Driver Results", chip: "Drivers", icon: "Users", description: "DNFs, penalties, and how results are decided." },
-  { name: "Championship Terms", chip: "Championship", icon: "Trophy", description: "Points, standings, and the fight for the title." },
-  { name: "Track Terms", chip: "Track", icon: "Map", description: "Apexes, kerbs, and the geometry of a circuit." },
-  { name: "Weather Terms", chip: "Weather", icon: "CloudRain", description: "Rain, drying lines, and mixed-condition chaos." },
-  { name: "Rules", chip: "Rules", icon: "BookOpen", description: "Parc fermé and the regulations behind the sport." },
+  { name: "Race Terms", slug: "flags-race", chip: "Flags & Race", icon: "Flag", description: "Flags, safety cars, and the language of race day." },
+  { name: "Strategy Terms", slug: "strategy", chip: "Strategy", icon: "Brain", description: "Undercuts, overcuts, and the pit-wall chess match." },
+  { name: "Tyres", slug: "tyres", chip: "Tyres", icon: "Disc", description: "Compounds, degradation, and tyre pit strategy." },
+  { name: "Car & Aerodynamics", slug: "car", chip: "Car", icon: "Car", description: "Downforce, drag, and the engineering behind the speed." },
+  { name: "Weekend Format", slug: "race-weekend", chip: "Race Weekend", icon: "Calendar", description: "Practice, qualifying, and how a race weekend unfolds." },
+  { name: "Timing & Gaps", slug: "timing", chip: "Timing", icon: "Timer", description: "Sectors, deltas, and reading the timing screens." },
+  { name: "Driver Results", slug: "drivers", chip: "Drivers", icon: "Users", description: "DNFs, penalties, and how results are decided." },
+  { name: "Championship Terms", slug: "championship", chip: "Championship", icon: "Trophy", description: "Points, standings, and the fight for the title." },
+  { name: "Track Terms", slug: "track", chip: "Track", icon: "Map", description: "Apexes, kerbs, and the geometry of a circuit." },
+  { name: "Weather Terms", slug: "weather", chip: "Weather", icon: "CloudRain", description: "Rain, drying lines, and mixed-condition chaos." },
+  { name: "Rules", slug: "rules", chip: "Rules", icon: "BookOpen", description: "Parc fermé and the regulations behind the sport." },
 ];
 
 export function getCategoryIcon(categoryName) {
   return CATEGORY_INFO.find((c) => c.name === categoryName)?.icon || "Flag";
+}
+
+export function getCategoryBySlug(slug) {
+  return CATEGORY_INFO.find((c) => c.slug === slug) || null;
+}
+
+export function getTermsByCategory(categoryName) {
+  return getAllTerms().filter((t) => t.category === categoryName);
 }
 
 export const POPULAR_SLUGS = [

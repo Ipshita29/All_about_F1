@@ -7,13 +7,13 @@
  * technical explanations. The switch's gating is unchanged from before —
  * beginnerTip only renders in Rookie mode, whyItMatters only in Race
  * Engineer mode — only how each state is presented has changed. Related
- * terms and the AI coach are preserved, as is visited-term tracking.
+ * terms are preserved, as is visited-term tracking. Purely data-driven —
+ * no AI is used anywhere in the Dictionary.
  */
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import DifficultyBadge from "../components/DifficultyBadge";
-import AICoach from "../components/AICoach";
 import TermCard from "../components/TermCard";
 import CategoryIcon from "../components/CategoryIcon";
 import TermAnimation from "../components/TermAnimation";
@@ -143,8 +143,6 @@ function DictionaryTerm() {
             )}
           </div>
         </article>
-
-        <AICoach termTitle={term.title} />
 
         {related.length > 0 && (
           <div className="fd-term-section fd-related-section">

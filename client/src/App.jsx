@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar"
+import ScrollToTop from "./components/ScrollToTop"
 import CircuitMaps from "./pages/CircuitMaps"
 import CircuitDetails from "./pages/CircuitDetails"
 import Drivers from "./pages/Drivers"
@@ -16,6 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DriverComparison from "./pages/DriverComparison";
 import TeamComparison from "./pages/TeamComparison";
 import F1Dictionary from "./pages/F1Dictionary";
+import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
 import NewsPage from "./pages/NewsPage";
 import "./App.css";
@@ -29,6 +31,7 @@ function AppShell() {
 
   return (
     <>
+      <ScrollToTop />
       {!isAuthPage && <Navbar />}
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>
@@ -45,6 +48,7 @@ function AppShell() {
         <Route path="/compare-drivers" element={<DriverComparison />} />
         <Route path="/compare-teams" element={<TeamComparison />} />
         <Route path="/dictionary" element={<F1Dictionary />} />
+        <Route path="/dictionary/category/:categorySlug" element={<DictionaryCategory />} />
         <Route path="/dictionary/:slug" element={<DictionaryTerm />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/auth" element={<AuthPage />} />

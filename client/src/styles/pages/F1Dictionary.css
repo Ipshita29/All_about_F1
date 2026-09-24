@@ -193,6 +193,8 @@
 .fd-band--light .fd-section-title { color: var(--text-on-light-muted); }
 
 .fd-band-heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 var(--space-5); }
+.fd-band--light .fd-band-heading { color: var(--text-on-light-primary); }
+.fd-band--dark .fd-band-heading { color: var(--text-primary); }
 
 /* ── Popular terms — editorial list, not a card grid ── */
 
@@ -257,7 +259,9 @@
 .fd-category-icon { color: var(--accent); margin-bottom: 2px; }
 .fd-category-card--dark .fd-category-icon { color: var(--accent-text); }
 
-.fd-category-card h3 { font-size: 1.05rem; margin: 0; }
+.fd-category-title { font-size: 1.05rem; margin: 0; color: var(--text-on-light-primary); }
+.fd-category-card--dark .fd-category-title { color: var(--text-primary); }
+
 .fd-category-card p { font-size: 0.82rem; color: var(--text-on-light-secondary); flex: 1; margin: 0; line-height: 1.5; }
 .fd-category-card--dark p { color: var(--text-secondary); }
 
@@ -271,6 +275,39 @@
 .fd-category-card--dark .fd-category-explore { color: var(--text-faint); }
 .fd-category-card:hover .fd-category-explore { color: var(--accent); }
 .fd-category-card--dark:hover .fd-category-explore { color: var(--accent-text); }
+
+/* ── Category page (department term list) ── */
+
+.fd-category-page-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+
+.fd-category-page-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--accent-text);
+    flex-shrink: 0;
+}
+
+.fd-category-page-title {
+    font-size: clamp(2rem, 2vw + 1.4rem, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.fd-category-page-desc {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 56ch;
+    margin: 0 0 var(--space-5);
+}
 
 /* ── Word of the day ── */
 
@@ -350,7 +387,8 @@
 /* ── Term archive grid ── */
 
 .fd-grid-header { display: flex; justify-content: space-between; align-items: baseline; margin: var(--space-7) 0 var(--space-5); }
-.fd-grid-count { font-size: 0.68rem; color: var(--text-on-light-muted); }
+.fd-grid-count { font-size: 0.68rem; color: var(--text-muted); }
+.fd-band--light .fd-grid-count { color: var(--text-on-light-muted); }
 
 .fd-term-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: var(--space-6) var(--space-5); }
 
@@ -374,7 +412,11 @@
 .fd-term-icon { color: var(--text-muted); }
 .fd-term-card--on-light .fd-term-icon { color: var(--text-on-light-muted); }
 
-.fd-term-title { font-size: 1rem; font-weight: 600; margin: 0; }
+.fd-term-title { font-size: 1rem; font-weight: 600; margin: 0; color: var(--text-primary); }
+.fd-term-card:hover .fd-term-title { color: var(--accent-text); }
+.fd-term-card--on-light .fd-term-title { color: var(--text-on-light-primary); }
+.fd-term-card--on-light:hover .fd-term-title { color: var(--accent); }
+
 .fd-term-category { font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-faint); text-transform: uppercase; }
 .fd-term-card--on-light .fd-term-category { color: var(--text-on-light-muted); }
 .fd-term-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
@@ -511,36 +553,6 @@
 .fd-anim-car-rival { animation-name: fdStrategyRival; }
 @keyframes fdStrategyRace { 0% { offset-distance: 0%; } 100% { offset-distance: 100%; } }
 @keyframes fdStrategyRival { 0% { offset-distance: 0%; } 100% { offset-distance: 100%; } }
-
-/* ── AI Coach ── */
-
-.fd-ai-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); margin-bottom: var(--space-7); }
-
-.fd-ai-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
-.fd-ai-orb { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
-.fd-ai-header h3 { font-size: 0.98rem; margin: 0 0 2px; }
-.fd-ai-header p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
-
-.fd-ai-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
-
-.fd-ai-btn {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    padding: 8px 14px;
-    border-radius: var(--radius-full);
-    cursor: pointer;
-}
-
-.fd-ai-btn:hover { border-color: var(--border-strong); }
-.fd-ai-btn-active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent-text); }
-
-.fd-ai-response { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-faint); }
-.fd-ai-response p { font-size: 0.86rem; color: var(--text-secondary); line-height: 1.6; margin: 0; }
-
-.fd-ai-loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
-.fd-ai-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: fdBlink 0.9s ease-in-out infinite; }
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
