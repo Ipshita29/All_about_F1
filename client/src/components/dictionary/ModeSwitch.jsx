@@ -1,28 +1,35 @@
 /*
- * Rookie / Race Engineer switch for the Pit Wall Briefing.
- * The chosen depth persists via getBriefingMode/saveBriefingMode in
- * utils/dictionaryHelpers.js so the hub and every term page stay in sync.
+ * Explanation-level segmented control — Rookie / Race Engineer.
+ * A proper two-cell segmented control, not a floating pill: equal-height
+ * cells, a shared border, the active cell filled with a light surface and
+ * marked with a small Milano Red indicator dot. Same getBriefingMode/
+ * saveBriefingMode contract as before — this only changes presentation.
  */
-function ModeSwitch({ mode, onChange }) {
-  return (
-    <div className="fd-mode" role="group" aria-label="Briefing depth">
-      <span className="fd-mode-label fd-mono">BRIEFING DEPTH</span>
-      <div className="fd-mode-track">
-        {["beginner", "expert"].map((m) => (
-          <button
-            key={m}
-            type="button"
-            className={`fd-mode-btn${mode === m ? " fd-mode-btn-active" : ""}`}
-            aria-pressed={mode === m}
-            onClick={() => onChange(m)}
-          >
-            {m === "beginner" ? "ROOKIE" : "RACE ENGINEER"}
-          </button>
-        ))}
-        <span className={`fd-mode-thumb fd-mode-thumb--${mode}`} aria-hidden="true" />
-      </div>
-    </div>
-  );
+const OPTIONS = [
+    { value: "beginner", label: "ROOKIE" },
+    { value: "expert", label: "RACE ENGINEER" },
+];
+
+function ModeSwitch({ mode, onChange, label = "EXPLANATION LEVEL", className = "" }) {
+    return (
+        <div className={`fd-mode${className ? ` ${className}` : ""}`}>
+            <span className="fd-mode-label fd-mono">{label}</span>
+            <div className="fd-mode-track" role="group" aria-label={label}>
+                {OPTIONS.map((opt) => (
+                    <button
+                        key={opt.value}
+                        type="button"
+                        aria-pressed={mode === opt.value}
+                        className={`fd-mode-btn${mode === opt.value ? " fd-mode-btn-active" : ""}`}
+                        onClick={() => onChange(opt.value)}
+                    >
+                        {mode === opt.value && <span className="fd-mode-dot" aria-hidden="true" />}
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 export default ModeSwitch;

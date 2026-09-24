@@ -3,9 +3,12 @@ import DifficultyBadge from "./DifficultyBadge";
 import CategoryIcon from "./CategoryIcon";
 import { getCategoryIcon } from "../../utils/dictionaryHelpers";
 
-function TermCard({ term, compact = false }) {
+function TermCard({ term, compact = false, onLight = false }) {
   return (
-    <Link to={`/dictionary/${term.slug}`} className={`fd-term-card${compact ? " fd-term-card-compact" : ""}`}>
+    <Link
+      to={`/dictionary/${term.slug}`}
+      className={`fd-term-card${compact ? " fd-term-card-compact" : ""}${onLight ? " fd-term-card--on-light" : ""}`}
+    >
       <div className="fd-term-card-top">
         <span className="fd-term-icon">
           <CategoryIcon name={getCategoryIcon(term.category)} size={20} />

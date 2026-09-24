@@ -1,15 +1,16 @@
 /*
- * PIT WALL BRIEFING — one term, opened like an engineer's folder.
- *
- * The page unfolds as a technical file: header tab, clearance stamps, the
- * briefing itself, an educational animation where one genuinely helps
- * (DRS flap, tyre wear, flags, undercut/overcut, pit stop), and a Rookie /
- * Race Engineer switch that cross-fades between simplified and technical
- * explanations without leaving the page. Related files and the AI coach
- * are preserved from the previous version, as is visited-term tracking.
+ * THE F1 ENGINEER'S HANDBOOK — a single term, read as a briefing rather
+ * than a card. Strong heading hierarchy with dividers instead of boxed
+ * sections; an educational animation where one genuinely helps (DRS flap,
+ * tyre wear, flags, undercut/overcut, pit stop); and the same Rookie /
+ * Race Engineer switch as the hub, cross-fading between simplified and
+ * technical explanations. The switch's gating is unchanged from before —
+ * beginnerTip only renders in Rookie mode, whyItMatters only in Race
+ * Engineer mode — only how each state is presented has changed. Related
+ * terms and the AI coach are preserved, as is visited-term tracking.
  */
 import { useEffect, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import DifficultyBadge from "../components/dictionary/DifficultyBadge";
 import AICoach from "../components/dictionary/AICoach";
@@ -17,6 +18,7 @@ import TermCard from "../components/dictionary/TermCard";
 import CategoryIcon from "../components/dictionary/CategoryIcon";
 import TermAnimation from "../components/dictionary/TermAnimation";
 import ModeSwitch from "../components/dictionary/ModeSwitch";
+import EmptyState from "../components/ui/EmptyState";
 import {
   getBriefingMode,
   saveBriefingMode,
@@ -25,8 +27,37 @@ import {
   estimateReadingTime,
   markTermVisited,
   getCategoryIcon,
+  POPULAR_SLUGS,
 } from "../utils/dictionaryHelpers";
 import "./F1Dictionary.css";
+
+function TermNotFound({ slug }) {
+  const suggestions = POPULAR_SLUGS.slice(0, 3).map(getTermBySlug).filter(Boolean);
+  const query = slug ? slug.replace(/-/g, " ") : "";
+
+  return (
+    <div className="fd-page">
+      <div className="fd-term-page">
+        <Link to="/dictionary" className="fd-back-link fd-mono">
+          <ArrowLeft size={15} /> BACK TO THE HANDBOOK
+        </Link>
+        <EmptyState
+          title="No term found"
+          description={`We couldn't find a definition for "${query}".`}
+          action={
+            <div className="fd-chip-row">
+              {suggestions.map((term) => (
+                <Link key={term.slug} to={`/dictionary/${term.slug}`} className="fd-chip">
+                  {term.title}
+                </Link>
+              ))}
+            </div>
+          }
+        />
+      </div>
+    </div>
+  );
+}
 
 function DictionaryTerm() {
   const { slug } = useParams();
@@ -37,7 +68,7 @@ function DictionaryTerm() {
     if (term) markTermVisited(term.slug);
   }, [term]);
 
-  if (!term) return <Navigate to="/dictionary" replace />;
+  if (!term) return <TermNotFound slug={slug} />;
 
   const changeMode = (m) => {
     setMode(m);
@@ -52,72 +83,58 @@ function DictionaryTerm() {
     <div className="fd-page">
       <div className="fd-term-page">
         <Link to="/dictionary" className="fd-back-link fd-mono">
-          <ArrowLeft size={15} /> BACK TO THE BRIEFING ROOM
+          <ArrowLeft size={15} /> BACK TO THE HANDBOOK
         </Link>
 
-        {/* ── The folder ─────────────────────────────────────────── */}
         <article className="fd-folder">
-          <div className="fd-folder-tab fd-mono" aria-hidden="true">
-            FILE — {term.category?.toUpperCase()}
-          </div>
-
           <header className="fd-folder-head">
             <span className="fd-term-header-icon">
-              <CategoryIcon name={getCategoryIcon(term.category)} size={30} />
+              <CategoryIcon name={getCategoryIcon(term.category)} size={26} />
             </span>
             <div className="fd-folder-head-copy">
+              <span className="fd-folder-tab fd-mono">{term.category}</span>
               <h1>{term.title}</h1>
               <div className="fd-term-meta-row">
-                <span className="fd-term-category-badge">{term.category}</span>
                 <DifficultyBadge level={term.difficulty} />
                 <span className="fd-reading-time fd-mono">{readingTime} MIN READ</span>
               </div>
             </div>
-            <ModeSwitch mode={mode} onChange={changeMode} />
           </header>
+
+          <ModeSwitch mode={mode} onChange={changeMode} className="fd-term-mode" />
 
           <div className="fd-divider" aria-hidden="true" />
 
           {/* the two depths cross-fade via the key change */}
           <div className="fd-folder-body" key={mode}>
-            <div className="fd-term-section">
-              <h2 className="fd-mono">{expert ? "TECHNICAL BRIEF" : "THE BRIEFING"}</h2>
-              <p>{term.meaning}</p>
-            </div>
-
-            <TermAnimation term={term} />
+            <p className="fd-term-lead">{term.meaning}</p>
 
             {!expert && term.beginnerTip && (
-              <div className="fd-tip-callout">
-                <strong className="fd-mono">ROOKIE NOTE</strong>
+              <div className="fd-term-section">
+                <h2 className="fd-mono">In Simple Terms</h2>
                 <p>{term.beginnerTip}</p>
               </div>
             )}
 
             {expert && term.whyItMatters && (
               <div className="fd-term-section">
-                <h2 className="fd-mono">WHY THE PIT WALL CARES</h2>
+                <h2 className="fd-mono">Race Engineer</h2>
                 <p>{term.whyItMatters}</p>
               </div>
             )}
 
-            {expert && term.example && (
-              <div className="fd-term-section">
-                <h2 className="fd-mono">CASE STUDY — REAL RACE</h2>
-                <p>{term.example}</p>
-              </div>
-            )}
+            <TermAnimation term={term} />
 
-            {!expert && term.example && (
+            {term.example && (
               <div className="fd-term-section">
-                <h2 className="fd-mono">SEEN IN A REAL RACE</h2>
+                <h2 className="fd-mono">Seen On Track</h2>
                 <p>{term.example}</p>
               </div>
             )}
 
             {term.funFact && (
               <div className="fd-term-section">
-                <h2 className="fd-mono">DID YOU KNOW?</h2>
+                <h2 className="fd-mono">Did You Know?</h2>
                 <div className="fd-fun-fact">
                   <Sparkles size={18} className="fd-fun-fact-icon" />
                   <p>{term.funFact}</p>
@@ -131,7 +148,7 @@ function DictionaryTerm() {
 
         {related.length > 0 && (
           <div className="fd-term-section fd-related-section">
-            <h2 className="fd-mono">CROSS-REFERENCED FILES</h2>
+            <h2 className="fd-mono">Related Terms</h2>
             <div className="fd-related-grid">
               {related.map((rel) => (
                 <TermCard key={rel.slug} term={rel} compact />
