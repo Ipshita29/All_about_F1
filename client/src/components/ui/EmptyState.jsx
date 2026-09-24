@@ -17,9 +17,9 @@ function DefaultIcon() {
     );
 }
 
-export default function EmptyState({ icon, title, description, action, className = "" }) {
+export default function EmptyState({ icon, title, description, action, onLight = false, className = "" }) {
     return (
-        <div className={`empty-state${className ? ` ${className}` : ""}`}>
+        <div className={`empty-state${onLight ? " empty-state--on-light" : ""}${className ? ` ${className}` : ""}`}>
             <span className="empty-state-icon" aria-hidden="true">
                 {icon || <DefaultIcon />}
             </span>

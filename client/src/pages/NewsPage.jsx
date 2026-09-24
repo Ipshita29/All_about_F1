@@ -1,19 +1,23 @@
 /*
- * FROM THE PADDOCK — the news feed as a premium F1 editorial magazine.
+ * FROM THE PADDOCK — the news feed as a premium F1 editorial newsroom.
  *
- * The newest story is the cinematic cover; the rest of the feed is grouped
- * into magazine chapters (Driver News, Team News, Technical, …) with varied
- * card scales instead of one repeating grid. Opening a story unfolds an
+ * A dark masthead leads into a light featured-story band, a dark deck of
+ * secondary stories, and a light "latest news" archive grouped into real
+ * chapters — a deliberate light/dark rhythm instead of one long black
+ * page. The chapter names already computed from article content now also
+ * double as a real, non-fake category filter. Opening a story unfolds an
  * in-page reader (no route change) via a shared-element view transition,
  * with a reading progress bar, contextual driver/team links and editorial
- * recommendations. Same /news endpoint and search feature as before; the
- * external "read the full story" link is preserved inside the reader.
+ * recommendations. Same /news endpoint, search and reader mechanics as
+ * before; only the presentation changes.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { SearchInput } from "../components/ui/Input";
+import EmptyState from "../components/ui/EmptyState";
+import Button from "../components/ui/Button";
 import {
     DRIVER_ID_MAP,
     FAV_TEAM_TO_CONSTRUCTOR_ID,
@@ -181,18 +185,22 @@ function Reader({ article, related, onClose, onSwitch }) {
                 </button>
 
                 <div className="fp-reader-body" ref={bodyRef} onScroll={onScroll}>
-                    <ArticleImage article={article} className="fp-reader-img" vtName="fp-story" />
-
                     <div className="fp-reader-copy">
+                        <span className="fp-kicker fp-mono">F1 · {chapterFor(article).toUpperCase()}</span>
+
+                        <h1 className="fp-reader-title">{article.title}</h1>
+
                         <div className="fp-reader-meta fp-mono">
                             <span className="fp-source">{article.source}</span>
                             <span>{formatNewsDate(article.publishedAt)}</span>
                             <span>{readingTime(article)} MIN BRIEF</span>
                             <span className="fp-reader-fresh">{formatArticleTime(article.publishedAt)}</span>
                         </div>
+                    </div>
 
-                        <h1 className="fp-reader-title">{article.title}</h1>
+                    <ArticleImage article={article} className="fp-reader-img" vtName="fp-story" />
 
+                    <div className="fp-reader-copy">
                         <p className="fp-reader-lede">{article.description}</p>
 
                         <a
@@ -224,7 +232,7 @@ function Reader({ article, related, onClose, onSwitch }) {
 
                         {related.length > 0 && (
                             <div className="fp-reader-related">
-                                <span className="fp-kicker fp-mono">THE EDITORS ALSO RECOMMEND</span>
+                                <span className="fp-kicker fp-mono">RELATED FROM THE PADDOCK</span>
                                 {related.map((rel) => (
                                     <button
                                         key={rel.id}
@@ -257,21 +265,43 @@ function StoryCard({ article, scale, onOpen, vtName }) {
                     <ArticleImage article={article} className="fp-card-img" vtName={vtName} />
                 )}
                 <div className="fp-card-copy">
-                    <div className="fp-card-meta fp-mono">
-                        <span className="fp-source">{article.source}</span>
-                        <span>{formatNewsDate(article.publishedAt)}</span>
-                        <span className="fp-card-read">{readingTime(article)} MIN</span>
-                    </div>
+                    <span className="fp-card-category fp-mono">F1 · {chapterFor(article).toUpperCase()}</span>
                     <h3 className="fp-card-title">{article.title}</h3>
                     {scale !== "small" && scale !== "text" && (
                         <p className="fp-card-desc">{article.description}</p>
                     )}
+                    <div className="fp-card-meta fp-mono">
+                        <span className="fp-source">{article.source}</span>
+                        <span>{formatNewsDate(article.publishedAt)}</span>
+                    </div>
                     <span className="fp-card-open fp-mono">
-                        OPEN STORY <ArrowRight size={12} />
+                        READ STORY <ArrowRight size={12} />
                     </span>
                 </div>
             </button>
         </article>
+    );
+}
+
+/* ── Loading skeleton — mirrors the real layout, not a bare spinner ── */
+
+function NewsSkeleton() {
+    return (
+        <div className="fp-skeleton" aria-busy="true" aria-label="Loading the paddock">
+            <div className="fp-band fp-band--light">
+                <div className="fp-band-inner">
+                    <div className="fp-sk fp-sk-cover" />
+                    <div className="fp-sk fp-sk-line" style={{ width: "70%" }} />
+                    <div className="fp-sk fp-sk-line" style={{ width: "45%" }} />
+                </div>
+            </div>
+            <div className="fp-band fp-band--dark">
+                <div className="fp-band-inner fp-deck">
+                    <div className="fp-sk fp-sk-card" />
+                    <div className="fp-sk fp-sk-card" />
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -282,23 +312,33 @@ function NewsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
+    const [activeCategory, setActiveCategory] = useState("All");
     const [active, setActive] = useState(null);
     const [transitionId, setTransitionId] = useState(null);
+    const [retryTick, setRetryTick] = useState(0);
 
     useEffect(() => {
+        let cancelled = false;
         const fetchNews = async () => {
             try {
                 const response = await fetch(`${API}/news`);
                 const data = await response.json();
-                setArticles(Array.isArray(data) ? data : []);
+                if (!cancelled) setArticles(Array.isArray(data) ? data : []);
             } catch {
-                setError("Failed to fetch news.");
+                if (!cancelled) setError("Failed to fetch news.");
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
         fetchNews();
-    }, []);
+        return () => { cancelled = true; };
+    }, [retryTick]);
+
+    const retry = () => {
+        setLoading(true);
+        setError("");
+        setRetryTick((t) => t + 1);
+    };
 
     const sorted = useMemo(
         () =>
@@ -308,14 +348,27 @@ function NewsPage() {
         [articles]
     );
 
+    /* categories are never invented — only chapter names that at least one
+       real, currently-loaded article actually matches are offered */
+    const categories = useMemo(() => {
+        const present = new Set(sorted.map(chapterFor));
+        return CHAPTERS.map((c) => c.name)
+            .filter((name) => present.has(name))
+            .concat(present.has(FALLBACK_CHAPTER) ? [FALLBACK_CHAPTER] : []);
+    }, [sorted]);
+
+    const searching = search.trim().length > 0;
+
     const filtered = sorted.filter((a) =>
         `${a.title} ${a.source}`.toLowerCase().includes(search.toLowerCase())
     );
+    const categoryFiltered =
+        activeCategory === "All" ? filtered : filtered.filter((a) => chapterFor(a) === activeCategory);
 
-    const searching = search.trim().length > 0;
-    const cover = !searching ? filtered[0] : null;
-    const deck = !searching ? filtered.slice(1, 3) : [];
-    const rest = searching ? filtered : filtered.slice(3);
+    const showCinematic = !searching && activeCategory === "All";
+    const cover = showCinematic ? categoryFiltered[0] : null;
+    const deck = showCinematic ? categoryFiltered.slice(1, 3) : [];
+    const rest = showCinematic ? categoryFiltered.slice(3) : categoryFiltered;
 
     const byName = new Map();
     for (const article of rest) {
@@ -355,125 +408,175 @@ function NewsPage() {
     const vtFor = (article) =>
         !active && transitionId === article.id ? "fp-story" : undefined;
 
-    if (loading) {
-        return (
-            <div className="fp fp-loading">
-                <LoadingSpinner label="Loading the paddock…" />
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="fp fp-loading">
-                <div className="fp-error">
-                    <h2>PRESS ROOM UNREACHABLE</h2>
-                    <p className="fp-mono">{error.toUpperCase()}</p>
-                </div>
-            </div>
-        );
-    }
+    const selectCategory = (name) => setActiveCategory(name);
 
     return (
         <div className="fp">
-            {/* ── Masthead ──────────────────────────────────────────── */}
+            {/* ── Masthead (dark) ──────────────────────────────────── */}
             <header className="fp-masthead">
-                <span className="fp-issue fp-mono">
-                    ALL ABOUT F1 · EDITORIAL ·{" "}
-                    {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }).toUpperCase()}
-                </span>
-                <h1 className="fp-title">FROM THE PADDOCK</h1>
-                <p className="fp-sub fp-mono">
-                    THE STORIES BEHIND THE STOPWATCH — {filtered.length} DISPATCH
-                    {filtered.length !== 1 ? "ES" : ""}
+                <span className="fp-issue fp-mono">FORMULA 1 · NEWS</span>
+                <h1 className="fp-title">The paddock, without the noise.</h1>
+                <p className="fp-sub">
+                    Current F1 stories, race developments and championship updates —
+                    gathered from the paddock's own newsrooms.
                 </p>
-                <div className="fp-rule" aria-hidden="true" />
-                <label className="fp-search">
-                    <span className="fp-mono">SEARCH THE ARCHIVE</span>
-                    <input
-                        type="text"
+
+                <div className="fp-controls">
+                    <SearchInput
                         placeholder="Headline or source…"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        aria-label="Search F1 news"
+                        className="fp-search-input"
                     />
-                </label>
-            </header>
-
-            <main className="fp-main">
-                {filtered.length === 0 && (
-                    <div className="fp-error">
-                        <h2>NOTHING ON THE WIRE</h2>
-                        <p className="fp-mono">TRY A DIFFERENT SEARCH</p>
-                    </div>
-                )}
-
-                {/* ── Cover story ───────────────────────────────────── */}
-                {cover && (
-                    <section className="fp-cover" aria-label="Cover story">
-                        <button type="button" className="fp-cover-hit" onClick={() => openStory(cover)}>
-                            <ArticleImage article={cover} className="fp-cover-img" vtName={vtFor(cover)} />
-                            <div className="fp-cover-scrim" aria-hidden="true" />
-                            <div className="fp-cover-copy">
-                                <span className="fp-kicker fp-mono">
-                                    COVER STORY · {formatArticleTime(cover.publishedAt)}
-                                </span>
-                                <h2 className="fp-cover-title">{cover.title}</h2>
-                                <p className="fp-cover-desc">{cover.description}</p>
-                                <div className="fp-card-meta fp-mono">
-                                    <span className="fp-source">{cover.source}</span>
-                                    <span>{formatNewsDate(cover.publishedAt)}</span>
-                                    <span>{readingTime(cover)} MIN BRIEF</span>
-                                </div>
-                            </div>
-                        </button>
-                    </section>
-                )}
-
-                {/* ── Featured deck ─────────────────────────────────── */}
-                {deck.length > 0 && (
-                    <section className="fp-deck" aria-label="Featured stories">
-                        {deck.map((article) => (
-                            <StoryCard
-                                key={article.id}
-                                article={article}
-                                scale="feature"
-                                onOpen={openStory}
-                                vtName={vtFor(article)}
-                            />
-                        ))}
-                    </section>
-                )}
-
-                {/* ── Chapters ──────────────────────────────────────── */}
-                {chapters.map(([name, items], ci) => (
-                    <section className="fp-chapter" key={name} aria-label={name}>
-                        <header className="fp-chapter-head">
-                            <span className="fp-chapter-num">{ROMAN[ci] || ci + 1}</span>
-                            <div>
-                                <h2 className="fp-chapter-title">{name}</h2>
-                                <span className="fp-chapter-count fp-mono">
-                                    {items.length} STOR{items.length !== 1 ? "IES" : "Y"}
-                                </span>
-                            </div>
-                        </header>
-                        <div className="fp-chapter-grid">
-                            {items.map((article, i) => (
-                                <StoryCard
-                                    key={article.id}
-                                    article={article}
-                                    scale={i === 0 ? "lead" : i <= 2 ? "small" : "text"}
-                                    onOpen={openStory}
-                                    vtName={vtFor(article)}
-                                />
+                    {categories.length > 0 && (
+                        <div className="fp-filter-row" role="group" aria-label="Filter by category">
+                            <button
+                                type="button"
+                                className={`fp-chip${activeCategory === "All" ? " fp-chip-active" : ""}`}
+                                onClick={() => selectCategory("All")}
+                            >
+                                All
+                            </button>
+                            {categories.map((name) => (
+                                <button
+                                    key={name}
+                                    type="button"
+                                    className={`fp-chip${activeCategory === name ? " fp-chip-active" : ""}`}
+                                    onClick={() => selectCategory(name)}
+                                >
+                                    {name}
+                                </button>
                             ))}
                         </div>
-                    </section>
-                ))}
+                    )}
+                </div>
+            </header>
 
-                <footer className="fp-colophon fp-mono" aria-hidden="true">
-                    — END OF THIS ISSUE · NEW DISPATCHES ARRIVE DAILY —
-                </footer>
-            </main>
+            {loading && <NewsSkeleton />}
+
+            {!loading && error && (
+                <div className="fp-band fp-band--light">
+                    <div className="fp-band-inner">
+                        <EmptyState
+                            onLight
+                            title="Press room unreachable"
+                            description="We couldn't load the news feed. Check your connection and try again."
+                            action={<Button variant="dark" onClick={retry}>Retry</Button>}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {!loading && !error && (
+                <>
+                    {categoryFiltered.length === 0 ? (
+                        <div className="fp-band fp-band--light">
+                            <div className="fp-band-inner">
+                                <EmptyState
+                                    onLight
+                                    title="Nothing on the wire"
+                                    description={
+                                        searching
+                                            ? `No stories match "${search.trim()}".`
+                                            : "No stories in this category right now."
+                                    }
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* ── Featured story (light) ───────────────── */}
+                            {cover && (
+                                <section className="fp-band fp-band--light" aria-label="Featured story">
+                                    <div className="fp-band-inner">
+                                        <span className="fp-section-title fp-mono">FEATURED STORY</span>
+                                        <article className="fp-cover">
+                                            <button type="button" className="fp-cover-hit" onClick={() => openStory(cover)}>
+                                                <ArticleImage article={cover} className="fp-cover-img" vtName={vtFor(cover)} />
+                                                <div className="fp-cover-copy">
+                                                    <span className="fp-kicker fp-mono">
+                                                        F1 · {chapterFor(cover).toUpperCase()}
+                                                    </span>
+                                                    <h2 className="fp-cover-title">{cover.title}</h2>
+                                                    <p className="fp-cover-desc">{cover.description}</p>
+                                                    <div className="fp-card-meta fp-mono">
+                                                        <span className="fp-source">{cover.source}</span>
+                                                        <span>{formatNewsDate(cover.publishedAt)}</span>
+                                                        <span>{readingTime(cover)} MIN BRIEF</span>
+                                                    </div>
+                                                    <span className="fp-card-open fp-mono">
+                                                        READ STORY <ArrowRight size={12} />
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </article>
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* ── Secondary stories (dark) ─────────────── */}
+                            {deck.length > 0 && (
+                                <section className="fp-band fp-band--dark" aria-label="Secondary stories">
+                                    <div className="fp-band-inner">
+                                        <span className="fp-section-title fp-mono">SECONDARY STORIES</span>
+                                        <div className="fp-deck">
+                                            {deck.map((article) => (
+                                                <StoryCard
+                                                    key={article.id}
+                                                    article={article}
+                                                    scale="feature"
+                                                    onOpen={openStory}
+                                                    vtName={vtFor(article)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* ── Latest news / chapters (light) ───────── */}
+                            <section className="fp-band fp-band--light">
+                                <div className="fp-band-inner">
+                                    <span className="fp-section-title fp-mono">
+                                        {showCinematic ? "LATEST NEWS" : searching ? "SEARCH RESULTS" : "FILTERED"}
+                                    </span>
+                                    {chapters.map(([name, items], ci) => (
+                                        <div className="fp-chapter" key={name}>
+                                            <header className="fp-chapter-head">
+                                                <span className="fp-chapter-num fp-mono">{ROMAN[ci] || ci + 1}</span>
+                                                <div>
+                                                    <h2 className="fp-chapter-title">{name}</h2>
+                                                    <span className="fp-chapter-count fp-mono">
+                                                        {items.length} STOR{items.length !== 1 ? "IES" : "Y"}
+                                                    </span>
+                                                </div>
+                                            </header>
+                                            <div className="fp-chapter-grid">
+                                                {items.map((article, i) => (
+                                                    <StoryCard
+                                                        key={article.id}
+                                                        article={article}
+                                                        scale={i === 0 ? "lead" : i <= 2 ? "small" : "text"}
+                                                        onOpen={openStory}
+                                                        vtName={vtFor(article)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </>
+                    )}
+
+                    <footer className="fp-band fp-band--dark">
+                        <p className="fp-colophon fp-mono" aria-hidden="true">
+                            — END OF THIS ISSUE · NEW DISPATCHES ARRIVE DAILY —
+                        </p>
+                    </footer>
+                </>
+            )}
 
             {active && (
                 <Reader

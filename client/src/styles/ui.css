@@ -347,6 +347,10 @@
 
 .empty-state-action { margin-top: var(--space-2); }
 
+.empty-state--on-light .empty-state-icon { background: var(--surface-light-2); border-color: var(--border-on-light-strong); color: var(--text-on-light-muted); }
+.empty-state--on-light .empty-state-title { color: var(--text-on-light-primary); }
+.empty-state--on-light .empty-state-desc { color: var(--text-on-light-secondary); }
+
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
