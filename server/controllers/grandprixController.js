@@ -46,6 +46,23 @@ const getQualifyingResults = async (req, res) => {
     }
 };
 
+const getPitStops = async (req, res) => {
+    try {
+        const { year, round } = req.params;
+        const response = await fetch(
+            `https://api.jolpi.ca/ergast/f1/${year}/${round}/pitstops.json?limit=100`
+        );
+        const data = await response.json();
+        res.json(
+            data.MRData.RaceTable.Races[0]?.PitStops || []
+        );
+    } catch (error) {
+        res.status(500).json({
+            message: "Failed to fetch pit stop data"
+        });
+    }
+};
+
 const getLatestRace = async (req, res) => {
     try {
         const response = await fetch(
@@ -64,5 +81,5 @@ const getLatestRace = async (req, res) => {
     }
 };
 module.exports = {
-    getGrandprix,getRaceResults,getQualifyingResults,getLatestRace
+    getGrandprix,getRaceResults,getQualifyingResults,getLatestRace,getPitStops
 }

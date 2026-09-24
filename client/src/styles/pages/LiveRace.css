@@ -376,30 +376,6 @@
 
 .lr-battle-tyres { font-size: var(--text-micro); color: var(--text-faint); padding-left: 17px; }
 
-/* ── Next-session panel (isLive === false) ────────────────────────────── */
-
-.lr-next-session { max-width: 560px; }
-
-.lr-next-session-id { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
-
-.lr-next-session-gp { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.lr-next-session-loc { font-size: var(--text-small); color: var(--lr-text-secondary); }
-
-.lr-next-session-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    font-size: var(--text-small);
-    color: var(--lr-text-secondary);
-}
-
-.lr-next-session-countdown {
-    font-weight: 700;
-    color: var(--accent-text);
-    font-size: var(--text-body);
-}
-
 .lr-next-session-divider { height: 1px; background: var(--lr-border); margin: var(--space-4) 0; }
 
 /* ── Compact empty states — never a big card ──────────────────────────── */
@@ -491,6 +467,175 @@
 .lr-radio-player { width: 100%; height: 32px; }
 
 .lr-radio-unavailable { font-size: var(--text-micro); color: var(--text-faint); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RACE HUB (isLive === false) — reuses .lr-panel/.lr-grid/.lr-pulse/
+   .lr-compact-empty from the live dashboard above; only genuinely new
+   shapes get their own rules here.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.lr-hub { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.lr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
+
+.lr-hub-stack { display: flex; flex-direction: column; gap: var(--space-4); }
+.lr-hub-stack .lr-panel { flex: 1; }
+
+/* ── Next session (header) ────────────────────────────────────────── */
+
+.lr-next-session { max-width: none; }
+
+.lr-next-session-id { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+.lr-next-session-gp { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.lr-next-session-loc { font-size: var(--text-small); color: var(--lr-text-secondary); }
+
+.lr-next-session-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-size: var(--text-small);
+    color: var(--lr-text-secondary);
+}
+
+.lr-next-session-countdown { font-weight: 700; color: var(--accent-text); font-size: var(--text-body); }
+
+/* ── Team Focus — All Teams overview + per-driver cards ───────────────── */
+
+.lr-hub-all-teams { display: flex; flex-direction: column; gap: 2px; }
+.lr-hub-all-teams-label { font-size: var(--text-micro); color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: var(--space-2); }
+
+.lr-standings-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 6px 0;
+    border-top: 1px solid var(--lr-border);
+    font-size: var(--text-small);
+}
+.lr-standings-row:first-of-type { border-top: none; }
+
+.lr-standings-pos { color: var(--lr-text-secondary); min-width: 2.5ch; }
+.lr-standings-name { color: var(--text-primary); font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-standings-team { color: var(--text-faint); font-size: var(--text-micro); }
+.lr-standings-points { color: var(--lr-text-technical); margin-left: auto; }
+
+.lr-hub-drivers { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-hub-driver-card {
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.lr-hub-driver-name { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
+
+.lr-hub-driver-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+.lr-hub-driver-stats span { display: flex; flex-direction: column; gap: 2px; }
+.lr-hub-driver-stats b { font-family: var(--font-mono); font-size: var(--text-small); }
+.lr-hub-driver-stats small { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+
+/* ── Recent Driver Form ────────────────────────────────────────────── */
+
+.lr-form-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-form-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.lr-form-name { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
+.lr-form-avg { color: var(--lr-text-secondary); font-size: var(--text-micro); }
+
+.lr-form-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.lr-form-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 5px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    font-size: var(--text-micro);
+    color: var(--text-primary);
+}
+
+/* ── Last Grand Prix ───────────────────────────────────────────────── */
+
+.lr-lastgp-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-3); }
+.lr-lastgp-name { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.lr-lastgp-round { color: var(--text-faint); font-size: var(--text-micro); }
+
+.lr-lastgp-podium { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+
+.lr-lastgp-pos {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+.lr-lastgp-p { color: var(--accent-text); font-weight: 700; font-size: var(--text-small); }
+.lr-lastgp-driver { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
+.lr-lastgp-team { font-size: var(--text-micro); color: var(--lr-text-secondary); }
+
+.lr-lastgp-highlights { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+
+/* ── Strategy ──────────────────────────────────────────────────────── */
+
+.lr-strategy-subtitle { margin-top: var(--space-4); }
+
+.lr-strategy-distribution { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.lr-strategy-tag {
+    font-size: var(--text-micro);
+    color: var(--lr-text-secondary);
+    border: 1px solid var(--lr-border);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+}
+
+.lr-strategy-podium { display: flex; flex-direction: column; gap: 4px; }
+
+.lr-strategy-row { display: flex; justify-content: space-between; gap: var(--space-3); padding: 6px 0; border-top: 1px solid var(--lr-border); font-size: var(--text-small); }
+.lr-strategy-row:first-child { border-top: none; }
+.lr-strategy-driver { font-weight: 600; color: var(--text-primary); }
+.lr-strategy-laps { color: var(--lr-text-secondary); }
+
+.lr-strategy-note { margin-top: var(--space-3); }
+
+/* ── What To Watch ─────────────────────────────────────────────────── */
+
+.lr-watch { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); max-width: 640px; }
+.lr-watch-copy { font-size: var(--text-small); color: var(--lr-text-secondary); line-height: 1.55; }
+
+/* ── Championship snapshot ─────────────────────────────────────────── */
+
+.lr-championship { display: flex; flex-direction: column; }
+
+/* ── Latest F1 updates ─────────────────────────────────────────────── */
+
+.lr-news-list { list-style: none; display: flex; flex-direction: column; }
+
+.lr-news-item { padding: 8px 0; border-top: 1px solid var(--lr-border); }
+.lr-news-item:first-child { border-top: none; }
+
+.lr-news-title { display: block; font-size: var(--text-small); font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+.lr-news-title:hover { color: var(--accent-text); }
+
+.lr-news-meta { font-size: var(--text-micro); color: var(--text-faint); }
+
+@media (max-width: 640px) {
+    .lr-lastgp-podium { grid-template-columns: 1fr 1fr; }
+    .lr-hub-driver-stats { grid-template-columns: repeat(2, 1fr); }
+}
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 
