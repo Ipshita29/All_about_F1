@@ -1,23 +1,4 @@
-/*
- * GLOBAL STYLES — fonts, design tokens, reset, and the shared UI
- * component system (Button, Card, Input, Stat, SectionHeader,
- * EmptyState). Single source of truth for the visual system: every page
- * stylesheet in the app consumes these custom properties and classes
- * rather than hard-coding colour, type or spacing values.
- *
- * PREMIUM F1 EDITORIAL × DATA INTELLIGENCE
- *
- * A five-colour palette (Milano Red, Cararra, Chalk, Slate, Carbon Black)
- * rather than a black-and-red scale. The page canvas is a dark Carbon
- * Black surface; light surfaces (Cararra / Chalk / Slate) break it up
- * deliberately on most pages. Milano Red is a small accent, not a theme.
- */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-/* ══════════════════════════════════════════════════════════════════
-   DESIGN TOKENS
-   ══════════════════════════════════════════════════════════════════ */
 
 :root {
     /* ── Raw palette — the five-colour source of truth ────────────── */

@@ -62,6 +62,42 @@ function parseGapSeconds(gap) {
     return Number.isNaN(n) ? null : n;
 }
 
+function formatCountdown(targetIso) {
+    if (!targetIso) return null;
+    const diffMs = new Date(targetIso).getTime() - Date.now();
+    if (Number.isNaN(diffMs) || diffMs <= 0) return null;
+    const totalMinutes = Math.floor(diffMs / 60000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [];
+    if (days > 0) parts.push(`${String(days).padStart(2, "0")}d`);
+    if (days > 0 || hours > 0) parts.push(`${String(hours).padStart(2, "0")}h`);
+    parts.push(`${String(minutes).padStart(2, "0")}m`);
+    return parts.join(" ");
+}
+
+/* Recomputed every 30s rather than every second — a countdown that's a
+   little stale for a few seconds is fine; a page that re-renders every
+   second for an idle empty state is not. */
+function useCountdown(targetIso) {
+    const [state, setState] = useState({ seenIso: targetIso, label: formatCountdown(targetIso) });
+
+    if (state.seenIso !== targetIso) {
+        setState({ seenIso: targetIso, label: formatCountdown(targetIso) });
+    }
+
+    useEffect(() => {
+        if (!targetIso) return undefined;
+        const id = setInterval(() => {
+            setState((s) => ({ ...s, label: formatCountdown(targetIso) }));
+        }, 30000);
+        return () => clearInterval(id);
+    }, [targetIso]);
+
+    return state.label;
+}
+
 /* ── Data hook ─────────────────────────────────────────────────────── */
 
 function useLiveRace() {
@@ -185,6 +221,46 @@ function CompactHeader({ data }) {
                 {data.updatedAt && <span className="lr-meta-item lr-meta-item--faint lr-mono">UPDATED {timeAgo(data.updatedAt).toUpperCase()}</span>}
             </div>
         </header>
+    );
+}
+
+/* ── Next-session panel (isLive === false) ────────────────────────── */
+
+function NextSessionPanel({ race, message }) {
+    const countdown = useCountdown(race?.startTime);
+
+    if (!race?.grandPrix) {
+        return <EmptyState title="No live session right now" description={message ?? "No F1 session is currently live."} />;
+    }
+
+    return (
+        <div className="lr-panel lr-next-session">
+            <span className="lr-panel-title">Next Session</span>
+            <div className="lr-next-session-id">
+                <span className="lr-next-session-gp">{race.grandPrix}</span>
+                {race.circuit && <span className="lr-next-session-loc">{race.circuit}{race.country ? `, ${race.country}` : ""}</span>}
+            </div>
+            {(race.session || countdown || race.startTime) && (
+                <div className="lr-next-session-meta">
+                    {race.session && <span className="lr-meta-item lr-mono">{sessionShortLabel(race.session)}</span>}
+                    {countdown && <span className="lr-next-session-countdown lr-mono">{countdown}</span>}
+                    {race.startTime && (
+                        <span className="lr-meta-item lr-meta-item--faint lr-mono">
+                            Scheduled {new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                    )}
+                </div>
+            )}
+
+            <div className="lr-next-session-divider" />
+
+            <div className="lr-compact-empty">
+                <span className="lr-compact-empty-title">NO LIVE SESSION RIGHT NOW</span>
+                <span className="lr-compact-empty-desc">
+                    No F1 session is currently live. The live timing dashboard will activate automatically when the next session begins.
+                </span>
+            </div>
+        </div>
     );
 }
 
@@ -684,10 +760,7 @@ function LiveRace() {
             <div className="lr">
                 <CompactHeader data={data} />
                 <main className="lr-main">
-                    <EmptyState
-                        title="No live session right now"
-                        description={data.message ?? "The dashboard will populate automatically once a session goes live."}
-                    />
+                    <NextSessionPanel race={data.race} message={data.message} />
                 </main>
             </div>
         );

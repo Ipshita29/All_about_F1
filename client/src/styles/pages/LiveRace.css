@@ -376,6 +376,32 @@
 
 .lr-battle-tyres { font-size: var(--text-micro); color: var(--text-faint); padding-left: 17px; }
 
+/* ── Next-session panel (isLive === false) ────────────────────────────── */
+
+.lr-next-session { max-width: 560px; }
+
+.lr-next-session-id { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-3); }
+
+.lr-next-session-gp { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.lr-next-session-loc { font-size: var(--text-small); color: var(--lr-text-secondary); }
+
+.lr-next-session-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-size: var(--text-small);
+    color: var(--lr-text-secondary);
+}
+
+.lr-next-session-countdown {
+    font-weight: 700;
+    color: var(--accent-text);
+    font-size: var(--text-body);
+}
+
+.lr-next-session-divider { height: 1px; background: var(--lr-border); margin: var(--space-4) 0; }
+
 /* ── Compact empty states — never a big card ──────────────────────────── */
 
 .lr-compact-empty {

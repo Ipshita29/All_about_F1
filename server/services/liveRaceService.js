@@ -265,11 +265,23 @@ async function getLiveRaceStatus() {
         // the live feed may still be able to answer "is something live now".
     }
 
-    const state = usingLiveFeedSchedule
+    let state = usingLiveFeedSchedule
         ? resolveSessionState([liveWindow], now)
         : jolpicaRace
             ? resolveSessionState(buildJolpicaSessionWindows(jolpicaRace), now)
             : { isLive: false, sessionType: null, sessionStatus: "none", startTime: null };
+
+    // The live feed only ever exposes ONE session — whichever it's currently
+    // tracking. Once that session ends and the feed hasn't advanced to the
+    // next one yet, its window resolves to "nothing next" even though
+    // Jolpica's full-weekend schedule knows exactly what's coming. Fall back
+    // to that schedule (and its race identity) so "next session" doesn't go
+    // dark for the gap between sessions.
+    let identitySource = usingLiveFeedSchedule;
+    if (usingLiveFeedSchedule && !state.isLive && state.sessionType === null && jolpicaRace) {
+        state = resolveSessionState(buildJolpicaSessionWindows(jolpicaRace), now);
+        identitySource = false;
+    }
 
     if (!jolpicaRace && !usingLiveFeedSchedule) {
         return {
@@ -306,11 +318,11 @@ async function getLiveRaceStatus() {
                 : "unavailable";
 
     const meeting = liveState.sessionInfo?.Meeting;
-    const grandPrix = usingLiveFeedSchedule ? meeting?.Name ?? jolpicaRace?.raceName ?? null : jolpicaRace?.raceName ?? null;
-    const circuit = usingLiveFeedSchedule ? meeting?.Circuit?.ShortName ?? jolpicaRace?.Circuit?.circuitName ?? null : jolpicaRace?.Circuit?.circuitName ?? null;
-    const country = usingLiveFeedSchedule ? meeting?.Country?.Name ?? jolpicaRace?.Circuit?.Location?.country ?? null : jolpicaRace?.Circuit?.Location?.country ?? null;
-    const round = usingLiveFeedSchedule ? String(meeting?.Number ?? jolpicaRace?.round ?? "") || null : jolpicaRace?.round ?? null;
-    const season = usingLiveFeedSchedule
+    const grandPrix = identitySource ? meeting?.Name ?? jolpicaRace?.raceName ?? null : jolpicaRace?.raceName ?? null;
+    const circuit = identitySource ? meeting?.Circuit?.ShortName ?? jolpicaRace?.Circuit?.circuitName ?? null : jolpicaRace?.Circuit?.circuitName ?? null;
+    const country = identitySource ? meeting?.Country?.Name ?? jolpicaRace?.Circuit?.Location?.country ?? null : jolpicaRace?.Circuit?.Location?.country ?? null;
+    const round = identitySource ? String(meeting?.Number ?? jolpicaRace?.round ?? "") || null : jolpicaRace?.round ?? null;
+    const season = identitySource
         ? liveState.sessionInfo?.StartDate?.slice(0, 4) ?? jolpicaRace?.season ?? null
         : jolpicaRace?.season ?? null;
 
