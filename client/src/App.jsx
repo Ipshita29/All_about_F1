@@ -20,6 +20,7 @@ import F1Dictionary from "./pages/F1Dictionary";
 import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
 import NewsPage from "./pages/NewsPage";
+import LiveRace from "./pages/LiveRace";
 import "./App.css";
 
 
@@ -35,6 +36,7 @@ function AppShell() {
       {!isAuthPage && <Navbar />}
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>
+        <Route path="/live" element={<LiveRace/>}/>
         <Route path="/drivers" element={<Drivers/>}/>
         <Route path="/drivers/:year/:id" element={<DriverDetails/>}/>
         <Route path="/teams" element={<Teams />} />

@@ -1,0 +1,480 @@
+/*
+ * LIVE RACE COMMAND CENTER — dense, modular, instrument-panel styling,
+ * composed as a real dashboard grid (dominant timing + battles row,
+ * three-up supporting-data row, event-feed row) rather than a stack of
+ * identical cards. Layered dark surfaces give the hierarchy page → card →
+ * inner data → table header that a flat single-black-tone UI can't.
+ * Milano Red stays reserved for LIVE state and the closest gaps; team and
+ * tyre colours are the only other colour carried through. No circuit/GPS
+ * panel, no telemetry panel — both fields are confirmed unavailable from
+ * the free live timing feed. `.lr-` namespace, self-contained.
+ */
+
+.lr {
+    /* Layered surfaces distinct from the rest of the site's flatter
+       card system — this page alone is meant to read as an instrument
+       panel, so it gets its own depth scale. */
+    --lr-surface-card: #202020;
+    --lr-surface-inner: #262626;
+    --lr-surface-header: #2c2c2c;
+    --lr-border: #383838;
+    --lr-text-secondary: #a9a59f;
+    --lr-text-technical: var(--color-slate);
+}
+
+.lr-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--lr-text-technical); }
+
+/* ── Loading skeleton — progressive shape of the real dashboard, not a
+   centered spinner ── */
+
+.lr-skel {
+    background: var(--lr-surface-card);
+    border: 1px solid var(--lr-border);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.lr-skel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(240, 237, 232, 0.05), transparent);
+    animation: lr-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes lr-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.lr-skel-header { height: 84px; border-radius: 0; border-left: none; border-right: none; border-top: none; }
+
+/* ── Compact header ────────────────────────────────────────────────── */
+
+.lr-header {
+    padding: var(--space-4) var(--space-6);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--lr-border);
+}
+
+.lr-header-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    max-width: 1480px;
+    margin: 0 auto;
+}
+
+.lr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    border: 1px solid var(--lr-border);
+    border-radius: var(--radius-full);
+    padding: 4px 12px;
+    flex-shrink: 0;
+}
+
+.lr-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.lr-badge--live {
+    color: #ffffff;
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.lr-badge--live .lr-badge-dot { animation: lr-pulse 1.6s ease-in-out infinite; }
+
+@keyframes lr-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.lr-header-id { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; min-width: 0; }
+
+.lr-header-title {
+    font-size: var(--text-h3);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lr-header-loc { font-size: var(--text-small); color: var(--lr-text-secondary); white-space: nowrap; }
+
+.lr-header-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    max-width: 1480px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: var(--text-small);
+    color: var(--lr-text-secondary);
+}
+
+.lr-meta-item { display: inline-flex; align-items: center; gap: 6px; }
+.lr-meta-item--faint { color: var(--text-faint); margin-left: auto; }
+
+.lr-flag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+.lr-flag-dot--allclear,
+.lr-flag-dot--green { background: var(--success); }
+.lr-flag-dot--yellow,
+.lr-flag-dot--doubleyellow { background: var(--warning); }
+.lr-flag-dot--red { background: var(--accent); }
+.lr-flag-dot--scdeployed,
+.lr-flag-dot--vscdeployed { background: var(--warning); }
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+
+.lr-main {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-6) var(--space-9);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.lr-grid { display: grid; gap: var(--space-5); align-items: start; }
+.lr-grid--primary { grid-template-columns: 7fr 3fr; }
+.lr-grid--triple { grid-template-columns: repeat(3, 1fr); }
+.lr-grid--events { grid-template-columns: 65fr 35fr; }
+
+@media (max-width: 1100px) {
+    .lr-grid--triple { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+    .lr-grid--primary,
+    .lr-grid--events { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+    .lr-grid--triple { grid-template-columns: 1fr; }
+}
+
+/* ── Panel shell ───────────────────────────────────────────────────── */
+
+.lr-panel {
+    background: var(--lr-surface-card);
+    border: 1px solid var(--lr-border);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.lr-panel--full { width: 100%; }
+
+/* Live Timing carries the most visual weight on the page. */
+.lr-panel--primary {
+    background: var(--lr-surface-inner);
+    border-color: var(--lr-border);
+}
+
+/* Battles is the second-strongest panel — a shade lighter than the
+   supporting modules, never a flat pill strip. */
+.lr-panel--battles { background: var(--lr-surface-card); }
+
+.lr-panel-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-3);
+}
+
+/* ── Timing table (shared by Live Timing / Tyres) ─────────────────────── */
+
+.lr-timing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+
+.lr-timing { width: 100%; border-collapse: collapse; font-size: var(--text-small); }
+
+.lr-timing thead th {
+    position: sticky;
+    top: 0;
+    background: var(--lr-surface-header);
+    z-index: 1;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px var(--space-2);
+    white-space: nowrap;
+}
+
+.lr-timing thead th:first-child { border-radius: 6px 0 0 6px; }
+.lr-timing thead th:last-child { border-radius: 0 6px 6px 0; }
+
+.lr-timing td {
+    padding: 9px var(--space-2);
+    border-top: 1px solid var(--lr-border);
+    white-space: nowrap;
+}
+
+.lr-timing-pos { font-weight: 700; font-size: var(--text-body); color: var(--text-primary); }
+
+.lr-row-pit { opacity: 0.55; }
+.lr-row-retired,
+.lr-row-stopped { opacity: 0.38; }
+
+.lr-driver-chip { display: flex; align-items: center; gap: var(--space-2); }
+
+.lr-team-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+.lr-driver-code { font-weight: 700; min-width: 3ch; color: var(--text-primary); }
+
+.lr-driver-name { color: var(--lr-text-secondary); font-size: var(--text-micro); }
+
+.lr-timing-team {
+    color: var(--lr-text-secondary);
+    font-size: var(--text-micro);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lr-tyre {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 0.65rem;
+    border: 2px solid var(--lr-border);
+    color: var(--text-primary);
+}
+
+.lr-tyre--soft { border-color: var(--accent); color: var(--accent-text); }
+.lr-tyre--medium { border-color: var(--warning); color: var(--warning); }
+.lr-tyre--hard { border-color: var(--color-cararra); color: var(--color-cararra); }
+.lr-tyre--intermediate,
+.lr-tyre--wet { border-color: var(--success); color: var(--success); }
+
+.lr-stint-pips { display: inline-flex; gap: 3px; margin-left: var(--space-2); vertical-align: middle; }
+.lr-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--lr-border); }
+.lr-pip--current { background: var(--accent-text); }
+
+/* Subtle live-update flash — brief, not decorative */
+.lr-flash {
+    display: inline-block;
+    animation: lr-flash-anim 900ms var(--ease);
+}
+
+@keyframes lr-flash-anim {
+    0% { color: var(--accent-text); }
+    100% { color: inherit; }
+}
+
+/* ── Session Pulse / Weather (shared compact key-value list) ──────────── */
+
+.lr-pulse { display: flex; flex-direction: column; gap: 2px; }
+
+.lr-pulse-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-top: 1px solid var(--lr-border);
+    font-size: var(--text-small);
+}
+
+.lr-pulse-row:first-child { border-top: none; }
+
+.lr-pulse-row dt { display: flex; align-items: center; gap: var(--space-2); color: var(--lr-text-secondary); }
+.lr-pulse-row dd { font-weight: 600; color: var(--text-primary); }
+
+/* ── Team Focus ────────────────────────────────────────────────────── */
+
+.lr-team-focus { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-team-select { height: 36px; font-size: var(--text-small); background: var(--lr-surface-inner); border-color: var(--lr-border); }
+
+.lr-team-compare { display: flex; flex-direction: column; }
+
+.lr-team-compare-row {
+    display: grid;
+    grid-template-columns: repeat(var(--lr-team-cols, 2), 1fr);
+    gap: var(--space-3);
+    padding: 8px 0;
+    border-top: 1px solid var(--lr-border);
+}
+
+.lr-team-compare-row:first-child { border-top: none; padding-top: 0; }
+
+.lr-team-compare-driver { display: flex; align-items: center; gap: 6px; }
+.lr-team-compare-pos { margin-left: auto; color: var(--lr-text-secondary); }
+
+.lr-team-compare-cell { display: flex; flex-direction: column; gap: 2px; }
+.lr-team-compare-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.lr-team-compare-value { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
+
+/* ── Battles (vertical dashboard cards) ───────────────────────────────── */
+
+.lr-battles-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-battle-card {
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lr-battle-heading {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+}
+
+.lr-battle-side { display: flex; align-items: center; gap: var(--space-2); }
+
+.lr-battle-side-id { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.lr-battle-side-name { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-battle-side-team { font-size: var(--text-micro); color: var(--lr-text-secondary); }
+
+.lr-battle-side-pos { margin-left: auto; color: var(--lr-text-secondary); flex-shrink: 0; }
+
+.lr-battle-icon { color: var(--text-faint); flex-shrink: 0; }
+
+.lr-battle-foot { display: flex; align-items: center; gap: var(--space-2); padding-left: 17px; }
+
+.lr-battle-gap { color: var(--accent-text); font-weight: 700; font-size: var(--text-small); }
+
+.lr-battle-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+}
+
+.lr-battle-tyres { font-size: var(--text-micro); color: var(--text-faint); padding-left: 17px; }
+
+/* ── Compact empty states — never a big card ──────────────────────────── */
+
+.lr-compact-empty {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) 0;
+}
+
+.lr-compact-empty-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+}
+
+.lr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
+
+/* ── Race control feed ─────────────────────────────────────────────── */
+
+.lr-feed { list-style: none; display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
+
+.lr-feed-item {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 8px 0;
+    border-top: 1px solid var(--lr-border);
+    font-size: var(--text-small);
+}
+
+.lr-feed-item:first-child { border-top: none; }
+
+.lr-feed-item--new { animation: lr-feed-in 420ms var(--ease); }
+
+@keyframes lr-feed-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.lr-rc-icon { flex-shrink: 0; position: relative; top: 1px; }
+.lr-rc-icon--green { color: var(--success); }
+.lr-rc-icon--yellow { color: var(--warning); }
+.lr-rc-icon--red { color: var(--accent-text); }
+.lr-rc-icon--neutral { color: var(--text-muted); }
+
+.lr-feed-time { color: var(--text-faint); flex-shrink: 0; font-size: var(--text-micro); }
+.lr-feed-body { color: var(--lr-text-secondary); line-height: 1.45; }
+.lr-feed-body b { color: var(--text-primary); font-size: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; margin-right: 4px; }
+
+/* ── Team radio ────────────────────────────────────────────────────── */
+
+.lr-radio {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-3);
+}
+
+.lr-radio-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.lr-radio-meta { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); color: var(--lr-text-secondary); }
+.lr-radio-driver { font-weight: 600; color: var(--text-primary); }
+.lr-radio-team { color: var(--lr-text-secondary); }
+
+.lr-radio-new {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-full);
+    padding: 2px 8px;
+}
+
+.lr-radio-player { width: 100%; height: 32px; }
+
+.lr-radio-unavailable { font-size: var(--text-micro); color: var(--text-faint); }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .lr-header { padding: var(--space-4); }
+    .lr-main { padding: var(--space-4) var(--space-4) var(--space-8); gap: var(--space-4); }
+    .lr-grid { gap: var(--space-4); }
+}
+
+@media (max-width: 640px) {
+    .lr-panel { padding: 16px; }
+    .lr-radio { grid-template-columns: 1fr; }
+}

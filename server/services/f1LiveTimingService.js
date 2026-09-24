@@ -1,30 +1,10 @@
-/*
- * Provider integration boundary for F1's own live timing feed — the same
- * publicly reachable SignalR Core stream FastF1 talks to
- * (wss://livetiming.formula1.com/signalrcore). This is NOT an official,
- * licensed API; it's the feed F1's own broadcast graphics/website consume,
- * reachable without any F1TV login. FastF1's current client attaches an
- * F1TV subscription token for full access — we deliberately never do that
- * (no paid subscription, no login flow), so some channels are expected to
- * be unavailable. What's actually available was verified live against a
- * real session while building this:
+/**
+ * Connects to F1's live timing SignalR feed and maintains
+ * the latest session state in memory.
  *
- *   CONFIRMED WORKING without auth: Heartbeat, DriverList, SessionInfo,
- *   SessionStatus, TimingData, TimingAppData, TimingStats, TrackStatus,
- *   WeatherData, RaceControlMessages, TeamRadio, SessionData, TopThree,
- *   ExtrapolatedClock.
- *
- *   CONFIRMED SILENT without auth (subscribed, zero messages over a
- *   70s window during a live, active practice session): Position.z
- *   (GPS/location), CarData.z (speed/throttle/brake/gear/RPM/DRS).
- *   These are gated behind the F1TV subscription token FastF1 requires.
- *   LapCount never fired either, but that may just be practice-session
- *   behavior (lap counting is a race concept) rather than a real gate —
- *   left genuinely untested; documented as such, not claimed working.
- *
- * This file never talks to React and never throws out of its public
- * functions — a dropped/failed connection degrades to "no live data",
- * never a crash.
+ * No F1TV authentication or paid live-data service is used.
+ * Some channels, such as telemetry and GPS, may be unavailable
+ * without F1TV access and are therefore treated as optional.
  */
 
 const WebSocket = require("ws");
@@ -228,7 +208,6 @@ let lastSessionPath = null;
 async function connect() {
     state.connectionStatus = "connecting";
     try {
-        console.log("[F1Live] Negotiating (no auth token)...");
         const negRes = await fetch(NEGOTIATE_URL, { method: "POST", headers: HEADERS });
         if (!negRes.ok) throw new Error(`negotiate failed (${negRes.status})`);
 
@@ -249,7 +228,6 @@ async function connect() {
 
 function attachListeners() {
     ws.on("open", () => {
-        console.log("[F1Live] WebSocket open, sending handshake...");
         ws.send(JSON.stringify({ protocol: "json", version: 1 }) + RECORD_SEPARATOR);
     });
 
@@ -266,9 +244,8 @@ function attachListeners() {
         }
     });
 
-    ws.on("close", (code) => {
+    ws.on("close", () => {
         state.connectionStatus = "disconnected";
-        console.log(`[F1Live] Connection closed (code ${code}). Reconnecting...`);
         scheduleReconnect();
     });
 
@@ -287,7 +264,6 @@ function handleFrame(msg) {
         }
         state.connectionStatus = "connected";
         reconnectAttempts = 0;
-        console.log("[F1Live] Connected. Subscribing to live channels...");
         ws.send(JSON.stringify({ type: 1, target: "Subscribe", arguments: [TOPICS], invocationId: "1" }) + RECORD_SEPARATOR);
         return;
     }
@@ -298,8 +274,6 @@ function handleFrame(msg) {
             console.error(`[F1Live] Subscribe rejected: ${msg.error}`);
             return;
         }
-        const channels = Object.keys(msg.result || {});
-        console.log(`[F1Live] Session detected: subscribed snapshot has ${channels.length} channels.`);
         for (const [channel, payload] of Object.entries(msg.result || {})) {
             applyChannelUpdate(channel, payload);
         }
@@ -324,7 +298,6 @@ function checkSessionChange() {
         return;
     }
     if (path !== lastSessionPath) {
-        console.log(`[F1Live] Session changed (${lastSessionPath} -> ${path}). Clearing live state.`);
         lastSessionPath = path;
         resetLiveState();
     }
@@ -334,7 +307,6 @@ function scheduleReconnect() {
     if (reconnectTimer) return;
     const delay = Math.min(BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttempts, MAX_RECONNECT_DELAY_MS);
     reconnectAttempts++;
-    console.log(`[F1Live] Reconnecting in ${delay / 1000}s...`);
     reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
         connect();

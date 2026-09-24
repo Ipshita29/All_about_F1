@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
 const PRIMARY_LINKS = [
+    { to: "/live", label: "Live" },
     { to: "/grandprixdashboard", label: "Race Weekend" },
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Constructors" },
