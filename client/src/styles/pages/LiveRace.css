@@ -498,6 +498,75 @@
 
 .lr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
 
+.lr-panel--light .lr-compact-empty svg,
+.lr-panel--chalk .lr-compact-empty svg { color: var(--lr-light-text-3); }
+.lr-panel--light .lr-compact-empty-title,
+.lr-panel--chalk .lr-compact-empty-title { color: var(--lr-light-text-2); }
+.lr-panel--light .lr-compact-empty-desc,
+.lr-panel--chalk .lr-compact-empty-desc { color: var(--lr-light-text-3); }
+
+/* ── Next Race Weather — compact forecast card, mixed light/dark so a
+   light panel doesn't just mean "another flat card": the condition
+   badge and stat tiles keep a carbon surface even inside a chalk
+   panel, with Milano Red reserved for the FORECAST label itself. ──── */
+
+.lr-forecast { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-forecast-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.lr-forecast-badge {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #ffffff;
+    background: var(--accent);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+}
+
+.lr-forecast-condition {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-small);
+    font-weight: 700;
+    color: var(--lr-light-text);
+}
+
+.lr-forecast-applies { font-size: var(--text-micro); color: var(--lr-light-text-3); }
+
+.lr-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+}
+
+.lr-forecast-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-carbon);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.lr-forecast-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(240, 237, 232, 0.08);
+    color: var(--color-chalk);
+    flex-shrink: 0;
+}
+
+.lr-forecast-stat > div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.lr-forecast-stat-value { font-size: var(--text-small); font-weight: 700; color: var(--color-cararra); }
+.lr-forecast-stat-label { font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-slate); }
+
 /* ── Race control feed ─────────────────────────────────────────────── */
 
 .lr-feed { list-style: none; display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; }
