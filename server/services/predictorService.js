@@ -620,15 +620,22 @@ async function buildPrediction() {
         return { error: "insufficient_historical_data" };
     }
 
-    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
+    const [recentRaces, circuitRaces, qualifyingResults, weather] = await Promise.all([
         fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
         fetchCircuitHistory(circuitId),
         qualifyingCompleted ? fetchQualifying(season, round) : Promise.resolve([]),
+        fetchRaceWeather(race),
     ]);
+
+    // Genuine availability check against the most recent completed round
+    // rather than assuming the source always has pit-stop records.
+    const mostRecentRound = recentRaces[0]?.round ?? null;
+    const pitStops = mostRecentRound ? await fetchPitStops(season, mostRecentRound) : [];
 
     const result = assemblePrediction({
         season, round, race, circuitId, stage, qualifyingCompleted,
         driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
+        weather, pitStopsAvailable: pitStops.length > 0,
     });
 
     cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result };
