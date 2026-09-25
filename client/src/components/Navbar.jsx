@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 const PRIMARY_LINKS = [
     { to: "/live", label: "Live" },
+    { to: "/predictor", label: "Predictor" },
     { to: "/grandprixdashboard", label: "Race Weekend" },
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Constructors" },
-    { to: "/predictor", label: "Predictor" },
     { to: "/news", label: "News" },
 ];
 
