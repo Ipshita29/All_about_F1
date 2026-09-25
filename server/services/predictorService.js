@@ -59,26 +59,27 @@
  * round being predicted (recentForm), or to a different race entirely
  * (circuitHistory, which excludes the race being predicted since that
  * race hasn't happened). No function in this file ever reads the
- * finishing result of the race it is predicting. `computeDriverFeatures`
- * takes the target round as an explicit parameter specifically so it can
- * be reused for historical backtesting later (Phase 14/15) by calling it
- * with round = some past race, without risking silently including that
+ * finishing result of the race it is predicting. The shared
+ * `assemblePrediction` helper takes standings/recent-races/qualifying as
+ * explicit inputs rather than fetching "current" data itself, which is
+ * exactly what makes it safely reusable for historical backtesting (see
+ * buildBacktestPrediction below) without risking silently including a
  * race's own result.
  *
- * CACHING
- * No MongoDB model in this first pass — a prediction is a pure function
- * of publicly available F1 data at a point in time, not user data, so
- * there's nothing here that needs to survive a server restart yet. An
- * in-memory cache keyed by `${season}-${round}-${stage}` avoids
- * recomputing (and re-hitting Jolpica ~10-15 times) on every request;
- * it's invalidated by TTL and by the pre/post-qualifying stage actually
- * changing. If/when Phase 14/15 needs to compare predictions against
- * actual results over time, that's the point to add a RacePrediction
- * Mongo model — deferred until there's a real reason to persist rather
- * than recompute.
+ * CACHING + PERSISTENCE (Phase 14)
+ * An in-memory cache keyed by `${season}-${round}-${stage}` avoids
+ * recomputing (and re-hitting Jolpica ~10-15 times) on every request to
+ * GET /api/predictor/upcoming; it's invalidated by TTL and by the
+ * pre/post-qualifying stage actually changing. Separately, every
+ * successfully generated prediction (both the real "live" upcoming one
+ * and any reconstructed "backtest" one) is persisted to the
+ * RacePrediction Mongo model — that's what makes Phase 14 evaluation
+ * possible: it reads back the prediction that genuinely existed before
+ * a race, rather than ever recomputing one after the fact.
  */
 
 const { getJson } = require("./jolpicaClient");
+const RacePrediction = require("../models/RacePrediction");
 
 const MODEL_NAME = "AllAboutF1 Weighted Power-Rank + Plackett-Luce Simulation";
 const MODEL_VERSION = "1.0.0";
@@ -390,38 +391,64 @@ function confidenceFor(features) {
 }
 
 // ---------------------------------------------------------------------------
-// Orchestrator
+// Persistence (Phase 14) — a prediction is saved once, at the moment it is
+// generated, so evaluation later reads back what genuinely existed before
+// the race rather than anything recomputed after the fact. Upserted by
+// (season, round, stage) so repeated cache-hits don't create duplicate
+// writes. Never blocks or fails the response — persistence is a side
+// effect, not something the upcoming-prediction screen depends on.
 // ---------------------------------------------------------------------------
 
-async function buildPrediction() {
-    const race = await fetchUpcomingRace();
-    if (!race) return { error: "no_upcoming_race" };
-
-    const season = race.season;
-    const round = Number(race.round);
-    const circuitId = race.Circuit?.circuitId ?? null;
-
-    const now = new Date();
-    const qualifyingDateTime = race.Qualifying ? new Date(`${race.Qualifying.date}T${race.Qualifying.time || "00:00:00Z"}`) : null;
-    const qualifyingCompleted = Boolean(qualifyingDateTime && now >= qualifyingDateTime);
-    const stage = qualifyingCompleted ? "post_qualifying" : "pre_qualifying";
-
-    const cacheKey = `${season}-${round}-${stage}`;
-    if (cache.key === cacheKey && cache.expiresAt > Date.now()) {
-        return cache.result;
+async function persistPrediction(result, source) {
+    try {
+        await RacePrediction.findOneAndUpdate(
+            { season: result.race.season, round: result.race.round, stage: result.stage },
+            {
+                season: result.race.season,
+                round: result.race.round,
+                raceName: result.race.name,
+                circuit: result.race.circuit,
+                circuitId: result.race.circuitId,
+                raceDate: result.race.date,
+                stage: result.stage,
+                source,
+                modelName: result.model.name,
+                modelVersion: result.model.version,
+                weights: result.weights,
+                dataAvailability: result.dataAvailability,
+                generatedAt: result.generatedAt,
+                predictions: result.predictions.map((p) => ({
+                    driverId: p.driverId,
+                    driverName: p.driverName,
+                    driverCode: p.driverCode,
+                    constructorId: p.constructorId,
+                    constructor: p.constructor,
+                    predictedPosition: p.predictedPosition,
+                    expectedFinish: p.expectedFinish,
+                    winProbability: p.winProbability,
+                    podiumProbability: p.podiumProbability,
+                    top5Probability: p.top5Probability,
+                    top10Probability: p.top10Probability,
+                    confidence: p.confidence,
+                })),
+            },
+            { upsert: true, returnDocument: "after" }
+        );
+    } catch (error) {
+        console.error(`[Predictor] Failed to persist prediction: ${error.message}`);
     }
+}
 
-    const { driverStandings, constructorStandings } = await fetchStandings(season);
-    if (driverStandings.length === 0) {
-        return { error: "insufficient_historical_data" };
-    }
+// ---------------------------------------------------------------------------
+// Shared assembly — turns fetched data into the final prediction shape.
+// Used by both buildPrediction() (the real upcoming race, "live") and
+// buildBacktestPrediction() (a past completed race, reconstructed with
+// data scoped strictly to before that race — "backtest"). Identical
+// feature engineering and simulation either way; only the data sources
+// feeding it differ.
+// ---------------------------------------------------------------------------
 
-    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
-        fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
-        fetchCircuitHistory(circuitId),
-        qualifyingCompleted ? fetchQualifying(season, round) : Promise.resolve([]),
-    ]);
-
+function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults }) {
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -520,7 +547,100 @@ async function buildPrediction() {
         ],
     };
 
+    return result;
+}
+
+// ---------------------------------------------------------------------------
+// Orchestrators
+// ---------------------------------------------------------------------------
+
+async function buildPrediction() {
+    const race = await fetchUpcomingRace();
+    if (!race) return { error: "no_upcoming_race" };
+
+    const season = race.season;
+    const round = Number(race.round);
+    const circuitId = race.Circuit?.circuitId ?? null;
+
+    const now = new Date();
+    const qualifyingDateTime = race.Qualifying ? new Date(`${race.Qualifying.date}T${race.Qualifying.time || "00:00:00Z"}`) : null;
+    const qualifyingCompleted = Boolean(qualifyingDateTime && now >= qualifyingDateTime);
+    const stage = qualifyingCompleted ? "post_qualifying" : "pre_qualifying";
+
+    const cacheKey = `${season}-${round}-${stage}`;
+    if (cache.key === cacheKey && cache.expiresAt > Date.now()) {
+        return cache.result;
+    }
+
+    const { driverStandings, constructorStandings } = await fetchStandings(season);
+    if (driverStandings.length === 0) {
+        return { error: "insufficient_historical_data" };
+    }
+
+    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
+        fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
+        fetchCircuitHistory(circuitId),
+        qualifyingCompleted ? fetchQualifying(season, round) : Promise.resolve([]),
+    ]);
+
+    const result = assemblePrediction({
+        season, round, race, circuitId, stage, qualifyingCompleted,
+        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
+    });
+
     cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result };
+    persistPrediction(result, "live");
+    return result;
+}
+
+/*
+ * Reconstructs what the model would have predicted for a PAST completed
+ * race, using ONLY data that genuinely existed before that race:
+ *   - standings AS OF the previous round (Jolpica's round-scoped
+ *     standings endpoint — verified to return a real historical
+ *     snapshot, not the current/final standings)
+ *   - recent-form results from rounds strictly before this one
+ *     (fetchRecentResults already enforces this)
+ *   - circuit history (a different race entirely by construction)
+ *   - that race's REAL qualifying result, which genuinely happened
+ *     before the race itself, so using it is not leakage
+ * This is Phase 12's own documented intent (see the module header) —
+ * the feature functions were written to accept an explicit target round
+ * specifically so this reuse would be leakage-safe. Tagged "backtest" so
+ * it is never confused with a prediction genuinely captured in real time.
+ */
+async function buildBacktestPrediction(season, round) {
+    const asOfRound = round - 1;
+    if (asOfRound < 1) return { error: "no_prior_standings" };
+
+    const [driverData, constructorData, raceData] = await Promise.all([
+        getJson(`/${season}/${asOfRound}/driverstandings.json?limit=100`).catch(() => null),
+        getJson(`/${season}/${asOfRound}/constructorstandings.json?limit=100`).catch(() => null),
+        getJson(`/${season}/${round}.json`),
+    ]);
+
+    const race = raceData.MRData.RaceTable.Races[0];
+    if (!race) return { error: "race_not_found" };
+
+    const driverStandings = driverData?.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [];
+    const constructorStandings = constructorData?.MRData.StandingsTable.StandingsLists[0]?.ConstructorStandings || [];
+    if (driverStandings.length === 0) return { error: "insufficient_historical_data" };
+
+    const circuitId = race.Circuit?.circuitId ?? null;
+    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
+        fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
+        fetchCircuitHistory(circuitId),
+        fetchQualifying(season, round),
+    ]);
+
+    const result = assemblePrediction({
+        season, round, race, circuitId,
+        stage: "post_qualifying",
+        qualifyingCompleted: true,
+        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
+    });
+
+    await persistPrediction(result, "backtest");
     return result;
 }
 
@@ -534,4 +654,4 @@ function summarizeFeature(feature) {
     return { available: true, score: Number(score.toFixed(3)), ...rest };
 }
 
-module.exports = { buildPrediction };
+module.exports = { buildPrediction, buildBacktestPrediction };
