@@ -358,31 +358,72 @@ function useRaceHubData(season) {
     return state;
 }
 
-/* ── 1. Header — next session identity + countdown ────────────────── */
+/* ── 1. Hero — editorial header module: race identity, countdown, and
+   the real circuit-map graphic (existing landingHelpers.circuitMapSrc
+   asset, resolved from the schedule already fetched below — no new
+   backend field, no invented image) ── */
 
-function RaceHubHeader({ race }) {
+function RaceHubHero({ race, hub }) {
     const countdown = useCountdown(race?.startTime);
 
     if (!race?.grandPrix) {
         return <EmptyState title="No live session right now" description="No F1 session is currently live." />;
     }
 
+    const weekend = hub.schedule.find((r) => String(r.round) === String(race.round));
+    const circuitId = weekend?.Circuit?.circuitId ?? null;
+    const mapCandidates = circuitMapCandidates(circuitId);
+
     return (
-        <div className="lr-panel lr-next-session">
-            <span className="lr-panel-title">Next Session</span>
-            <div className="lr-next-session-id">
-                <span className="lr-next-session-gp">{race.grandPrix}</span>
-                {race.circuit && <span className="lr-next-session-loc">{race.circuit}{race.country ? `, ${race.country}` : ""}</span>}
+        <div className="lr-hero">
+            <div className="lr-hero-main">
+                <span className="lr-hero-eyebrow">
+                    <Flag size={12} aria-hidden="true" />
+                    NEXT SESSION
+                </span>
+                <div className="lr-hero-id">
+                    <span className="lr-hero-gp">{race.grandPrix}</span>
+                    {race.circuit && (
+                        <span className="lr-hero-loc">
+                            <MapPin size={15} aria-hidden="true" />
+                            {race.circuit}{race.country ? `, ${race.country}` : ""}
+                        </span>
+                    )}
+                </div>
+                <div className="lr-hero-meta">
+                    {race.session && (
+                        <div className="lr-hero-meta-item">
+                            <span className="lr-hero-meta-label"><Flag size={11} aria-hidden="true" />Session</span>
+                            <span className="lr-hero-meta-value">{sessionShortLabel(race.session)}</span>
+                        </div>
+                    )}
+                    {race.startTime && (
+                        <div className="lr-hero-meta-item">
+                            <span className="lr-hero-meta-label"><Calendar size={11} aria-hidden="true" />Green Light</span>
+                            <span className="lr-hero-meta-value">
+                                {new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                        </div>
+                    )}
+                    {countdown && (
+                        <div className="lr-hero-meta-item">
+                            <span className="lr-hero-meta-label"><Timer size={11} aria-hidden="true" />Countdown</span>
+                            <span className="lr-hero-meta-value lr-hero-meta-value--accent">{countdown}</span>
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className="lr-next-session-meta">
-                {race.session && <span className="lr-meta-item lr-mono">{sessionShortLabel(race.session)}</span>}
-                {race.startTime && (
-                    <span className="lr-meta-item lr-mono">
-                        {new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                )}
-                {countdown && <span className="lr-next-session-countdown lr-mono">{countdown}</span>}
-                <span className="lr-meta-item lr-meta-item--faint">NO LIVE SESSION RIGHT NOW</span>
+            <div className="lr-hero-map">
+                <LayeredImage
+                    candidates={mapCandidates}
+                    alt={race.circuit ? `${race.circuit} circuit map` : "Circuit map"}
+                    fallback={
+                        <span className="lr-hero-map-fallback">
+                            <MapPin size={28} aria-hidden="true" />
+                            <span>Map unavailable</span>
+                        </span>
+                    }
+                />
             </div>
         </div>
     );
@@ -406,7 +447,7 @@ function useTeamOptions(constructorStandings) {
 
 function TeamFocusHub({ hub, selectedTeamId, onSelectTeam, teams }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (teams.length === 0) return <EmptyState title="Standings unavailable" description="Team standings couldn't be loaded." />;
+    if (teams.length === 0) return <EmptyState title="Standings unavailable" description="Team standings couldn't be loaded." onLight />;
 
     const lastResults = hub.latest?.Results ?? [];
     const qualByDriver = new Map(hub.qualifying.map((q) => [q.Driver.driverId, q.position]));
@@ -426,6 +467,7 @@ function TeamFocusHub({ hub, selectedTeamId, onSelectTeam, teams }) {
                     {teams.slice(0, 5).map((t) => (
                         <div className="lr-standings-row" key={t.id}>
                             <span className="lr-mono lr-standings-pos">P{t.position}</span>
+                            <TeamLogo constructorId={t.id} className="lr-standings-logo" />
                             <span className="lr-team-dot" style={{ background: t.color }} aria-hidden="true" />
                             <span className="lr-standings-name">{t.name}</span>
                             <span className="lr-mono lr-standings-points">{t.points} PTS</span>
@@ -433,20 +475,31 @@ function TeamFocusHub({ hub, selectedTeamId, onSelectTeam, teams }) {
                     ))}
                 </div>
             ) : teamDrivers.length === 0 ? (
-                <EmptyState title="No drivers found" description="This team has no standings entry this season." />
+                <EmptyState title="No drivers found" description="This team has no standings entry this season." onLight />
             ) : (
                 <div className="lr-hub-drivers">
                     {teamDrivers.map((s) => {
                         const lastResult = lastResults.find((r) => r.Driver.driverId === s.Driver.driverId);
                         const qualPos = qualByDriver.get(s.Driver.driverId);
+                        const fullName = `${s.Driver.givenName} ${s.Driver.familyName}`;
+                        const accent = getTeamAccent(selectedTeamId);
                         return (
-                            <div className="lr-hub-driver-card" key={s.Driver.driverId}>
-                                <span className="lr-hub-driver-name">{s.Driver.givenName} {s.Driver.familyName}</span>
-                                <div className="lr-hub-driver-stats">
-                                    <span><b>P{s.position}</b><small>Championship</small></span>
-                                    <span><b>{s.points}</b><small>Points</small></span>
-                                    <span><b>{lastResult ? `P${lastResult.position}` : "—"}</b><small>Last Race</small></span>
-                                    <span><b>{qualPos ? `P${qualPos}` : "—"}</b><small>Last Qualifying</small></span>
+                            <div className="lr-driver-card" key={s.Driver.driverId} style={{ "--lr-driver-accent": accent }}>
+                                <DriverPortrait
+                                    driverId={s.Driver.driverId}
+                                    fullName={fullName}
+                                    frameClassName="lr-driver-card-photo"
+                                    fallbackClassName="lr-driver-card-photo-fallback"
+                                    fallbackIcon={<UserRound size={28} aria-hidden="true" />}
+                                />
+                                <div className="lr-driver-card-body">
+                                    <span className="lr-driver-card-name">{fullName}</span>
+                                    <div className="lr-driver-card-stats">
+                                        <span><b>P{s.position}</b><small>Championship</small></span>
+                                        <span><b>{s.points}</b><small>Points</small></span>
+                                        <span><b>{lastResult ? `P${lastResult.position}` : "—"}</b><small>Last Race</small></span>
+                                        <span><b>{qualPos ? `P${qualPos}` : "—"}</b><small>Last Qualifying</small></span>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -457,20 +510,23 @@ function TeamFocusHub({ hub, selectedTeamId, onSelectTeam, teams }) {
     );
 }
 
-function RecentDriverForm({ hub, selectedTeamId }) {
+function RecentDriverForm({ hub, selectedTeamId, teams, onSelectTeam }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (!selectedTeamId || selectedTeamId === "all") {
-        return <EmptyState title="Select a team" description="Choose a team in Team Focus to see recent driver form." />;
-    }
 
     const teamDrivers = hub.driverStandings.filter((s) => s.Constructors?.[0]?.constructorId === selectedTeamId);
-    if (teamDrivers.length === 0 || hub.recentRaces.length === 0) {
-        return <EmptyState title="No recent form data" description="Recent race history isn't available yet." />;
-    }
+    const accent = getTeamAccent(selectedTeamId);
 
     return (
         <div className="lr-form-list">
-            {teamDrivers.map((s) => {
+            {teams.length > 0 && (
+                <Select value={selectedTeamId ?? ""} onChange={(e) => onSelectTeam(e.target.value)} className="lr-team-select">
+                    {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </Select>
+            )}
+
+            {teamDrivers.length === 0 || hub.recentRaces.length === 0 ? (
+                <EmptyState title="No recent form data" description="Recent race history isn't available yet." />
+            ) : teamDrivers.map((s) => {
                 const rows = hub.recentRaces
                     .map((race) => ({ round: race.round, result: race.results.find((r) => r.Driver.driverId === s.Driver.driverId) }))
                     .filter((row) => row.result);
@@ -479,16 +535,23 @@ function RecentDriverForm({ hub, selectedTeamId }) {
 
                 return (
                     <div className="lr-form-driver" key={s.Driver.driverId}>
-                        <div className="lr-form-head">
-                            <span className="lr-form-name">{s.Driver.familyName}</span>
-                            {avg && <span className="lr-mono lr-form-avg">AVG P{avg}</span>}
+                        <div className="lr-form-driver-id">
+                            <DriverAvatar code={s.Driver.code ?? s.Driver.familyName?.slice(0, 3)?.toUpperCase()} color={accent} size="lg" />
+                            <div>
+                                <span className="lr-form-name">{s.Driver.familyName}</span>
+                                {avg && <span className="lr-mono lr-form-avg">AVG P{avg}</span>}
+                            </div>
                         </div>
-                        <div className="lr-form-chips">
-                            {rows.length === 0 ? (
-                                <span className="lr-compact-empty-desc">No recent race results found.</span>
-                            ) : rows.map((row) => (
-                                <span className="lr-form-chip lr-mono" key={row.round} title={`Round ${row.round}`}>P{row.result.position}</span>
-                            ))}
+                        <div className="lr-form-body">
+                            <div className="lr-form-chips">
+                                {rows.length === 0 ? (
+                                    <span className="lr-compact-empty-desc">No recent race results found.</span>
+                                ) : rows.map((row) => (
+                                    <span className={`lr-form-chip lr-mono${Number(row.result.position) <= 3 ? " lr-form-chip--podium" : ""}`} key={row.round} title={`Round ${row.round}`}>
+                                        P{row.result.position}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 );
@@ -528,8 +591,11 @@ function NextRaceContext({ hub, race }) {
 function NextRaceWeatherForecast() {
     return (
         <div className="lr-compact-empty">
-            <span className="lr-compact-empty-title">FORECAST UNAVAILABLE</span>
-            <span className="lr-compact-empty-desc">Weather forecast data will appear here when a forecast provider is integrated. Live conditions appear on this page once the session goes live.</span>
+            <Cloud size={18} aria-hidden="true" />
+            <div className="lr-compact-empty-body">
+                <span className="lr-compact-empty-title">FORECAST UNAVAILABLE</span>
+                <span className="lr-compact-empty-desc">Weather forecast data will appear here when a forecast provider is integrated. Live conditions appear on this page once the session goes live.</span>
+            </div>
         </div>
     );
 }
@@ -566,7 +632,7 @@ function computeRaceHighlights(latest, pitStops) {
 function LastGrandPrixSummary({ hub }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
     const latest = hub.latest;
-    if (!latest?.Results?.length) return <EmptyState title="No completed races yet" description="Race results will appear here once a Grand Prix has been completed." />;
+    if (!latest?.Results?.length) return <EmptyState title="No completed races yet" description="Race results will appear here once a Grand Prix has been completed." onLight />;
 
     const podium = latest.Results.slice(0, 3);
     const fastestLap = latest.Results.find((r) => r.FastestLap?.rank === "1");
@@ -574,19 +640,19 @@ function LastGrandPrixSummary({ hub }) {
 
     const items = [
         highlights.biggestGain && {
-            label: "Biggest Gain", driver: highlights.biggestGain.Driver,
+            label: "Biggest Gain", icon: <TrendingUp size={15} aria-hidden="true" />, driver: highlights.biggestGain.Driver,
             value: `+${positionsGained(highlights.biggestGain)} positions`, sub: `P${highlights.biggestGain.grid} → P${highlights.biggestGain.position}`,
         },
         highlights.biggestLoss && {
-            label: "Biggest Loss", driver: highlights.biggestLoss.Driver,
+            label: "Biggest Loss", icon: <TrendingDown size={15} aria-hidden="true" />, driver: highlights.biggestLoss.Driver,
             value: `${positionsGained(highlights.biggestLoss)} positions`, sub: `P${highlights.biggestLoss.grid} → P${highlights.biggestLoss.position}`,
         },
         highlights.totalPitStops > 0 && {
-            label: "Pit Stops", driver: null,
+            label: "Pit Stops", icon: <Wrench size={15} aria-hidden="true" />, driver: null,
             value: highlights.totalPitStops, sub: "across the field",
         },
         {
-            label: "Classified", driver: null,
+            label: "Classified", icon: <CheckCircle2 size={15} aria-hidden="true" />, driver: null,
             value: `${highlights.classifiedCount} / ${highlights.totalEntrants}`, sub: "finishers",
         },
     ].filter(Boolean);
@@ -598,16 +664,37 @@ function LastGrandPrixSummary({ hub }) {
                 <span className="lr-lastgp-round lr-mono">ROUND {latest.round}</span>
             </div>
             <div className="lr-lastgp-podium">
-                {podium.map((r, i) => (
-                    <div className="lr-lastgp-pos" key={r.Driver.driverId}>
-                        <span className="lr-mono lr-lastgp-p">P{i + 1}</span>
-                        <span className="lr-lastgp-driver">{r.Driver.givenName} {r.Driver.familyName}</span>
-                        <span className="lr-lastgp-team">{r.Constructor.name}</span>
-                    </div>
-                ))}
+                {podium.map((r, i) => {
+                    const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
+                    return (
+                        <div className={`lr-lastgp-pos${i === 0 ? " lr-lastgp-pos--p1" : ""}`} key={r.Driver.driverId}>
+                            <div className="lr-lastgp-photo">
+                                <DriverPortrait
+                                    driverId={r.Driver.driverId}
+                                    fullName={fullName}
+                                    frameClassName="lr-lastgp-photo"
+                                    fallbackClassName="lr-lastgp-photo-fallback"
+                                    fallbackIcon={<UserRound size={24} aria-hidden="true" />}
+                                />
+                            </div>
+                            <span className="lr-lastgp-p">{i === 0 && <Trophy size={13} aria-hidden="true" />}P{i + 1}</span>
+                            <span className="lr-lastgp-driver">{fullName}</span>
+                            <span className="lr-lastgp-team">{r.Constructor.name}</span>
+                        </div>
+                    );
+                })}
                 {fastestLap && (
                     <div className="lr-lastgp-pos">
-                        <span className="lr-mono lr-lastgp-p">FL</span>
+                        <div className="lr-lastgp-photo">
+                            <DriverPortrait
+                                driverId={fastestLap.Driver.driverId}
+                                fullName={`${fastestLap.Driver.givenName} ${fastestLap.Driver.familyName}`}
+                                frameClassName="lr-lastgp-photo"
+                                fallbackClassName="lr-lastgp-photo-fallback"
+                                fallbackIcon={<Timer size={24} aria-hidden="true" />}
+                            />
+                        </div>
+                        <span className="lr-lastgp-p"><Timer size={13} aria-hidden="true" />FL</span>
                         <span className="lr-lastgp-driver">{fastestLap.Driver.givenName} {fastestLap.Driver.familyName}</span>
                         <span className="lr-lastgp-team lr-mono">{fastestLap.FastestLap.Time.time}</span>
                     </div>
@@ -619,10 +706,13 @@ function LastGrandPrixSummary({ hub }) {
                 <div className="lr-highlight-grid">
                     {items.map((item) => (
                         <div className="lr-highlight-item" key={item.label}>
-                            <span className="lr-highlight-label">{item.label}</span>
-                            {item.driver && <span className="lr-highlight-driver">{item.driver.givenName} {item.driver.familyName}</span>}
-                            <span className="lr-mono lr-highlight-value">{item.value}</span>
-                            <span className="lr-highlight-sub">{item.sub}</span>
+                            <span className="lr-highlight-icon">{item.icon}</span>
+                            <div className="lr-highlight-text">
+                                <span className="lr-highlight-label">{item.label}</span>
+                                {item.driver && <span className="lr-highlight-driver">{item.driver.givenName} {item.driver.familyName}</span>}
+                                <span className="lr-mono lr-highlight-value">{item.value}</span>
+                                <span className="lr-highlight-sub">{item.sub}</span>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -650,8 +740,11 @@ function LastRaceStrategy({ hub }) {
     if (hub.pitStops.length === 0) {
         return (
             <div className="lr-compact-empty">
-                <span className="lr-compact-empty-title">NO PIT-STOP RECORDS</span>
-                <span className="lr-compact-empty-desc">No pit-stop records are available for {latest.raceName}.</span>
+                <Wrench size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO PIT-STOP RECORDS</span>
+                    <span className="lr-compact-empty-desc">No pit-stop records are available for {latest.raceName}.</span>
+                </div>
             </div>
         );
     }
@@ -687,6 +780,11 @@ function LastRaceStrategy({ hub }) {
                 {podiumStrategies.map(({ driver, stops }) => (
                     <div className="lr-strategy-row" key={driver.driverId}>
                         <span className="lr-strategy-driver">{driver.familyName}</span>
+                        <span className="lr-strategy-pips" aria-hidden="true">
+                            {Array.from({ length: stops.length + 1 }).map((_, i) => (
+                                <span key={i} className={`lr-strategy-pip${i > 0 ? " lr-strategy-pip--stop" : ""}`} />
+                            ))}
+                        </span>
                         <span className="lr-mono lr-strategy-laps">
                             {stops.length === 0 ? "No stops" : stops.map((s) => `Lap ${s.lap}`).join(" · ")}
                         </span>
@@ -694,8 +792,11 @@ function LastRaceStrategy({ hub }) {
                 ))}
             </div>
             <div className="lr-strategy-tyre-note">
-                <span className="lr-highlight-label">Tyre Data</span>
-                <span className="lr-compact-empty-desc">Not available from historical source — pit lap and stop count above are real; compounds are not.</span>
+                <CircleDashed size={16} aria-hidden="true" />
+                <div className="lr-strategy-tyre-note-body">
+                    <span className="lr-highlight-label">Tyre Data</span>
+                    <span className="lr-compact-empty-desc">Not available from historical source — pit lap and stop count above are real; compounds are not.</span>
+                </div>
             </div>
         </div>
     );
@@ -706,24 +807,31 @@ function LastRaceStrategy({ hub }) {
 function ChampionshipSnapshot({ hub }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
     if (hub.driverStandings.length === 0 && hub.constructorStandings.length === 0) {
-        return <EmptyState title="Standings unavailable" description="Championship standings couldn't be loaded." />;
+        return <EmptyState title="Standings unavailable" description="Championship standings couldn't be loaded." onLight />;
     }
 
     return (
         <div className="lr-championship">
-            <span className="lr-panel-title">Drivers</span>
-            {hub.driverStandings.slice(0, 6).map((s) => (
-                <div className="lr-standings-row" key={s.Driver.driverId}>
-                    <span className="lr-mono lr-standings-pos">P{s.position}</span>
-                    <span className="lr-standings-name">{s.Driver.givenName} {s.Driver.familyName}</span>
-                    <span className="lr-standings-team">{s.Constructors?.[0]?.name ?? ""}</span>
-                    <span className="lr-mono lr-standings-points">{s.points}</span>
-                </div>
-            ))}
-            <span className="lr-panel-title lr-strategy-subtitle">Constructors</span>
+            <span className="lr-panel-title"><Trophy size={13} aria-hidden="true" />Drivers</span>
+            {hub.driverStandings.slice(0, 6).map((s) => {
+                const constructorId = s.Constructors?.[0]?.constructorId;
+                return (
+                    <div className="lr-standings-row" key={s.Driver.driverId}>
+                        <span className="lr-mono lr-standings-pos">P{s.position}</span>
+                        <span className="lr-driver-avatar lr-driver-avatar--sm lr-championship-avatar" style={{ background: getTeamAccent(constructorId) }} aria-hidden="true">
+                            {s.Driver.code ?? s.Driver.familyName?.slice(0, 3)?.toUpperCase()}
+                        </span>
+                        <span className="lr-standings-name">{s.Driver.givenName} {s.Driver.familyName}</span>
+                        <span className="lr-standings-team">{s.Constructors?.[0]?.name ?? ""}</span>
+                        <span className="lr-mono lr-standings-points">{s.points}</span>
+                    </div>
+                );
+            })}
+            <span className="lr-panel-title lr-strategy-subtitle"><Car size={13} aria-hidden="true" />Constructors</span>
             {hub.constructorStandings.slice(0, 6).map((s) => (
                 <div className="lr-standings-row" key={s.Constructor.constructorId}>
                     <span className="lr-mono lr-standings-pos">P{s.position}</span>
+                    <TeamLogo constructorId={s.Constructor.constructorId} className="lr-standings-logo" />
                     <span className="lr-team-dot" style={{ background: getTeamAccent(s.Constructor.constructorId) }} aria-hidden="true" />
                     <span className="lr-standings-name">{s.Constructor.name}</span>
                     <span className="lr-mono lr-standings-points">{s.points}</span>
@@ -735,16 +843,36 @@ function ChampionshipSnapshot({ hub }) {
 
 /* ── 11. Latest F1 updates — reuses the existing News integration ────── */
 
+/* Same real article.image field the homepage's NewsThumb uses — a neutral
+   mark fills in only when the article genuinely has none or it fails to
+   load, never a placeholder network request. */
+function NewsItemThumb({ article }) {
+    const [failed, setFailed] = useState(false);
+    const hasImage = Boolean(article.image) && !failed;
+    return (
+        <span className="lr-news-thumb" aria-hidden="true">
+            {hasImage ? (
+                <img src={article.image} alt="" loading="lazy" onError={() => setFailed(true)} />
+            ) : (
+                <span className="lr-news-thumb-mark">F1</span>
+            )}
+        </span>
+    );
+}
+
 function LatestF1Updates({ hub }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (hub.news.length === 0) return <EmptyState title="No updates available" description="Couldn't load the latest F1 news right now." />;
+    if (hub.news.length === 0) return <EmptyState title="No updates available" description="Couldn't load the latest F1 news right now." onLight />;
 
     return (
         <ul className="lr-news-list">
             {hub.news.slice(0, 6).map((item) => (
                 <li className="lr-news-item" key={item.id}>
-                    <a href={item.url} target="_blank" rel="noreferrer" className="lr-news-title">{item.title}</a>
-                    <span className="lr-news-meta">{item.source}{item.publishedAt ? ` · ${timeAgo(item.publishedAt)}` : ""}</span>
+                    <NewsItemThumb article={item} />
+                    <div className="lr-news-body">
+                        <a href={item.url} target="_blank" rel="noreferrer" className="lr-news-title">{item.title}</a>
+                        <span className="lr-news-meta">{item.source}{item.publishedAt ? ` · ${timeAgo(item.publishedAt)}` : ""}</span>
+                    </div>
                 </li>
             ))}
         </ul>
@@ -758,46 +886,52 @@ function RaceHub({ race }) {
     const teams = useTeamOptions(hub.constructorStandings);
     const [selectedTeamId, setSelectedTeamId] = useState(null);
 
+    // Default to the championship leader rather than a bare "select a
+    // team" state — set synchronously during render once teams load.
+    if (!selectedTeamId && teams.length > 0) {
+        setSelectedTeamId(teams[0].id);
+    }
+
     if (!race?.grandPrix) {
-        return <RaceHubHeader race={race} />;
+        return <RaceHubHero race={race} hub={hub} />;
     }
 
     return (
         <div className="lr-hub">
-            <RaceHubHeader race={race} />
+            <RaceHubHero race={race} hub={hub} />
 
-            <div className="lr-grid lr-grid--split">
-                <Panel title="Team Focus">
+            <div className="lr-grid lr-grid--7-5">
+                <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>} className="lr-panel--light">
                     <TeamFocusHub hub={hub} selectedTeamId={selectedTeamId} onSelectTeam={setSelectedTeamId} teams={teams} />
                 </Panel>
                 <div className="lr-hub-stack">
-                    <Panel title="Next Race Context">
+                    <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race Context</>}>
                         <NextRaceContext hub={hub} race={race} />
                     </Panel>
-                    <Panel title="Next Race Weather">
+                    <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>}>
                         <NextRaceWeatherForecast />
                     </Panel>
                 </div>
             </div>
 
-            <Panel title="Last Grand Prix" className="lr-panel--full">
+            <Panel title={<><Trophy size={13} aria-hidden="true" />Last Grand Prix</>} className="lr-panel--full lr-panel--chalk">
                 <LastGrandPrixSummary hub={hub} />
             </Panel>
 
-            <div className="lr-grid lr-grid--split">
-                <Panel title="Last Race Strategy">
+            <div className="lr-grid lr-grid--5-7">
+                <Panel title={<><Wrench size={13} aria-hidden="true" />Last Race Strategy</>}>
                     <LastRaceStrategy hub={hub} />
                 </Panel>
-                <Panel title="Recent Driver Form">
-                    <RecentDriverForm hub={hub} selectedTeamId={selectedTeamId} />
+                <Panel title={<><TrendingUp size={13} aria-hidden="true" />Recent Driver Form</>}>
+                    <RecentDriverForm hub={hub} selectedTeamId={selectedTeamId} teams={teams} onSelectTeam={setSelectedTeamId} />
                 </Panel>
             </div>
 
-            <div className="lr-grid lr-grid--split">
-                <Panel title="Championship Snapshot">
+            <div className="lr-grid lr-grid--5-7">
+                <Panel title={<><Trophy size={13} aria-hidden="true" />Championship Snapshot</>} className="lr-panel--light">
                     <ChampionshipSnapshot hub={hub} />
                 </Panel>
-                <Panel title="Latest F1 Updates">
+                <Panel title={<><Newspaper size={13} aria-hidden="true" />Latest F1 Updates</>} className="lr-panel--light">
                     <LatestF1Updates hub={hub} />
                 </Panel>
             </div>
