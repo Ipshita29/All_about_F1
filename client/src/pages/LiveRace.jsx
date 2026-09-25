@@ -10,10 +10,16 @@
  * tightens while a session is actually live and relaxes otherwise.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer } from "lucide-react";
+import {
+    Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
+    MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
+    Newspaper, Car, CircleDashed,
+} from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
-import { getTeamAccent } from "../config/driverAssets";
-import { positionsGained } from "../utils/landingHelpers";
+import { LayeredImage } from "../components/EntityDetail";
+import { getTeamAccent, getDriverAssets, DRIVER_CODE_TO_ID } from "../config/driverAssets";
+import { getTeamAssets } from "../config/teamAssets";
+import { positionsGained, circuitMapCandidates } from "../utils/landingHelpers";
 import "../styles/pages/LiveRace.css";
 import { API_BASE_URL as API } from "../config/api";
 
@@ -185,6 +191,45 @@ function useFlashTracker(drivers) {
     return flash.keys;
 }
 
+/* ── Shared driver/team visuals ───────────────────────────────────────
+   Two distinct treatments, used deliberately in different contexts:
+     - DriverAvatar: a solid team-colour badge carrying the FIA code. Used
+       in dense live-timing rows where the feed only ever gives a code and
+       name, never a stable asset id — an honest, always-correct avatar
+       rather than a guessed/broken photo.
+     - DriverPortrait: the real local cutout PNGs from driverAssets.js,
+       used only where there's room for them to read properly (Race Hub
+       cards, podium, Live Team Focus) and we have a real Ergast driverId
+       to resolve them from. ── */
+
+function DriverAvatar({ code, color, size }) {
+    return (
+        <span className={`lr-driver-avatar${size ? ` lr-driver-avatar--${size}` : ""}`} style={{ background: color || "var(--border-strong)" }} aria-hidden="true">
+            {code || "—"}
+        </span>
+    );
+}
+
+function DriverPortrait({ driverId, fullName, frameClassName, fallbackClassName, fallbackIcon }) {
+    const candidates = driverId ? getDriverAssets(driverId, fullName).imageCandidates : [];
+    return (
+        <div className={frameClassName}>
+            <LayeredImage
+                candidates={candidates}
+                alt={fullName || ""}
+                fallback={<span className={fallbackClassName}>{fallbackIcon ?? <UserRound size={26} />}</span>}
+            />
+        </div>
+    );
+}
+
+function TeamLogo({ constructorId, className }) {
+    const { logo } = getTeamAssets(constructorId);
+    const [failed, setFailed] = useState(false);
+    if (!logo || failed) return null;
+    return <img src={logo} alt="" className={className} onError={() => setFailed(true)} />;
+}
+
 /* ── Compact header ────────────────────────────────────────────────── */
 
 function CompactHeader({ data }) {
@@ -201,7 +246,12 @@ function CompactHeader({ data }) {
                 </span>
                 <div className="lr-header-id">
                     <span className="lr-header-title">{race?.grandPrix ?? "No Session Scheduled"}</span>
-                    {race?.circuit && <span className="lr-header-loc">{race.circuit}{race.country ? `, ${race.country}` : ""}</span>}
+                    {race?.circuit && (
+                        <span className="lr-header-loc">
+                            <MapPin size={12} aria-hidden="true" />
+                            {race.circuit}{race.country ? `, ${race.country}` : ""}
+                        </span>
+                    )}
                 </div>
             </div>
             <div className="lr-header-meta">
