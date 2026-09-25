@@ -21,7 +21,8 @@ import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
 import NewsPage from "./pages/NewsPage";
 import LiveRace from "./pages/LiveRace";
-import Predictor from "./pages/Predictor";
+import Predictor from "./pages/Predictor"
+import NotFound from "./pages/NotFound";
 import "./App.css";
 
 
@@ -56,6 +57,7 @@ function AppShell() {
         <Route path="/dictionary/:slug" element={<DictionaryTerm />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
