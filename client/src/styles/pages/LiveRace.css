@@ -396,8 +396,13 @@
     gap: var(--space-3);
 }
 
+/* aspect-ratio (not a fixed height) so the crop stays proportional to the
+   real portrait source images (~1042x1460, ≈ 5:7) regardless of how wide
+   the grid column ends up — a short, wide box is what was cropping every
+   driver down to their forehead; a portrait-shaped one shows the face. */
 .lr-team-compare-photo {
-    height: 96px;
+    aspect-ratio: 5 / 7;
+    max-height: 220px;
     border-radius: 8px;
     background: linear-gradient(180deg, var(--lr-surface-header), var(--lr-surface-inner));
 }
@@ -757,7 +762,7 @@
    for. Team colour becomes a coloured edge rather than a plain dot. */
 .lr-driver-card {
     display: grid;
-    grid-template-columns: 84px 1fr;
+    grid-template-columns: 96px 1fr;
     gap: var(--space-3);
     background: rgba(25, 25, 25, 0.03);
     border: 1px solid var(--lr-light-border);
@@ -766,13 +771,16 @@
     overflow: hidden;
 }
 
+/* aspect-ratio, not a fixed height — keeps the crop proportional to the
+   real portrait source images (~1042x1460, ≈ 5:7) so it shows a full
+   recognizable face rather than just hair/forehead. */
 .lr-driver-card-photo {
     position: relative;
+    aspect-ratio: 5 / 7;
     background: linear-gradient(180deg, rgba(25, 25, 25, 0.08), rgba(25, 25, 25, 0.02));
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    min-height: 100px;
 }
 
 .lr-driver-card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
@@ -783,7 +791,6 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    min-height: 100px;
     color: var(--lr-light-text-3);
 }
 
