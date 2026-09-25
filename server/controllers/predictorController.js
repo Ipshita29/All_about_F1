@@ -11,12 +11,13 @@ const getUpcomingPrediction = async (req, res) => {
         if (result.error) {
             return res.status(200).json({
                 available: false,
+                reason: result.error,
                 message: ERROR_MESSAGES[result.error] || "Prediction unavailable.",
             });
         }
         res.json({ available: true, ...result });
     } catch (error) {
-        res.status(502).json({ available: false, message: "Prediction unavailable — failed to reach F1 data source." });
+        res.status(502).json({ available: false, reason: "upstream_failure", message: "Prediction unavailable — failed to reach F1 data source." });
     }
 };
 
