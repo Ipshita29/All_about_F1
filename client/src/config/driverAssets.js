@@ -49,6 +49,41 @@ export const TEAM_ACCENTS = {
 export const DEFAULT_ACCENT = "#7F1D1A";
 
 /*
+ * The live timing feed (server/services/f1LiveTimingService.js) identifies
+ * drivers by FIA three-letter code, not by the Ergast/Jolpica driverId used
+ * everywhere else. This bridges the two so live-dashboard avatars can reuse
+ * the same local cutouts as the rest of the site instead of a fresh image
+ * source — bounded to the current grid, degrades to no image (never a
+ * remote photo) for anyone missing from either side.
+ */
+export const DRIVER_CODE_TO_ID = {
+    VER: "max_verstappen",
+    LEC: "leclerc",
+    HAM: "hamilton",
+    RUS: "russell",
+    ANT: "antonelli",
+    NOR: "norris",
+    PIA: "piastri",
+    SAI: "sainz",
+    HAD: "hadjar",
+    ALB: "albon",
+    ALO: "alonso",
+    STR: "stroll",
+    GAS: "gasly",
+    OCO: "ocon",
+    BEA: "bearman",
+    TSU: "tsunoda",
+    VET: "vettel",
+    PER: "perez",
+    LIN: "arvid_lindblad",
+    COL: "colapinto",
+    BOR: "bortoleto",
+    LAW: "lawson",
+    HUL: "hulkenberg",
+    BOT: "bottas",
+};
+
+/*
  * Per-driver overrides. `image` points at a local transparent cutout in
  * /public/drivers — every driver here gets the same consistent treatment;
  * anyone missing from this map falls back to the styled monogram, never a
