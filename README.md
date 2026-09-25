@@ -24,6 +24,28 @@ The backend keeps one long-lived connection to the live timing feed (opened once
 
 **Important:** this is not an official, licensed F1 data source — it's a publicly accessible feed, consumed the same way FastF1 does, without authentication. Two channels that carry car telemetry and GPS (`CarData.z`, `Position.z`) are gated behind an F1TV subscription login that this project deliberately does not implement, so speed/throttle/brake/gear/DRS and on-track (x, y) position are not available here; those fields are always returned as `null` rather than faked. Availability of the free channels may change if F1 alters the feed.
 
+## Race Predictor
+
+`GET /api/predictor/upcoming` (`server/services/predictorService.js`) generates a statistical prediction for the next Grand Prix from real Jolpica data — no LLM, no fabricated numbers.
+
+**Method — weighted power-ranking + Plackett-Luce simulation.** There isn't a training dataset here suitable for a real ML classifier (the grid, rules, and car performance change every season), so instead of forcing one, each driver gets a transparent 0–1 "strength" score built from five documented, weighted features:
+
+| Feature | Weight | Source |
+|---|---|---|
+| Recent form | 0.35 | Last 5 races, recency-weighted (finish position, points, podiums) |
+| Qualifying | 0.25 | This weekend's grid — only once qualifying has actually happened; its weight is redistributed across the other four beforehand, never guessed |
+| Constructor strength | 0.20 | Current constructor standings position |
+| Circuit history | 0.10 | Driver's all-time record at this specific circuit (neutral default for drivers with no prior starts there — never fabricated) |
+| Championship standing | 0.10 | Current driver standings position |
+
+Those strength scores feed a **Plackett-Luce Monte Carlo simulation** (5,000 simulated race orders) — the standard, explainable method for turning per-competitor strength into real finishing-order probabilities, rather than presenting a raw score as if it were a probability. Win/podium/top-5/top-10 probabilities and expected finish are the actual tallied simulation outcomes (win probabilities across the full field sum to 1.0).
+
+**Leakage prevention:** every feature is scoped to data available *before* the race being predicted — standings reflect only completed races, recent form only looks at rounds strictly before the target round, and circuit history is always a different race entirely. `computeDriverFeatures`-style functions take the target round as an explicit parameter so they can be reused for historical backtesting later without risking that a race's own result leaks into its own prediction.
+
+**What's deliberately not used:** weather (no forecast provider integrated) and tyre-compound strategy (Jolpica doesn't expose historical compound data) — `dataAvailability.weather`/`tyreStrategy` are always `false` rather than faked.
+
+**Caching:** predictions are cached in memory (30 min TTL) per `season-round-stage`, where stage is `pre_qualifying`/`post_qualifying` — a fresh prediction generates once per stage transition, not on every request, and Jolpica is never hit more than necessary. No MongoDB persistence yet; a prediction is a pure function of public F1 data, so there's nothing that needs to survive a restart until a future phase compares predictions against actual results over time.
+
 ## Project Structure
 
 ```
@@ -40,7 +62,7 @@ All_about_F1/
 └── server/                 # Express REST API
     ├── routes/             # auth, user, drivers, teams, circuits, grand prix, news, preferences, live race
     ├── controllers/        # Route handlers, including calls to Jolpica and NewsAPI
-    ├── services/           # f1LiveTimingService (provider integration), liveRaceService (state + normalization)
+    ├── services/           # f1LiveTimingService, liveRaceService, predictorService (see "Race Predictor"), jolpicaClient
     ├── models/             # Mongoose schemas (User)
     ├── middleware/          # JWT auth middleware
     └── config/             # MongoDB connection
@@ -106,5 +128,6 @@ The client runs on Vite's default dev server (http://localhost:5173) and the API
 | `/grandprixdashboard` | Grand Prix schedule and results |
 | `/circuitmaps` | Circuit details |
 | `/api/live/race` | Current/next session state — schedule-based, or live via F1's live timing feed during an active session |
+| `/api/predictor/upcoming` | Statistical prediction for the next Grand Prix — see "Race Predictor" |
 | `/news` | Latest F1 news |
 | `/profile` | Authenticated user's profile (JWT-protected) |
