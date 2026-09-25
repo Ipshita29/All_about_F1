@@ -10,6 +10,7 @@
  * period, weather, tyre strategy), it's left out rather than invented.
  */
 import { Fragment, useEffect, useState } from "react";
+import { CheckCircle2, Clock, Info, Circle, CloudSun, Thermometer, Droplets, Wind } from "lucide-react";
 import { Button, EmptyState, LoadingSpinner } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/Predictor.css";
@@ -26,10 +27,31 @@ const FACTOR_LABELS = {
 
 const DATA_USED_ROWS = [
     ["historicalStandings", "Current championship standings"],
-    ["recentForm", "Recent race form"],
+    ["currentSeasonData", "Recent race form"],
     ["qualifying", "Qualifying performance"],
     ["circuitHistory", "Circuit history"],
 ];
+
+/* Every status the backend can send for a dataAvailability entry, and how
+   to show it — "pending"/"limited" are genuine states, not a lesser
+   version of "unavailable": pending means the data hasn't happened yet,
+   limited means the source only partially covers that topic. */
+const STATUS_META = {
+    available: { label: "Available", className: "pr-status--available", Icon: CheckCircle2 },
+    pending: { label: "Pending", className: "pr-status--pending", Icon: Clock },
+    limited: { label: "Limited", className: "pr-status--limited", Icon: Info },
+    unavailable: { label: "Unavailable", className: "pr-status--unavailable", Icon: Circle },
+};
+
+function StatusBadge({ status }) {
+    const meta = STATUS_META[status] ?? STATUS_META.unavailable;
+    return (
+        <span className={`pr-status ${meta.className}`}>
+            <meta.Icon size={13} aria-hidden="true" />
+            {meta.label}
+        </span>
+    );
+}
 
 function scoreLabel(score) {
     if (score === null || score === undefined) return "—";
@@ -357,16 +379,13 @@ function ModelInfo({ model, stage, generatedAt, driverCount }) {
 }
 
 function DataUsed({ dataAvailability }) {
-    const unavailable = [
-        dataAvailability?.weather === false ? "Weather" : null,
-        dataAvailability?.tyreStrategy === false ? "Tyre strategy" : null,
-    ].filter(Boolean);
+    const isAvailable = (key) => dataAvailability?.[key]?.status === "available";
 
     return (
         <div className="pr-datalist">
             {DATA_USED_ROWS.map(([key, label]) => (
-                <div className={`pr-data-row${dataAvailability?.[key] ? "" : " pr-data-row--off"}`} key={key}>
-                    <span className="pr-data-mark" aria-hidden="true">{dataAvailability?.[key] ? "✓" : "○"}</span>
+                <div className={`pr-data-row${isAvailable(key) ? "" : " pr-data-row--off"}`} key={key}>
+                    <span className="pr-data-mark" aria-hidden="true">{isAvailable(key) ? "✓" : "○"}</span>
                     {label}
                 </div>
             ))}
@@ -374,41 +393,64 @@ function DataUsed({ dataAvailability }) {
                 <span className="pr-data-mark" aria-hidden="true">✓</span>
                 Constructor performance
             </div>
-            {unavailable.map((label) => (
-                <div className="pr-data-row pr-data-row--off" key={label}>
-                    <span className="pr-data-mark" aria-hidden="true">○</span>
-                    {label}
-                </div>
-            ))}
         </div>
     );
 }
 
-function DataAvailabilityTable({ dataAvailability }) {
-    if (!dataAvailability) return null;
-    const labels = {
-        historicalData: "Historical data",
-        historicalStandings: "Historical data",
-        currentSeasonData: "Current season",
-        qualifying: "Qualifying",
-        circuitHistory: "Circuit history",
-        weather: "Weather",
-        tyreStrategy: "Tyre strategy",
-    };
-    const seen = new Set();
-    const rows = Object.entries(dataAvailability).filter(([key]) => {
-        const label = labels[key];
-        if (!label || seen.has(label)) return false;
-        seen.add(label);
-        return true;
-    });
+const AVAILABILITY_LABELS = {
+    historicalStandings: "Historical data",
+    currentSeasonData: "Current season",
+    circuitHistory: "Circuit history",
+    qualifying: "Qualifying",
+    weatherForecast: "Weather forecast",
+    pitStopStrategy: "Pit-stop strategy",
+    tyreCompounds: "Tyre compounds",
+};
+
+const WEATHER_CONDITIONS = {
+    0: "Clear sky", 1: "Mostly clear", 2: "Partly cloudy", 3: "Overcast",
+    45: "Fog", 48: "Fog", 51: "Drizzle", 53: "Drizzle", 55: "Drizzle",
+    61: "Rain", 63: "Rain", 65: "Heavy rain", 71: "Snow", 73: "Snow", 75: "Heavy snow",
+    80: "Rain showers", 81: "Rain showers", 82: "Violent showers",
+    95: "Thunderstorm", 96: "Thunderstorm", 99: "Thunderstorm",
+};
+
+/* Forecast for the upcoming race session — explicitly labeled as such so
+   it's never confused with the Live Race page's live-session weather
+   feed, which this page has nothing to do with. */
+function WeatherForecastDetail({ weather }) {
+    if (!weather) return null;
+    const condition = WEATHER_CONDITIONS[weather.weatherCode] ?? null;
+    const appliesTo = weather.forecastFor
+        ? new Date(weather.forecastFor).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+        : null;
 
     return (
-        <dl className="pr-kv">
-            {rows.map(([key, value]) => (
+        <div className="pr-forecast">
+            <span className="pr-forecast-label">FORECAST{appliesTo ? ` · ${appliesTo}` : ""}</span>
+            <div className="pr-forecast-stats">
+                {condition && <span className="pr-forecast-stat"><CloudSun size={13} aria-hidden="true" />{condition}</span>}
+                {weather.airTemperature != null && <span className="pr-forecast-stat pr-mono"><Thermometer size={13} aria-hidden="true" />{Math.round(weather.airTemperature)}°C</span>}
+                {weather.precipitationProbability != null && <span className="pr-forecast-stat pr-mono"><Droplets size={13} aria-hidden="true" />{weather.precipitationProbability}%</span>}
+                {weather.windSpeed != null && <span className="pr-forecast-stat pr-mono"><Wind size={13} aria-hidden="true" />{Math.round(weather.windSpeed)} km/h</span>}
+            </div>
+        </div>
+    );
+}
+
+function DataAvailabilityTable({ dataAvailability, weather }) {
+    if (!dataAvailability) return null;
+    const rows = Object.entries(dataAvailability).filter(([key]) => AVAILABILITY_LABELS[key]);
+
+    return (
+        <dl className="pr-kv pr-kv--availability">
+            {rows.map(([key, entry]) => (
                 <div className="pr-kv-row" key={key}>
-                    <dt>{labels[key]}</dt>
-                    <dd className={value ? "pr-avail-yes" : "pr-avail-no"}>{value ? "Available" : "Unavailable"}</dd>
+                    <dt>{AVAILABILITY_LABELS[key]}</dt>
+                    <dd>
+                        <StatusBadge status={entry?.status} />
+                        {key === "weatherForecast" && entry?.status === "available" && <WeatherForecastDetail weather={weather} />}
+                    </dd>
                 </div>
             ))}
         </dl>
@@ -631,7 +673,7 @@ function Predictor() {
         );
     }
 
-    const { race, stage, generatedAt, model, dataAvailability, predictions, limitations } = data;
+    const { race, stage, generatedAt, model, dataAvailability, weather, predictions, limitations } = data;
     const winner = predictions?.[0] ?? null;
 
     return (
@@ -658,7 +700,7 @@ function Predictor() {
                     </Panel>
                 </div>
                 <Panel title="Data Availability">
-                    <DataAvailabilityTable dataAvailability={dataAvailability} />
+                    <DataAvailabilityTable dataAvailability={dataAvailability} weather={weather} />
                 </Panel>
                 <p className="pr-disclaimer">
                     Predictions are model estimates based on available historical and race-weekend data. They are not guaranteed race outcomes.
