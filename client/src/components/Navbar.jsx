@@ -6,6 +6,7 @@ const PRIMARY_LINKS = [
     { to: "/grandprixdashboard", label: "Race Weekend" },
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Constructors" },
+    { to: "/predictor", label: "Predictor" },
     { to: "/news", label: "News" },
 ];
 
