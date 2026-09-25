@@ -7,7 +7,13 @@ const getNews = async (req, res) => {
             id: index + 1,
             title: article.title,
             description: article.description,
-            image: article.urlToImage || "https://via.placeholder.com/800x450?text=Formula+1+News",
+            // via.placeholder.com (the previous fallback here) is dead —
+            // requests to it just hang instead of failing fast, which made
+            // any article without a real image look broken rather than
+            // triggering the frontend's own designed fallback UI. Returning
+            // null lets both NewsPage.jsx's ArticleImage and the homepage's
+            // NewsThumb show their real, instant, no-network fallback state.
+            image: article.urlToImage || null,
             url: article.url,
             publishedAt: article.publishedAt,
             source: article.source.name,
