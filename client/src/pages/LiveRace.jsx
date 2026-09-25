@@ -978,8 +978,7 @@ function LiveTimingTable({ drivers }) {
                             {cell(d.driverNumber, "position", d.position, "lr-timing-pos")}
                             <td>
                                 <span className="lr-driver-chip">
-                                    <span className="lr-team-dot" style={{ background: d.teamColor ?? "var(--border-strong)" }} aria-hidden="true" />
-                                    <span className="lr-driver-code lr-mono">{d.driverCode ?? d.driverNumber}</span>
+                                    <DriverAvatar code={d.driverCode ?? String(d.driverNumber)} color={d.teamColor} size="sm" />
                                     <span className="lr-driver-name">{d.name ?? `#${d.driverNumber}`}</span>
                                 </span>
                             </td>
@@ -1114,12 +1113,24 @@ function TeamFocus({ drivers, season }) {
             {teamDrivers.length === 0 ? (
                 <EmptyState title="No drivers reporting" description="This team has no live data yet." />
             ) : (
+                <>
+                <div className="lr-team-compare-portraits" style={{ "--lr-team-cols": teamDrivers.length }}>
+                    {teamDrivers.map((d) => (
+                        <DriverPortrait
+                            key={d.driverNumber}
+                            driverId={DRIVER_CODE_TO_ID[d.driverCode]}
+                            fullName={d.name}
+                            frameClassName="lr-driver-card-photo lr-team-compare-photo"
+                            fallbackClassName="lr-driver-card-photo-fallback"
+                            fallbackIcon={<DriverAvatar code={d.driverCode ?? String(d.driverNumber)} color={d.teamColor} size="lg" />}
+                        />
+                    ))}
+                </div>
                 <div className="lr-team-compare" style={{ "--lr-team-cols": teamDrivers.length }}>
                     <div className="lr-team-compare-row lr-team-compare-head">
                         {teamDrivers.map((d) => (
                             <div className="lr-team-compare-driver" key={d.driverNumber}>
-                                <span className="lr-team-dot" style={{ background: d.teamColor ?? "var(--border-strong)" }} aria-hidden="true" />
-                                <span className="lr-driver-code lr-mono">{d.driverCode ?? d.driverNumber}</span>
+                                <DriverAvatar code={d.driverCode ?? String(d.driverNumber)} color={d.teamColor} size="sm" />
                                 <span className="lr-mono lr-team-compare-pos">P{d.position ?? "—"}</span>
                             </div>
                         ))}
@@ -1135,6 +1146,7 @@ function TeamFocus({ drivers, season }) {
                         </div>
                     ))}
                 </div>
+                </>
             )}
         </div>
     );
@@ -1161,8 +1173,11 @@ function BattlesSection({ drivers }) {
     if (battles.length === 0) {
         return (
             <div className="lr-compact-empty">
-                <span className="lr-compact-empty-title">NO ACTIVE BATTLES</span>
-                <span className="lr-compact-empty-desc">No drivers currently within 1 second.</span>
+                <Swords size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO ACTIVE BATTLES</span>
+                    <span className="lr-compact-empty-desc">No drivers currently within 1 second.</span>
+                </div>
             </div>
         );
     }
@@ -1174,7 +1189,7 @@ function BattlesSection({ drivers }) {
                     <span className="lr-battle-heading">BATTLE FOR P{car.position}</span>
 
                     <div className="lr-battle-side">
-                        <span className="lr-team-dot" style={{ background: ahead.teamColor ?? "var(--border-strong)" }} aria-hidden="true" />
+                        <DriverAvatar code={ahead.driverCode} color={ahead.teamColor} />
                         <div className="lr-battle-side-id">
                             <span className="lr-battle-side-name">{ahead.name ?? ahead.driverCode}</span>
                             <span className="lr-battle-side-team">{ahead.team ?? "—"}</span>
@@ -1189,7 +1204,7 @@ function BattlesSection({ drivers }) {
                     </div>
 
                     <div className="lr-battle-side">
-                        <span className="lr-team-dot" style={{ background: car.teamColor ?? "var(--border-strong)" }} aria-hidden="true" />
+                        <DriverAvatar code={car.driverCode} color={car.teamColor} />
                         <div className="lr-battle-side-id">
                             <span className="lr-battle-side-name">{car.name ?? car.driverCode}</span>
                             <span className="lr-battle-side-team">{car.team ?? "—"}</span>
@@ -1307,16 +1322,22 @@ function RaceControlSection({ events }) {
     if (events.length === 0) {
         return (
             <div className="lr-compact-empty">
-                <span className="lr-compact-empty-title">NO EVENTS YET</span>
-                <span className="lr-compact-empty-desc">Flags, penalties and incidents will appear here.</span>
+                <AlertTriangle size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO EVENTS YET</span>
+                    <span className="lr-compact-empty-desc">Flags, penalties and incidents will appear here.</span>
+                </div>
             </div>
         );
     }
 
     return (
         <ul className="lr-feed">
-            {newestFirst.map((e, i) => (
-                <li className={`lr-feed-item${i === 0 && isNew ? " lr-feed-item--new" : ""}`} key={e.id}>
+            {newestFirst.map((e, i) => {
+                const t = (e.type || "").toUpperCase();
+                const serious = t.includes("RED") || t.includes("SC") || t.includes("VSC") || t.includes("PENALTY") || t.includes("INCIDENT");
+                return (
+                <li className={`lr-feed-item${i === 0 && isNew ? " lr-feed-item--new" : ""}${serious ? " lr-feed-item--serious" : ""}`} key={e.id}>
                     {raceControlIcon(e.type)}
                     <span className="lr-feed-time lr-mono">
                         {e.timestamp ? new Date(`${e.timestamp}Z`).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
@@ -1325,7 +1346,8 @@ function RaceControlSection({ events }) {
                         {e.type && <b>{e.type.replace(/_/g, " ")}</b>} {e.message}
                     </span>
                 </li>
-            ))}
+                );
+            })}
         </ul>
     );
 }
@@ -1336,8 +1358,11 @@ function TeamRadioSection({ teamRadio, drivers }) {
     if (teamRadio.length === 0) {
         return (
             <div className="lr-compact-empty">
-                <span className="lr-compact-empty-title">NO RADIO YET</span>
-                <span className="lr-compact-empty-desc">Clips appear here as they're captured.</span>
+                <RadioIcon size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO RADIO YET</span>
+                    <span className="lr-compact-empty-desc">Clips appear here as they're captured.</span>
+                </div>
             </div>
         );
     }
@@ -1349,7 +1374,7 @@ function TeamRadioSection({ teamRadio, drivers }) {
                 return (
                     <li className="lr-radio-item" key={`${r.driverNumber}-${r.timestamp}-${i}`}>
                         <div className="lr-radio-meta">
-                            <RadioIcon size={13} aria-hidden="true" />
+                            <DriverAvatar code={driver?.driverCode ?? (r.driverNumber ? String(r.driverNumber) : "?")} color={driver?.teamColor} size="sm" />
                             <span className="lr-radio-driver">{driver?.name ?? (r.driverNumber ? `#${r.driverNumber}` : "Unknown")}</span>
                             <span className="lr-radio-team">{r.team ?? ""}</span>
                             {i === 0 && <span className="lr-radio-new">NEW</span>}
@@ -1357,7 +1382,9 @@ function TeamRadioSection({ teamRadio, drivers }) {
                         {r.recordingUrl ? (
                             <audio controls preload="none" src={r.recordingUrl} className="lr-radio-player" />
                         ) : (
-                            <span className="lr-radio-unavailable">Recording unavailable</span>
+                            <span className="lr-radio-unavailable">
+                                <RadioIcon size={12} aria-hidden="true" /> Recording unavailable
+                            </span>
                         )}
                     </li>
                 );
@@ -1462,38 +1489,40 @@ function LiveRace() {
             <CompactHeader data={data} />
             <main className="lr-main">
                 <div className="lr-grid lr-grid--primary">
-                    <Panel title="Live Timing" className="lr-panel--primary">
+                    <Panel title={<><Timer size={13} aria-hidden="true" />Live Timing</>} className="lr-panel--primary">
                         <LiveTimingTable drivers={drivers} />
                     </Panel>
-                    <Panel title="Battles" className="lr-panel--battles">
+                    <Panel title={<><Swords size={13} aria-hidden="true" />Battles</>} className="lr-panel--battles">
                         <BattlesSection drivers={drivers} />
                     </Panel>
                 </div>
 
-                <div className="lr-grid lr-grid--triple">
-                    <Panel title="Session Pulse">
-                        <SessionPulse data={data} drivers={drivers} />
-                    </Panel>
-                    <Panel title="Team Focus">
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
                         <TeamFocus drivers={drivers} season={data.race?.season} />
                     </Panel>
-                    <Panel title="Tyres & Strategy">
+                    <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
+                        <SessionPulse data={data} drivers={drivers} />
+                    </Panel>
+                </div>
+
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />Tyres &amp; Strategy</>}>
                         <TyreStrategySection drivers={drivers} />
                     </Panel>
-                </div>
-
-                <div className="lr-grid lr-grid--events">
-                    <Panel title="Race Control">
+                    <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
                         <RaceControlSection events={data.events ?? []} />
                     </Panel>
-                    <Panel title="Weather">
-                        <WeatherSection weather={data.weather} />
-                    </Panel>
                 </div>
 
-                <Panel title="Team Radio" className="lr-panel--full">
-                    <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
-                </Panel>
+                <div className="lr-grid lr-grid--4-8">
+                    <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
+                        <WeatherSection weather={data.weather} />
+                    </Panel>
+                    <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
+                        <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
+                    </Panel>
+                </div>
             </main>
         </div>
     );
