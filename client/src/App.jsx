@@ -21,6 +21,7 @@ import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
 import NewsPage from "./pages/NewsPage";
 import LiveRace from "./pages/LiveRace";
+import Predictor from "./pages/Predictor";
 import "./App.css";
 
 
@@ -37,6 +38,7 @@ function AppShell() {
       <Routes>
         <Route path="/" element ={<LandingPage/>}/>
         <Route path="/live" element={<LiveRace/>}/>
+        <Route path="/predictor" element={<Predictor/>}/>
         <Route path="/drivers" element={<Drivers/>}/>
         <Route path="/drivers/:year/:id" element={<DriverDetails/>}/>
         <Route path="/teams" element={<Teams />} />
