@@ -41,6 +41,15 @@ const SESSION_SHORT_LABELS = {
 
 const COMPOUND_LABELS = { SOFT: "S", MEDIUM: "M", HARD: "H", INTERMEDIATE: "I", WET: "W" };
 
+// Pit-stop counts are a race concept — meaningless (always 0) during a
+// qualifying/practice segment, so the timing table and session summary
+// hide that column/stat entirely for those session types rather than
+// showing a misleading "0".
+const RACE_LIKE_SESSIONS = new Set(["race", "sprint"]);
+function isRaceLikeSession(sessionType) {
+    return RACE_LIKE_SESSIONS.has(sessionType);
+}
+
 function sessionShortLabel(type) {
     return SESSION_SHORT_LABELS[type] ?? (type ? type.toUpperCase() : "SESSION");
 }
@@ -1091,13 +1100,14 @@ function RaceHub({ race }) {
 
 /* ── Live timing (dominant section) ───────────────────────────────── */
 
-function LiveTimingTable({ drivers }) {
+function LiveTimingTable({ drivers, sessionType }) {
     const flashKeys = useFlashTracker(drivers);
 
     if (drivers.length === 0) {
         return <EmptyState title="No timing data yet" description="Driver timing will appear as soon as the session reports it." />;
     }
     const sorted = [...drivers].sort((a, b) => (a.position ?? 99) - (b.position ?? 99));
+    const showStops = isRaceLikeSession(sessionType);
 
     const cell = (driverNumber, field, value, className = "") => (
         <td className={`lr-mono${className ? ` ${className}` : ""}`}>
@@ -1119,7 +1129,7 @@ function LiveTimingTable({ drivers }) {
                         <th>Age</th>
                         <th>Last Lap</th>
                         <th>Best Lap</th>
-                        <th>Stops</th>
+                        {showStops && <th>Stops</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -1145,7 +1155,7 @@ function LiveTimingTable({ drivers }) {
                             <td className="lr-mono">{d.tyreAge ?? "—"}</td>
                             {cell(d.driverNumber, "lastLap", d.lastLap)}
                             {cell(d.driverNumber, "bestLap", d.bestLap)}
-                            <td className="lr-mono">{d.pitStops}</td>
+                            {showStops && <td className="lr-mono">{d.pitStops}</td>}
                         </tr>
                     ))}
                 </tbody>
