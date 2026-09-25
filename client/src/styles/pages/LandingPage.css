@@ -261,16 +261,17 @@
 .platform-intro { max-width: 640px; margin-bottom: var(--space-7); }
 
 /* ── The platform visual — the real product image (client/public/
-   homepage.png, a portrait-oriented shot), framed in a light Cararra
-   panel and sized to its own aspect ratio so object-fit: cover never
-   has to crop it aggressively. ── */
+   homepage.png), presented as a wide horizontal editorial banner. The
+   source photo itself is portrait-oriented, so a wide container +
+   object-fit: cover deliberately shows a cropped horizontal band of it
+   (the standard treatment for a tall photo used as a hero banner) —
+   that crop is intentional, not a bug. ── */
 
 .platform-visual {
     position: relative;
     display: block;
     width: 100%;
-    max-width: 480px;
-    aspect-ratio: 744 / 1447;
+    aspect-ratio: 16 / 7;
     background: var(--surface-light-1);
     border-radius: var(--radius-xl);
     overflow: hidden;
@@ -906,7 +907,7 @@
 
     .platform-row { grid-template-columns: 32px 1fr 18px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
-    .platform-visual { max-width: 300px; }
+    .platform-visual { aspect-ratio: 4 / 3; }
     .lp-explore-grid { grid-template-columns: 1fr; }
 
     .lp-invite, .lp-radio { left: var(--space-3); right: var(--space-3); width: auto; }
