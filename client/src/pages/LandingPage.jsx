@@ -494,13 +494,15 @@ function ForYouTag() {
    the featured story and the News page both use — this was previously
    just never rendered here at all, not a bad data source; a neutral
    surface fills in only if the image genuinely has none or fails to load. */
-function NewsThumb({ article }) {
+function NewsThumb({ article, className }) {
     const [failed, setFailed] = useState(false);
     const hasImage = Boolean(article.image) && !failed;
     return (
-        <span className={`news-item-img${hasImage ? "" : " news-item-img--missing"}`} aria-hidden="true">
-            {hasImage && (
+        <span className={`news-item-img${hasImage ? "" : " news-item-img--missing"}${className ? ` ${className}` : ""}`} aria-hidden="true">
+            {hasImage ? (
                 <img src={article.image} alt="" loading="lazy" onError={() => setFailed(true)} />
+            ) : (
+                <span className="news-item-img-mark">FROM THE PADDOCK</span>
             )}
         </span>
     );
@@ -532,14 +534,7 @@ function PaddockNews({ articles, favs, error }) {
 
             <div className="news-grid">
                 <a href={featured.url} target="_blank" rel="noreferrer" className="news-featured">
-                    <div className="news-featured-img">
-                        <img
-                            src={featured.image}
-                            alt=""
-                            loading="lazy"
-                            onError={(e) => { e.target.closest("div").classList.add("is-imgless"); }}
-                        />
-                    </div>
+                    <NewsThumb article={featured} className="news-featured-img" />
                     <div className="news-featured-body">
                         <p className="news-meta">
                             {featured.source?.toUpperCase()} · {formatArticleTime(featured.publishedAt)}
@@ -554,13 +549,15 @@ function PaddockNews({ articles, favs, error }) {
                 <div className="news-side">
                     {supporting.map((article) => (
                         <a key={article.id} href={article.url} target="_blank" rel="noreferrer" className="news-item">
-                            <NewsThumb article={article} />
+                            <NewsThumb article={article} className="news-item-img--large" />
                             <div className="news-item-body">
                                 <p className="news-meta">
                                     {article.source?.toUpperCase()} · {formatArticleTime(article.publishedAt)}
                                     {articleIsForYou(article, favs) && <ForYouTag />}
                                 </p>
                                 <h3 className="news-item-title">{article.title}</h3>
+                                {article.description && <p className="news-item-desc">{article.description}</p>}
+                                <span className="news-readmore">READ STORY →</span>
                             </div>
                         </a>
                     ))}
