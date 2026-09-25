@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
+import { positionsGained } from "../utils/landingHelpers";
 import "../styles/pages/LiveRace.css";
 import { API_BASE_URL as API } from "../config/api";
 
@@ -485,6 +486,33 @@ function NextRaceWeatherForecast() {
 
 /* ── 6. Last Grand Prix summary ───────────────────────────────────── */
 
+const NON_FINISH_CODES = new Set(["R", "D", "W", "N", "E"]);
+const NON_FINISH_LABELS = { R: "Retired", D: "DSQ", W: "DNS", N: "Not Classified", E: "Excluded" };
+
+function computeRaceHighlights(latest, pitStops) {
+    const results = latest.Results || [];
+
+    let biggestGain = null;
+    let biggestLoss = null;
+    for (const r of results) {
+        const gain = positionsGained(r);
+        if (gain === null) continue;
+        if (gain > 0 && (!biggestGain || gain > positionsGained(biggestGain))) biggestGain = r;
+        if (gain < 0 && (!biggestLoss || gain < positionsGained(biggestLoss))) biggestLoss = r;
+    }
+
+    const nonFinishers = results.filter((r) => NON_FINISH_CODES.has(r.positionText));
+
+    return {
+        biggestGain,
+        biggestLoss,
+        nonFinishers,
+        classifiedCount: results.length - nonFinishers.length,
+        totalEntrants: results.length,
+        totalPitStops: pitStops.length,
+    };
+}
+
 function LastGrandPrixSummary({ hub }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
     const latest = hub.latest;
@@ -492,6 +520,26 @@ function LastGrandPrixSummary({ hub }) {
 
     const podium = latest.Results.slice(0, 3);
     const fastestLap = latest.Results.find((r) => r.FastestLap?.rank === "1");
+    const highlights = computeRaceHighlights(latest, hub.pitStops);
+
+    const items = [
+        highlights.biggestGain && {
+            label: "Biggest Gain", driver: highlights.biggestGain.Driver,
+            value: `+${positionsGained(highlights.biggestGain)} positions`, sub: `P${highlights.biggestGain.grid} → P${highlights.biggestGain.position}`,
+        },
+        highlights.biggestLoss && {
+            label: "Biggest Loss", driver: highlights.biggestLoss.Driver,
+            value: `${positionsGained(highlights.biggestLoss)} positions`, sub: `P${highlights.biggestLoss.grid} → P${highlights.biggestLoss.position}`,
+        },
+        highlights.totalPitStops > 0 && {
+            label: "Pit Stops", driver: null,
+            value: highlights.totalPitStops, sub: "across the field",
+        },
+        {
+            label: "Classified", driver: null,
+            value: `${highlights.classifiedCount} / ${highlights.totalEntrants}`, sub: "finishers",
+        },
+    ].filter(Boolean);
 
     return (
         <div className="lr-lastgp">
@@ -518,10 +566,25 @@ function LastGrandPrixSummary({ hub }) {
             <div className="lr-next-session-divider" />
             <div className="lr-lastgp-highlights">
                 <span className="lr-panel-title">Key Highlights</span>
-                <p className="lr-compact-empty-desc">
-                    Detailed incident/highlight analysis isn't available from the current data source — only final classification and fastest lap are. Full race analysis is planned for a future phase.
-                </p>
-                <Button variant="secondary" size="sm" disabled aria-disabled="true">Full Race Analysis — Coming Soon</Button>
+                <div className="lr-highlight-grid">
+                    {items.map((item) => (
+                        <div className="lr-highlight-item" key={item.label}>
+                            <span className="lr-highlight-label">{item.label}</span>
+                            {item.driver && <span className="lr-highlight-driver">{item.driver.givenName} {item.driver.familyName}</span>}
+                            <span className="lr-mono lr-highlight-value">{item.value}</span>
+                            <span className="lr-highlight-sub">{item.sub}</span>
+                        </div>
+                    ))}
+                </div>
+                {highlights.nonFinishers.length > 0 && (
+                    <p className="lr-highlight-dnf">
+                        <span className="lr-highlight-label">Did Not Finish</span>{" "}
+                        {highlights.nonFinishers.map((r) => `${r.Driver.familyName} (${NON_FINISH_LABELS[r.positionText] ?? r.positionText})`).join(", ")}
+                    </p>
+                )}
+                <Button variant="secondary" size="sm" to={`/grandprixdashboard/${latest.season}/${latest.round}`} arrow>
+                    View Full Race Results
+                </Button>
             </div>
         </div>
     );

@@ -586,7 +586,27 @@
 .lr-lastgp-driver { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
 .lr-lastgp-team { font-size: var(--text-micro); color: var(--lr-text-secondary); }
 
-.lr-lastgp-highlights { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+.lr-lastgp-highlights { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; width: 100%; }
+
+.lr-highlight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); width: 100%; }
+
+.lr-highlight-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+}
+
+.lr-highlight-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.lr-highlight-driver { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
+.lr-highlight-value { font-size: var(--text-body); font-weight: 700; color: var(--accent-text); }
+.lr-highlight-sub { font-size: var(--text-micro); color: var(--lr-text-secondary); }
+
+.lr-highlight-dnf { font-size: var(--text-small); color: var(--lr-text-secondary); line-height: 1.5; }
+.lr-highlight-dnf .lr-highlight-label { display: inline; margin-right: 6px; }
 
 /* ── Strategy ──────────────────────────────────────────────────────── */
 
