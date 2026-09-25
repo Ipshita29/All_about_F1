@@ -267,11 +267,13 @@
 
 .platform-visual {
     position: relative;
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 744 / 1447;
     background: var(--surface-light-1);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    max-width: 420px;
-    aspect-ratio: 744 / 1447;
     margin: 0 auto var(--space-8);
     box-shadow: var(--shadow-sm);
 }
