@@ -1,8 +1,12 @@
+const { cached, TTL } = require("../services/jolpicaCache");
+
 const getGrandprix = async (req, res) => {
     const {year}=req.params;
     try {
-        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}.json`)
-        const data = await response.json();
+        const data = await cached(`schedule:${year}`, TTL.SCHEDULE, async () => {
+            const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}.json`)
+            return response.json();
+        });
         res.json(
             data.MRData.RaceTable.Races
         )
@@ -14,8 +18,10 @@ const getGrandprix = async (req, res) => {
 const getRaceResults = async (req,res)=>{
     try{
         const {year,round} = req.params;
-        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/${round}/results.json`)
-        const data = await response.json();
+        const data = await cached(`results:${year}:${round}`, TTL.HISTORICAL, async () => {
+            const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/${round}/results.json`)
+            return response.json();
+        });
         res.json(
             data.MRData.RaceTable.Races[0].Results
         )
@@ -30,11 +36,12 @@ const getQualifyingResults = async (req, res) => {
     try {
         const { year, round } = req.params;
 
-        const response = await fetch(
-            `https://api.jolpi.ca/ergast/f1/${year}/${round}/qualifying.json`
-        );
-
-        const data = await response.json();
+        const data = await cached(`qualifying:${year}:${round}`, TTL.HISTORICAL, async () => {
+            const response = await fetch(
+                `https://api.jolpi.ca/ergast/f1/${year}/${round}/qualifying.json`
+            );
+            return response.json();
+        });
 
         res.json(
             data.MRData.RaceTable.Races[0]?.QualifyingResults || []
@@ -49,10 +56,12 @@ const getQualifyingResults = async (req, res) => {
 const getPitStops = async (req, res) => {
     try {
         const { year, round } = req.params;
-        const response = await fetch(
-            `https://api.jolpi.ca/ergast/f1/${year}/${round}/pitstops.json?limit=100`
-        );
-        const data = await response.json();
+        const data = await cached(`pitstops:${year}:${round}`, TTL.HISTORICAL, async () => {
+            const response = await fetch(
+                `https://api.jolpi.ca/ergast/f1/${year}/${round}/pitstops.json?limit=100`
+            );
+            return response.json();
+        });
         res.json(
             data.MRData.RaceTable.Races[0]?.PitStops || []
         );
@@ -65,11 +74,12 @@ const getPitStops = async (req, res) => {
 
 const getLatestRace = async (req, res) => {
     try {
-        const response = await fetch(
-            "https://api.jolpi.ca/ergast/f1/current/last/results.json"
-        );
-
-        const data = await response.json();
+        const data = await cached("latest", TTL.LATEST, async () => {
+            const response = await fetch(
+                "https://api.jolpi.ca/ergast/f1/current/last/results.json"
+            );
+            return response.json();
+        });
 
         res.json(
             data.MRData.RaceTable.Races[0]
