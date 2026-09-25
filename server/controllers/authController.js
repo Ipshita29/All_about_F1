@@ -33,7 +33,7 @@ const signup = async (req,res)=>{
         })
     }
     catch(e){
-        console.log(e)
+        console.error(e)
         return res.status(401).json({
             message: "Signup failed"
         })
@@ -60,7 +60,7 @@ const login = async (req,res)=>{
         res.json({token})
     }
     catch(e){
-        console.log(e)
+        console.error(e)
         return res.status(401).json({
             message: "Login failed"
         })

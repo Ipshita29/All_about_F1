@@ -15,7 +15,7 @@ const authMiddleware = (req,res,next)=>{
         next()
     }
     catch(e){
-        console.log(e)
+        console.error(e)
         return res.status(401).json({
             success:false,
             message: "Invalid token"

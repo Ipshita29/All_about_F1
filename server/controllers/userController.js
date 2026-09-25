@@ -49,7 +49,7 @@ const updateProfile = async (req, res) => {
             favoriteDriver: user.favoriteDriver,
         });
     } catch (e) {
-        console.log(e);
+        console.error(e);
         res.status(500).json({ message: "Could not update profile" });
     }
 };
@@ -68,7 +68,7 @@ const getProfile = async (req, res) => {
             favoriteDriver: user.favoriteDriver,
         });
     } catch (e) {
-        console.log(e);
+        console.error(e);
         res.status(500).json({ message: "Could not load profile" });
     }
 };
