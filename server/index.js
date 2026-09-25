@@ -23,6 +23,10 @@ app.get("/",(req,res)=>{
     res.send("Hello F1 fan. This is the landing page.")
 })
 
+app.get("/api/health",(req,res)=>{
+    res.json({ status: "ok" })
+})
+
 app.get("/profile",authMiddleware,(req,res)=>{
         res.json(req.user);
     }
