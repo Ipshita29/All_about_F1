@@ -919,6 +919,22 @@
 
 .lr-strategy-subtitle { margin-top: var(--space-4); }
 
+/* Pit Stop Distribution — compact stat tiles, real stop counts only. */
+.lr-pitdist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: var(--space-2); }
+
+.lr-pitdist-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.lr-pitdist-value { font-size: var(--text-h3); font-weight: 800; color: var(--accent-text); }
+.lr-pitdist-label { font-size: var(--text-micro); color: var(--lr-text-secondary); }
+
 .lr-strategy-distribution { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 .lr-strategy-tag {
