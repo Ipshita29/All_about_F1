@@ -153,6 +153,42 @@ function strOrNull(v) {
 // opens that channel up, or a token is added later.
 const CAR_DATA_CHANNELS = { rpm: "0", speed: "2", gear: "3", throttle: "4", brake: "5", drs: "45" };
 
+/*
+ * Gap-to-leader / interval-to-car-ahead live at two DIFFERENT places in
+ * TimingData.Lines[num] depending on session type — confirmed by directly
+ * inspecting the raw feed during a live qualifying session:
+ *
+ *   RACE / SPRINT:  top-level `GapToLeader` (string) and
+ *                    `IntervalToPositionAhead.Value`.
+ *   QUALIFYING / PRACTICE: no top-level gap/interval at all — instead a
+ *   `Stats` array, one entry per session segment (Q1/Q2/Q3, or the single
+ *   practice segment), each with `TimeDiffToFastest` and
+ *   `TimeDifftoPositionAhead` (yes, that capitalization — it's what the
+ *   feed actually sends). Reading only the race-shaped fields is why gap/
+ *   interval always showed "-" in qualifying even with a fully live
+ *   connection; this checks both shapes rather than assuming one.
+ */
+function latestStatsEntry(stats) {
+    if (!Array.isArray(stats) || stats.length === 0) return null;
+    for (let i = stats.length - 1; i >= 0; i--) {
+        const entry = stats[i];
+        if (entry && (entry.TimeDiffToFastest || entry.TimeDifftoPositionAhead)) return entry;
+    }
+    return stats[stats.length - 1] || null;
+}
+
+function timingGapToLeader(timing) {
+    const raceField = strOrNull(timing?.GapToLeader);
+    if (raceField !== null) return raceField;
+    return strOrNull(latestStatsEntry(timing?.Stats)?.TimeDiffToFastest);
+}
+
+function timingGapToAhead(timing) {
+    const raceField = strOrNull(timing?.IntervalToPositionAhead?.Value);
+    if (raceField !== null) return raceField;
+    return strOrNull(latestStatsEntry(timing?.Stats)?.TimeDifftoPositionAhead);
+}
+
 function normalizeDrivers(state) {
     const numbers = new Set([
         ...Object.keys(state.driverList),
@@ -181,8 +217,8 @@ function normalizeDrivers(state) {
             team: info?.TeamName ?? null,
             teamColor: info?.TeamColour ? `#${info.TeamColour}` : null,
             position: numOrNull(timing?.Position),
-            gapToLeader: strOrNull(timing?.TimeDiffToFastest),
-            gapToAhead: strOrNull(timing?.TimeDiffToPositionAhead),
+            gapToLeader: timingGapToLeader(timing),
+            gapToAhead: timingGapToAhead(timing),
             lastLap: strOrNull(timing?.LastLapTime?.Value),
             bestLap: strOrNull(stats?.PersonalBestLapTime?.Value ?? timing?.BestLapTime?.Value),
             currentTyre: currentStint?.Compound ?? null,
