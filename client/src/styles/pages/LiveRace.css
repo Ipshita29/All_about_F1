@@ -850,36 +850,31 @@
 
 .lr-lastgp-podium { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
 
+/* Compact, data-focused result cards — no photo area. Position + trophy/
+   timer mark, driver name as the headline, team as the supporting line. */
 .lr-lastgp-pos {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     background: rgba(25, 25, 25, 0.03);
     border: 1px solid var(--lr-light-border);
     border-radius: 10px;
-    padding: 12px;
-    overflow: hidden;
+    padding: 14px 16px;
 }
 
 .lr-lastgp-pos--p1 { border-color: var(--accent-border); background: var(--accent-dim); }
 
-.lr-lastgp-photo {
-    position: relative;
-    height: 92px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(25, 25, 25, 0.1), rgba(25, 25, 25, 0.02));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.lr-lastgp-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-.lr-lastgp-photo-fallback { color: var(--lr-light-text-3); }
+/* Fastest Lap gets its own subtle treatment — a chalk surface, distinct
+   from both the neutral P2/P3 cards and P1's red accent. */
+.lr-lastgp-pos--fl { background: var(--lr-light-2); border-color: var(--lr-light-border-strong); }
 
 .lr-lastgp-p { display: inline-flex; align-items: center; gap: 4px; color: var(--lr-light-text-2); font-weight: 800; font-size: var(--text-small); }
 .lr-lastgp-pos--p1 .lr-lastgp-p { color: var(--accent); }
-.lr-lastgp-driver { font-size: var(--text-small); font-weight: 700; color: var(--lr-light-text); }
-.lr-lastgp-team { font-size: var(--text-micro); color: var(--lr-light-text-3); }
+
+.lr-lastgp-driver { font-size: var(--text-body); font-weight: 700; color: var(--lr-light-text); line-height: 1.25; }
+
+.lr-lastgp-team { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--lr-light-text-3); }
+.lr-lastgp-team svg { flex-shrink: 0; opacity: 0.7; }
 
 .lr-lastgp-highlights { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; width: 100%; }
 

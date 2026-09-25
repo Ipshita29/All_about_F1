@@ -820,32 +820,14 @@ function LastGrandPrixSummary({ hub }) {
                     const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
                     return (
                         <div className={`lr-lastgp-pos${i === 0 ? " lr-lastgp-pos--p1" : ""}`} key={r.Driver.driverId}>
-                            <div className="lr-lastgp-photo">
-                                <DriverPortrait
-                                    driverId={r.Driver.driverId}
-                                    fullName={fullName}
-                                    frameClassName="lr-lastgp-photo"
-                                    fallbackClassName="lr-lastgp-photo-fallback"
-                                    fallbackIcon={<UserRound size={24} aria-hidden="true" />}
-                                />
-                            </div>
                             <span className="lr-lastgp-p">{i === 0 && <Trophy size={13} aria-hidden="true" />}P{i + 1}</span>
                             <span className="lr-lastgp-driver">{fullName}</span>
-                            <span className="lr-lastgp-team">{r.Constructor.name}</span>
+                            <span className="lr-lastgp-team"><Car size={11} aria-hidden="true" />{r.Constructor.name}</span>
                         </div>
                     );
                 })}
                 {fastestLap && (
-                    <div className="lr-lastgp-pos">
-                        <div className="lr-lastgp-photo">
-                            <DriverPortrait
-                                driverId={fastestLap.Driver.driverId}
-                                fullName={`${fastestLap.Driver.givenName} ${fastestLap.Driver.familyName}`}
-                                frameClassName="lr-lastgp-photo"
-                                fallbackClassName="lr-lastgp-photo-fallback"
-                                fallbackIcon={<Timer size={24} aria-hidden="true" />}
-                            />
-                        </div>
+                    <div className="lr-lastgp-pos lr-lastgp-pos--fl">
                         <span className="lr-lastgp-p"><Timer size={13} aria-hidden="true" />FL</span>
                         <span className="lr-lastgp-driver">{fastestLap.Driver.givenName} {fastestLap.Driver.familyName}</span>
                         <span className="lr-lastgp-team lr-mono">{fastestLap.FastestLap.Time.time}</span>
