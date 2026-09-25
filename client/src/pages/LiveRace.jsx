@@ -1395,10 +1395,25 @@ function StintPips({ count }) {
     );
 }
 
-function TyreStrategySection({ drivers }) {
+function TyreStrategySection({ drivers, sessionType }) {
     const withTyres = drivers.filter((d) => d.currentTyre);
+    const showStops = isRaceLikeSession(sessionType);
+
     if (withTyres.length === 0) {
-        return <EmptyState title="No tyre data yet" description="Stint and compound data will appear once drivers are on track." />;
+        // Drivers already being reported (position/name/team) means the
+        // session genuinely is live — "once drivers are on track" would be
+        // false in that case, so the copy only claims what's actually true.
+        return drivers.length > 0 ? (
+            <div className="lr-compact-empty">
+                <CircleDashed size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">TYRE DATA NOT REPORTED</span>
+                    <span className="lr-compact-empty-desc">Tyre information is not currently being reported for this session.</span>
+                </div>
+            </div>
+        ) : (
+            <EmptyState title="No tyre data yet" description="Stint and compound data will appear once drivers are on track." />
+        );
     }
     const sorted = [...withTyres].sort((a, b) => (a.position ?? 99) - (b.position ?? 99));
 
@@ -1406,7 +1421,10 @@ function TyreStrategySection({ drivers }) {
         <div className="lr-timing-scroll">
             <table className="lr-timing">
                 <thead>
-                    <tr><th>Driver</th><th>Compound</th><th>Age</th><th>Stint</th><th>Stops</th></tr>
+                    <tr>
+                        <th>Driver</th><th>Compound</th><th>Age</th><th>Stint</th>
+                        {showStops && <th>Stops</th>}
+                    </tr>
                 </thead>
                 <tbody>
                     {sorted.map((d) => (
@@ -1422,7 +1440,7 @@ function TyreStrategySection({ drivers }) {
                                 {d.stintNumber ?? "—"}
                                 <StintPips count={d.stintNumber} />
                             </td>
-                            <td className="lr-mono">{d.pitStops}</td>
+                            {showStops && <td className="lr-mono">{d.pitStops}</td>}
                         </tr>
                     ))}
                 </tbody>
