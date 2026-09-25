@@ -567,9 +567,7 @@
 
 .news-featured:hover { box-shadow: var(--shadow-md); color: var(--text-on-light-primary); }
 
-.news-featured-img { aspect-ratio: 16 / 9; background: var(--surface-light-3); overflow: hidden; }
-.news-featured-img img { width: 100%; height: 100%; object-fit: cover; }
-.news-featured-img.is-imgless { display: none; }
+.news-featured-img { aspect-ratio: 16 / 9; }
 
 .news-featured-body { padding: var(--space-6); }
 
@@ -605,37 +603,74 @@
 
 .news-readmore { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); }
 
-.news-side { display: flex; flex-direction: column; }
+.news-side { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; }
 
 .news-item {
     display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--border-on-light);
+    align-items: stretch;
+    gap: var(--space-4);
+    flex: 1;
+    padding: var(--space-4);
+    border: 1px solid var(--border-on-light);
+    border-radius: var(--radius-lg);
+    background: var(--surface-light-2);
     color: var(--text-on-light-primary);
+    transition: box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
 
-.news-item:hover { color: var(--accent); }
-.news-item:first-child { padding-top: 0; }
-.news-side .news-item:last-child { border-bottom: none; }
+.news-item:hover { box-shadow: var(--shadow-md); border-color: var(--accent-border); color: var(--text-on-light-primary); }
 
+/* Base image shell (also used by the featured story above) — a <span>
+   wrapping either a real <img> or the designed fallback mark below, so
+   the container always has real, predictable dimensions whether or not
+   an image loads. */
 .news-item-img {
     display: block;
+    position: relative;
     flex-shrink: 0;
-    width: 72px;
-    aspect-ratio: 4 / 3;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--surface-light-3);
 }
 
 .news-item-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.news-item-img--missing { background: var(--surface-light-3); }
 
-.news-item-body { min-width: 0; flex: 1; }
+.news-item-img-mark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--text-on-light-muted);
+}
 
-.news-item-title { font-size: 0.94rem; font-weight: 500; line-height: 1.4; }
+.news-item-img--large {
+    width: 38%;
+    max-width: 190px;
+    aspect-ratio: 4 / 3;
+}
+
+.news-item-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; justify-content: center; }
+
+.news-item-title { font-size: 1.05rem; font-weight: 700; line-height: 1.35; color: var(--text-on-light-primary); }
+
+.news-item-desc {
+    font-size: 0.82rem;
+    color: var(--text-on-light-secondary);
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.news-item .news-readmore { margin-top: 2px; }
 
 .news-foryou {
     font-family: var(--font-mono);
@@ -849,6 +884,8 @@
     .champ,
     .lp-explore { padding-left: var(--space-4); padding-right: var(--space-4); }
     .news > .news-head, .news > .news-grid { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .news-item { flex-direction: column; }
+    .news-item-img--large { width: 100%; max-width: none; aspect-ratio: 16 / 9; }
 
     .ri-stats { flex-direction: column; gap: var(--space-5); }
     .ri-stats .ri-stat {
