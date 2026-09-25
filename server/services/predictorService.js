@@ -482,7 +482,7 @@ async function persistPrediction(result, source) {
 // feeding it differ.
 // ---------------------------------------------------------------------------
 
-function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults }) {
+function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, weather = null, pitStopsAvailable = false }) {
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -563,20 +563,29 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         generatedAt: new Date().toISOString(),
         model: { name: MODEL_NAME, version: MODEL_VERSION },
         weights: WEIGHTS,
+        // Each entry is a genuine status, not a plain yes/no: "pending" means
+        // the data hasn't happened yet (never an integration failure),
+        // "limited" means the source only partially covers that topic, and
+        // "unavailable" is reserved for data that should exist but couldn't
+        // be fetched — never used just because a provider isn't integrated.
         dataAvailability: {
-            historicalStandings: true,
-            currentSeasonData: recentRaces.length > 0,
-            recentForm: recentRaces.length > 0,
-            circuitHistory: circuitRaces.length > 0,
-            qualifying: qualifyingCompleted && qualifyingResults.length > 0,
-            weather: false,
-            tyreStrategy: false,
+            historicalStandings: { status: "available" },
+            currentSeasonData: { status: recentRaces.length > 0 ? "available" : "unavailable" },
+            circuitHistory: { status: circuitRaces.length > 0 ? "available" : "unavailable" },
+            qualifying: {
+                status: !qualifyingCompleted ? "pending" : qualifyingResults.length > 0 ? "available" : "unavailable",
+            },
+            weatherForecast: { status: weather ? "available" : "unavailable" },
+            pitStopStrategy: { status: pitStopsAvailable ? "available" : "unavailable" },
+            tyreCompounds: { status: "limited" },
         },
+        weather,
         predictions,
         limitations: [
             "This is a statistical estimate from publicly available historical/current-season data, not a guarantee — F1 outcomes depend on many factors (incidents, weather, strategy, reliability) this model does not model.",
             "Weights and the simulation's ability transform (k=4) are documented, reasoned choices, not fitted against held-out historical results.",
-            "Weather forecast and tyre-compound strategy are not used — no reliable forecast provider is integrated, and Jolpica doesn't expose historical tyre-compound data.",
+            "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not yet used as a scoring input to the prediction itself.",
+            "Historical pit-stop counts and timing are available from the data source; tyre compounds are not, so compound/stint strategy is never shown or implied.",
             "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit).",
         ],
     };
