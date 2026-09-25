@@ -35,6 +35,7 @@ const TTL = {
     HISTORICAL: 24 * 60 * 60 * 1000, // a past round's results/qualifying/pitstops never change
     SCHEDULE: 10 * 60 * 1000, // a season's schedule rarely changes within a session
     LATEST: 2 * 60 * 1000, // "current/last" can advance to a new race
+    FORECAST: 30 * 60 * 1000, // weatherService — Open-Meteo forecasts drift slowly; no need to refetch per request
 };
 
 module.exports = { cached, TTL };

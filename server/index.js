@@ -13,6 +13,7 @@ const userRoutes = require("./routes/userRoutes");
 const newsRoutes = require ("./routes/news.js");
 const liveRaceRoutes = require("./routes/liveRaceRoutes");
 const predictorRoutes = require("./routes/predictorRoutes");
+const weatherRoutes = require("./routes/weatherRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -41,6 +42,7 @@ app.use("/user", userRoutes);
 app.use("/news", newsRoutes);
 app.use("/api/live", liveRaceRoutes);
 app.use("/api/predictor", predictorRoutes);
+app.use("/weather", weatherRoutes);
 
 app.listen(process.env.PORT||3000,()=>{
     console.log("Server listening on port 3000")
