@@ -1176,6 +1176,7 @@ function SessionPulse({ data, drivers }) {
         .filter((x) => x.secs !== null)
         .sort((a, b) => a.secs - b.secs)[0];
 
+    const raceLike = isRaceLikeSession(data.race?.session);
     const totalPitStops = drivers.reduce((sum, d) => sum + (d.pitStops || 0), 0);
 
     const rows = [
@@ -1184,7 +1185,7 @@ function SessionPulse({ data, drivers }) {
         [<Users size={14} aria-hidden="true" />, "Drivers Reporting", drivers.length || "—"],
         [<Timer size={14} aria-hidden="true" />, "Fastest Lap", fastest ? `${fastest.d.driverCode} · ${fastest.d.bestLap}` : "—"],
         [<Thermometer size={14} aria-hidden="true" />, "Weather", weatherSummary],
-        [<AlertTriangle size={14} aria-hidden="true" />, "Pit Stops", totalPitStops || "—"],
+        [<Wrench size={14} aria-hidden="true" />, "Pit Stops", raceLike ? (totalPitStops || "—") : "Not applicable"],
         [<AlertTriangle size={14} aria-hidden="true" />, "Race Control Events", data.events?.length ?? 0],
     ];
 
@@ -1336,7 +1337,7 @@ function BattlesSection({ drivers }) {
                 <Swords size={18} aria-hidden="true" />
                 <div className="lr-compact-empty-body">
                     <span className="lr-compact-empty-title">NO ACTIVE BATTLES</span>
-                    <span className="lr-compact-empty-desc">No drivers currently within 1 second.</span>
+                    <span className="lr-compact-empty-desc">No drivers currently within 1.0s.</span>
                 </div>
             </div>
         );
