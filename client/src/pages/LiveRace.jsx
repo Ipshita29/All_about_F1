@@ -651,19 +651,6 @@ function LastRaceStrategy({ hub }) {
     );
 }
 
-/* ── 9. What To Watch — AI integration boundary, no fake content ─────── */
-
-function WhatToWatch({ race }) {
-    return (
-        <div className="lr-watch">
-            <p className="lr-watch-copy">
-                AI-generated storylines, form trends and strategy previews for {race?.grandPrix ?? "the next race"} will appear here in a future Race Intelligence phase.
-            </p>
-            <Button variant="secondary" disabled aria-disabled="true">Generate Full Race Preview — Coming Soon</Button>
-        </div>
-    );
-}
-
 /* ── 10. Championship snapshot ─────────────────────────────────────── */
 
 function ChampionshipSnapshot({ hub }) {
@@ -755,10 +742,6 @@ function RaceHub({ race }) {
                     <RecentDriverForm hub={hub} selectedTeamId={selectedTeamId} />
                 </Panel>
             </div>
-
-            <Panel title="What To Watch" className="lr-panel--full">
-                <WhatToWatch race={race} />
-            </Panel>
 
             <div className="lr-grid lr-grid--split">
                 <Panel title="Championship Snapshot">
