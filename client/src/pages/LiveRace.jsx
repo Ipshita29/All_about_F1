@@ -596,8 +596,14 @@ function LastGrandPrixSummary({ hub }) {
 function LastRaceStrategy({ hub }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
     const latest = hub.latest;
-    if (!latest?.Results?.length || hub.pitStops.length === 0) {
-        return <EmptyState title="Strategy data unavailable" description="Pit-stop data for the last race couldn't be loaded." />;
+    if (!latest?.Results?.length) return <EmptyState title="No completed races yet" description="Strategy data will appear here once a Grand Prix has been completed." />;
+    if (hub.pitStops.length === 0) {
+        return (
+            <div className="lr-compact-empty">
+                <span className="lr-compact-empty-title">NO PIT-STOP RECORDS</span>
+                <span className="lr-compact-empty-desc">No pit-stop records are available for {latest.raceName}.</span>
+            </div>
+        );
     }
 
     const stopsByDriver = new Map();
@@ -637,7 +643,10 @@ function LastRaceStrategy({ hub }) {
                     </div>
                 ))}
             </div>
-            <p className="lr-compact-empty-desc lr-strategy-note">Pit lap and stop count are from real race data. Tyre compound history isn't available from the current data source.</p>
+            <div className="lr-strategy-tyre-note">
+                <span className="lr-highlight-label">Tyre Data</span>
+                <span className="lr-compact-empty-desc">Not available from historical source — pit lap and stop count above are real; compounds are not.</span>
+            </div>
         </div>
     );
 }
