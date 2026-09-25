@@ -1,0 +1,302 @@
+/*
+ * RACE PREDICTOR — premium F1 editorial + data-visualization treatment,
+ * self-contained (`.pr-` namespace + its own `.pr-mono` utility rather
+ * than borrowing LiveRace.css). Dark canvas, layered surfaces, Milano
+ * Red reserved for the winner/podium accent — never a betting-odds look.
+ */
+
+.pr-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-slate); }
+
+.pr {
+    --pr-surface-card: #202020;
+    --pr-surface-inner: #262626;
+    --pr-surface-header: #2c2c2c;
+    --pr-border: #383838;
+    --pr-text-secondary: #a9a59f;
+}
+
+.pr-loading {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+}
+
+.pr-loading-title { font-size: var(--text-small); color: var(--text-muted); letter-spacing: 0.02em; }
+
+/* ── Header ────────────────────────────────────────────────────────── */
+
+.pr-header {
+    padding: var(--space-6) var(--space-5);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--pr-border);
+}
+
+.pr-header-inner { max-width: 1180px; margin: 0 auto; }
+
+.pr-eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+}
+
+.pr-header-gp { font-size: var(--text-h2); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
+.pr-header-loc { font-size: var(--text-body); color: var(--pr-text-secondary); margin: 0 0 var(--space-4); }
+
+.pr-header-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); font-size: var(--text-small); }
+
+.pr-meta-item {
+    color: var(--text-primary);
+    background: var(--surface-2);
+    border: 1px solid var(--pr-border);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+}
+
+.pr-countdown { color: var(--accent-text); font-weight: 700; border-color: var(--accent-border); background: var(--accent-dim); }
+.pr-sprint-tag { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
+.pr-meta-item--faint { background: none; border-color: transparent; color: var(--text-faint); padding-left: 0; }
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+
+.pr-main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: var(--space-5) var(--space-5) var(--space-9);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.pr-grid { display: grid; gap: var(--space-4); }
+.pr-grid--split { grid-template-columns: 1fr 1fr; align-items: start; }
+
+@media (max-width: 800px) {
+    .pr-grid--split { grid-template-columns: 1fr; }
+}
+
+/* ── Status banner ─────────────────────────────────────────────────── */
+
+.pr-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--pr-surface-card);
+    border: 1px solid var(--pr-border);
+    border-left: 3px solid var(--text-faint);
+    border-radius: 8px;
+}
+
+.pr-status--post { border-left-color: var(--success); }
+
+.pr-status-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+
+.pr-status-desc { font-size: var(--text-small); color: var(--pr-text-secondary); margin: 0; }
+
+/* ── Panel shell ───────────────────────────────────────────────────── */
+
+.pr-panel {
+    background: var(--pr-surface-card);
+    border: 1px solid var(--pr-border);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.pr-panel--full { width: 100%; }
+
+.pr-panel-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-3);
+}
+
+/* ── Prediction summary ────────────────────────────────────────────── */
+
+.pr-summary {
+    background: var(--pr-surface-inner);
+    border: 1px solid var(--pr-border);
+    border-radius: 10px;
+    padding: 20px 24px;
+}
+
+.pr-summary-body { display: flex; align-items: center; gap: var(--space-4); }
+
+.pr-team-bar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--pr-team-color, var(--pr-border)); }
+
+.pr-summary-id { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.pr-summary-name { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.pr-summary-team { font-size: var(--text-small); color: var(--pr-text-secondary); }
+
+.pr-summary-prob { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.pr-summary-prob-value { font-size: var(--text-h3); font-weight: 700; color: var(--accent-text); }
+.pr-summary-prob-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+
+/* ── Podium ────────────────────────────────────────────────────────── */
+
+.pr-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+
+.pr-podium-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    background: var(--pr-surface-inner);
+    border: 1px solid var(--pr-border);
+    border-top: 3px solid var(--pr-team-color, var(--pr-border));
+    border-radius: 8px;
+}
+
+.pr-podium-pos { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.pr-podium-name { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
+.pr-podium-team { font-size: var(--text-micro); color: var(--pr-text-secondary); margin-bottom: 6px; }
+.pr-podium-prob { font-size: var(--text-small); color: var(--accent-text); font-weight: 700; }
+.pr-podium-prob small { font-family: var(--font-sans); color: var(--text-faint); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 4px; }
+
+@media (max-width: 640px) {
+    .pr-podium { grid-template-columns: 1fr; }
+}
+
+/* ── Classification table ─────────────────────────────────────────── */
+
+.pr-timing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+
+.pr-table { width: 100%; border-collapse: collapse; font-size: var(--text-small); }
+
+.pr-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--pr-surface-header);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px var(--space-2);
+    white-space: nowrap;
+}
+
+.pr-row { cursor: pointer; }
+.pr-row td { padding: 9px var(--space-2); border-top: 1px solid var(--pr-border); white-space: nowrap; }
+.pr-row:hover { background: var(--pr-surface-inner); }
+.pr-row--open { background: var(--pr-surface-inner); }
+.pr-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.pr-pos { font-weight: 700; font-size: var(--text-body); color: var(--text-primary); }
+
+.pr-driver-chip { display: flex; align-items: center; gap: var(--space-2); }
+.pr-team-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.pr-driver-code { font-weight: 700; min-width: 3ch; color: var(--text-primary); }
+.pr-driver-name { color: var(--pr-text-secondary); font-size: var(--text-micro); }
+.pr-team-cell { color: var(--pr-text-secondary); font-size: var(--text-micro); }
+
+.pr-confidence {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--pr-border);
+    color: var(--pr-text-secondary);
+}
+
+.pr-confidence--high { color: var(--success); border-color: rgba(47, 191, 106, 0.35); background: var(--success-dim); }
+.pr-confidence--medium { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
+.pr-confidence--low { color: var(--text-faint); }
+
+.pr-detail-row td { padding: 0; border-top: none; }
+
+.pr-detail { background: var(--pr-surface-inner); padding: var(--space-4); border-top: 1px solid var(--pr-border); border-bottom: 1px solid var(--pr-border); }
+
+.pr-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+.pr-detail-stat { display: flex; flex-direction: column; gap: 2px; }
+.pr-detail-stat span { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
+.pr-detail-stat small { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+
+@media (max-width: 700px) {
+    .pr-detail-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Factor rows (shared by Why-This-Prediction + per-driver detail) ──── */
+
+.pr-detail-factors, .pr-why { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.pr-factor-row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-small); }
+
+.pr-factor-label { color: var(--pr-text-secondary); }
+.pr-factor-value { color: var(--text-primary); min-width: 8ch; text-align: right; }
+.pr-factor-unavailable { color: var(--text-faint); font-size: var(--text-micro); grid-column: 2 / span 2; }
+
+.pr-bar { display: block; height: 6px; border-radius: 3px; background: var(--pr-surface-header); overflow: hidden; }
+.pr-bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+
+@media (max-width: 500px) {
+    .pr-factor-row { grid-template-columns: 100px 1fr auto; }
+}
+
+/* ── Model / Data Used / Data Availability ────────────────────────── */
+
+.pr-kv { display: flex; flex-direction: column; gap: 2px; }
+
+.pr-kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-top: 1px solid var(--pr-border);
+    font-size: var(--text-small);
+}
+.pr-kv-row:first-child { border-top: none; }
+.pr-kv-row dt { color: var(--pr-text-secondary); }
+.pr-kv-row dd { font-weight: 600; color: var(--text-primary); }
+
+.pr-avail-yes { color: var(--success); }
+.pr-avail-no { color: var(--text-faint); }
+
+.pr-datalist { display: flex; flex-direction: column; gap: 8px; }
+
+.pr-data-row { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); color: var(--text-primary); }
+.pr-data-row--off { color: var(--text-faint); }
+
+.pr-data-mark { font-family: var(--font-mono); width: 16px; text-align: center; color: var(--success); }
+.pr-data-row--off .pr-data-mark { color: var(--text-faint); }
+
+/* ── Disclaimer ────────────────────────────────────────────────────── */
+
+.pr-disclaimer {
+    font-size: var(--text-micro);
+    color: var(--text-faint);
+    line-height: 1.6;
+    max-width: 90ch;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .pr-header { padding: var(--space-5) var(--space-4); }
+    .pr-main { padding: var(--space-4) var(--space-4) var(--space-8); }
+    .pr-panel { padding: 16px; }
+    .pr-summary-body { flex-wrap: wrap; }
+    .pr-summary-prob { align-items: flex-start; }
+}
