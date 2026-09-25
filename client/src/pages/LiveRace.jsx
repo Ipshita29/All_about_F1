@@ -13,7 +13,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
-    Newspaper, Car, CircleDashed,
+    Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
+    CloudLightning,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -586,15 +587,166 @@ function NextRaceContext({ hub, race }) {
     );
 }
 
-/* ── 5. Next Race Weather — no forecast provider exists; say so ──────── */
+/* ── 5. Next Race Weather — real forecast, from Open-Meteo (free, no key)
+   via server/services/weatherService.js. Coordinates come from Jolpica's
+   own schedule (Circuit.Location.lat/long, already fetched into
+   hub.schedule below) rather than any hardcoded circuit. This is a
+   forecast for the next scheduled session — never presented as live
+   conditions, which stay driven entirely by the existing live-timing
+   weather feed elsewhere on this page. ── */
 
-function NextRaceWeatherForecast() {
+const WMO_CONDITIONS = {
+    0: { label: "Clear sky", Icon: Sun },
+    1: { label: "Mostly clear", Icon: CloudSun },
+    2: { label: "Partly cloudy", Icon: CloudSun },
+    3: { label: "Overcast", Icon: Cloudy },
+    45: { label: "Fog", Icon: CloudFog },
+    48: { label: "Freezing fog", Icon: CloudFog },
+    51: { label: "Light drizzle", Icon: CloudDrizzle },
+    53: { label: "Drizzle", Icon: CloudDrizzle },
+    55: { label: "Dense drizzle", Icon: CloudDrizzle },
+    56: { label: "Freezing drizzle", Icon: CloudDrizzle },
+    57: { label: "Freezing drizzle", Icon: CloudDrizzle },
+    61: { label: "Light rain", Icon: CloudRain },
+    63: { label: "Rain", Icon: CloudRain },
+    65: { label: "Heavy rain", Icon: CloudRain },
+    66: { label: "Freezing rain", Icon: CloudRain },
+    67: { label: "Freezing rain", Icon: CloudRain },
+    71: { label: "Light snow", Icon: CloudSnow },
+    73: { label: "Snow", Icon: CloudSnow },
+    75: { label: "Heavy snow", Icon: CloudSnow },
+    77: { label: "Snow grains", Icon: CloudSnow },
+    80: { label: "Rain showers", Icon: CloudRain },
+    81: { label: "Rain showers", Icon: CloudRain },
+    82: { label: "Violent showers", Icon: CloudRain },
+    85: { label: "Snow showers", Icon: CloudSnow },
+    86: { label: "Snow showers", Icon: CloudSnow },
+    95: { label: "Thunderstorm", Icon: CloudLightning },
+    96: { label: "Thunderstorm, hail", Icon: CloudLightning },
+    99: { label: "Thunderstorm, hail", Icon: CloudLightning },
+};
+
+function weatherCondition(code) {
+    return WMO_CONDITIONS[code] ?? { label: "—", Icon: Cloud };
+}
+
+const COMPASS_POINTS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+
+function compassDirection(deg) {
+    if (deg == null) return null;
+    return COMPASS_POINTS[Math.round(deg / 22.5) % 16];
+}
+
+function useWeatherForecast(lat, lon, targetIso) {
+    const hasParams = lat != null && lon != null && Boolean(targetIso);
+    const key = `${lat}|${lon}|${targetIso}`;
+
+    // Reset synchronously during render when the target changes, rather
+    // than as the first act of the effect below.
+    const [state, setState] = useState({ seenKey: key, status: hasParams ? "loading" : "unavailable", data: null });
+    if (state.seenKey !== key) {
+        setState({ seenKey: key, status: hasParams ? "loading" : "unavailable", data: null });
+    }
+
+    useEffect(() => {
+        if (!hasParams) return undefined;
+        let cancelled = false;
+
+        fetch(`${API}/weather/forecast?lat=${lat}&lon=${lon}&time=${encodeURIComponent(targetIso)}`)
+            .then((res) => (res.ok ? res.json() : { available: false }))
+            .then((json) => {
+                if (cancelled) return;
+                setState((s) => ({ ...s, status: json?.available ? "ready" : "unavailable", data: json?.available ? json : null }));
+            })
+            .catch(() => {
+                if (!cancelled) setState((s) => ({ ...s, status: "error", data: null }));
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [lat, lon, targetIso, hasParams]);
+
+    return state;
+}
+
+function NextRaceWeatherForecast({ hub, race }) {
+    const weekend = hub.schedule.find((r) => String(r.round) === String(race?.round));
+    const location = weekend?.Circuit?.Location;
+    const lat = location?.lat != null ? Number(location.lat) : null;
+    const lon = location?.long != null ? Number(location.long) : null;
+    const targetIso = race?.startTime ?? null;
+
+    const forecast = useWeatherForecast(lat, lon, targetIso);
+
+    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
+
+    if (forecast.status === "loading" || forecast.status === "idle") {
+        return <div className="lr-hub-loading">Loading forecast…</div>;
+    }
+
+    if (forecast.status === "error") {
+        return (
+            <div className="lr-compact-empty">
+                <Cloud size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">FORECAST UNAVAILABLE</span>
+                    <span className="lr-compact-empty-desc">Couldn't reach the weather service. Try again shortly.</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (forecast.status === "unavailable" || !forecast.data) {
+        return (
+            <div className="lr-compact-empty">
+                <Cloud size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">FORECAST UNAVAILABLE</span>
+                    <span className="lr-compact-empty-desc">
+                        {lat == null
+                            ? "Circuit location isn't available for this race yet."
+                            : "This session is too far out for a forecast — Open-Meteo only forecasts about 16 days ahead."}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    const f = forecast.data;
+    const condition = weatherCondition(f.weatherCode);
+    const direction = compassDirection(f.windDirection);
+    const appliesTo = new Date(f.forecastFor).toLocaleString(undefined, {
+        weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+
+    const stats = [
+        f.airTemperature != null && { icon: <Thermometer size={14} aria-hidden="true" />, label: "Air Temp", value: `${Math.round(f.airTemperature)}°C` },
+        f.precipitationProbability != null && { icon: <Droplets size={14} aria-hidden="true" />, label: "Rain Chance", value: `${f.precipitationProbability}%` },
+        f.windSpeed != null && { icon: <Wind size={14} aria-hidden="true" />, label: "Wind", value: `${Math.round(f.windSpeed)} km/h${direction ? ` ${direction}` : ""}` },
+        f.humidity != null && { icon: <Droplets size={14} aria-hidden="true" />, label: "Humidity", value: `${f.humidity}%` },
+    ].filter(Boolean);
+
     return (
-        <div className="lr-compact-empty">
-            <Cloud size={18} aria-hidden="true" />
-            <div className="lr-compact-empty-body">
-                <span className="lr-compact-empty-title">FORECAST UNAVAILABLE</span>
-                <span className="lr-compact-empty-desc">Weather forecast data will appear here when a forecast provider is integrated. Live conditions appear on this page once the session goes live.</span>
+        <div className="lr-forecast">
+            <div className="lr-forecast-head">
+                <span className="lr-forecast-badge">FORECAST</span>
+                <span className="lr-forecast-condition">
+                    <condition.Icon size={16} aria-hidden="true" />
+                    {condition.label}
+                </span>
+            </div>
+            <span className="lr-forecast-applies">For {sessionShortLabel(race?.session)} · {appliesTo}</span>
+            <div className="lr-forecast-grid">
+                {stats.map((s) => (
+                    <div className="lr-forecast-stat" key={s.label}>
+                        <span className="lr-forecast-stat-icon">{s.icon}</span>
+                        <div>
+                            <span className="lr-forecast-stat-value lr-mono">{s.value}</span>
+                            <span className="lr-forecast-stat-label">{s.label}</span>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -908,8 +1060,8 @@ function RaceHub({ race }) {
                     <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race Context</>}>
                         <NextRaceContext hub={hub} race={race} />
                     </Panel>
-                    <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>}>
-                        <NextRaceWeatherForecast />
+                    <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>} className="lr-panel--chalk">
+                        <NextRaceWeatherForecast hub={hub} race={race} />
                     </Panel>
                 </div>
             </div>
