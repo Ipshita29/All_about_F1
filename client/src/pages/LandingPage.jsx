@@ -259,54 +259,6 @@ const AREAS = [
     { n: "06", to: "/dictionary", title: "F1 Dictionary", copy: "Understand the language of the sport." },
 ];
 
-/* Abstract circuit + telemetry composition. Not a real track, not tied to
-   live data — a decorative technical drawing that visually says "every
-   part of F1 in one place": a racing line, sector markers, a ghost race
-   number and a couple of readout-style labels. */
-function TechnicalVisual() {
-    return (
-        <div className="platform-visual" aria-hidden="true">
-            <svg
-                viewBox="0 0 560 400"
-                fill="none"
-                preserveAspectRatio="xMidYMid slice"
-                className="platform-visual-svg"
-            >
-                <path
-                    className="platform-visual-grid"
-                    d="M0 80H560M0 160H560M0 240H560M0 320H560M80 0V400M160 0V400M240 0V400M320 0V400M400 0V400M480 0V400"
-                    strokeWidth="1"
-                />
-                <path
-                    className="platform-visual-line"
-                    d="M40 300 L140 300 Q180 300 190 260 L210 150 Q216 110 256 105 L340 96
-                       Q372 92 380 60 L392 24 Q398 6 420 6 L520 6"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                />
-                <circle className="platform-visual-dot" cx="256" cy="105" r="4" />
-                <circle className="platform-visual-dot" cx="420" cy="6" r="4" />
-                <text x="150" y="330" className="platform-visual-label">SECTOR 1</text>
-                <text x="300" y="130" className="platform-visual-label">SECTOR 2</text>
-                <text x="430" y="30" className="platform-visual-label">SECTOR 3</text>
-            </svg>
-
-            <span className="platform-visual-number">44</span>
-
-            <div className="platform-visual-readout">
-                <span>
-                    <b>1:28.947</b>
-                    <small>BEST LAP</small>
-                </span>
-                <span>
-                    <b>312</b>
-                    <small>KM/H</small>
-                </span>
-            </div>
-        </div>
-    );
-}
-
 function PlatformOverview() {
     return (
         <section className="platform" aria-label="What All About F1 does">
@@ -318,7 +270,9 @@ function PlatformOverview() {
                 />
             </div>
 
-            <TechnicalVisual />
+            <div className="platform-visual">
+                <img src="/homepage.png" alt="" className="platform-visual-img" loading="lazy" />
+            </div>
 
             <ol className="platform-list">
                 {AREAS.map((a) => (

@@ -260,68 +260,23 @@
 
 .platform-intro { max-width: 640px; margin-bottom: var(--space-7); }
 
-/* ── The technical visual — a light Cararra panel, not a photo ── */
+/* ── The platform visual — the real product image (client/public/
+   homepage.png, a portrait-oriented shot), framed in a light Cararra
+   panel and sized to its own aspect ratio so object-fit: cover never
+   has to crop it aggressively. ── */
 
 .platform-visual {
     position: relative;
     background: var(--surface-light-1);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    min-height: 340px;
-    margin-bottom: var(--space-8);
+    max-width: 420px;
+    aspect-ratio: 744 / 1447;
+    margin: 0 auto var(--space-8);
     box-shadow: var(--shadow-sm);
 }
 
-.platform-visual-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-
-.platform-visual-grid { stroke: var(--border-on-light); }
-
-.platform-visual-line { stroke: var(--color-carbon); fill: none; }
-
-.platform-visual-dot { fill: var(--accent); }
-
-.platform-visual-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    fill: var(--text-on-light-muted);
-}
-
-.platform-visual-number {
-    position: absolute;
-    top: var(--space-6);
-    left: var(--space-7);
-    font-family: var(--font-mono);
-    font-weight: 700;
-    font-size: 6rem;
-    line-height: 1;
-    color: var(--text-on-light-primary);
-    opacity: 0.08;
-}
-
-.platform-visual-readout {
-    position: absolute;
-    right: var(--space-7);
-    bottom: var(--space-6);
-    display: flex;
-    gap: var(--space-7);
-}
-
-.platform-visual-readout span { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
-
-.platform-visual-readout b {
-    font-family: var(--font-mono);
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-on-light-primary);
-}
-
-.platform-visual-readout small {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
-    color: var(--text-on-light-muted);
-}
+.platform-visual-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* ── The six platform areas — a clean list, not six cards ── */
 
@@ -869,7 +824,6 @@
     .hero-lines { width: 100%; left: 0; opacity: 0.3; }
     .platform-row { grid-template-columns: 40px 1fr 20px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
-    .platform-visual-number { font-size: 4.5rem; }
     .news-grid { grid-template-columns: 1fr; }
     .lp-explore-grid { grid-template-columns: repeat(2, 1fr); }
 
@@ -905,9 +859,7 @@
 
     .platform-row { grid-template-columns: 32px 1fr 18px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
-    .platform-visual { min-height: 260px; }
-    .platform-visual-number { font-size: 3.5rem; top: var(--space-5); left: var(--space-5); }
-    .platform-visual-readout { right: var(--space-5); bottom: var(--space-5); gap: var(--space-5); }
+    .platform-visual { max-width: 300px; }
     .lp-explore-grid { grid-template-columns: 1fr; }
 
     .lp-invite, .lp-radio { left: var(--space-3); right: var(--space-3); width: auto; }
