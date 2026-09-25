@@ -79,6 +79,7 @@
  */
 
 const { getJson } = require("./jolpicaClient");
+const { getForecast } = require("./weatherService");
 const RacePrediction = require("../models/RacePrediction");
 
 const MODEL_NAME = "AllAboutF1 Weighted Power-Rank + Plackett-Luce Simulation";
@@ -145,6 +146,39 @@ async function fetchQualifying(season, round) {
         return data.MRData.RaceTable.Races[0]?.QualifyingResults || [];
     } catch {
         return [];
+    }
+}
+
+// Used only to confirm the historical source genuinely has pit-stop
+// records for a recent round — a real availability check, not an
+// assumption. Never used to infer tyre compounds, which Jolpica does not
+// provide at all.
+async function fetchPitStops(season, round) {
+    try {
+        const data = await getJson(`/${season}/${round}/pitstops.json?limit=100`);
+        return data.MRData.RaceTable.Races[0]?.PitStops || [];
+    } catch {
+        return [];
+    }
+}
+
+// Forecast for the upcoming race session itself — reuses the same
+// Open-Meteo integration as the Race Hub's "Next Race Weather" (see
+// weatherService.js), keyed off this race's own circuit coordinates
+// (never hardcoded). Returns null when coordinates are missing or the
+// race is further out than Open-Meteo's ~16-day forecast window; that's
+// a genuine "not available yet", not a fabricated value.
+async function fetchRaceWeather(race) {
+    const location = race.Circuit?.Location;
+    const lat = location?.lat != null ? Number(location.lat) : null;
+    const lon = location?.long != null ? Number(location.long) : null;
+    if (lat == null || lon == null || !race.date) return null;
+
+    const targetIso = `${race.date}T${race.time || "00:00:00Z"}`;
+    try {
+        return await getForecast(lat, lon, targetIso);
+    } catch {
+        return null;
     }
 }
 
