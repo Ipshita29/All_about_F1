@@ -1662,6 +1662,8 @@ function LiveRace() {
     }
 
     const drivers = data.drivers ?? [];
+    const sessionType = data.race?.session;
+    const tyresTitle = isRaceLikeSession(sessionType) ? "Tyres & Strategy" : "Tyres";
 
     return (
         <div className="lr">
@@ -1669,7 +1671,7 @@ function LiveRace() {
             <main className="lr-main">
                 <div className="lr-grid lr-grid--primary">
                     <Panel title={<><Timer size={13} aria-hidden="true" />Live Timing</>} className="lr-panel--primary">
-                        <LiveTimingTable drivers={drivers} />
+                        <LiveTimingTable drivers={drivers} sessionType={sessionType} />
                     </Panel>
                     <Panel title={<><Swords size={13} aria-hidden="true" />Battles</>} className="lr-panel--battles">
                         <BattlesSection drivers={drivers} />
@@ -1686,8 +1688,8 @@ function LiveRace() {
                 </div>
 
                 <div className="lr-grid lr-grid--6-6">
-                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />Tyres &amp; Strategy</>}>
-                        <TyreStrategySection drivers={drivers} />
+                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
+                        <TyreStrategySection drivers={drivers} sessionType={sessionType} />
                     </Panel>
                     <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
                         <RaceControlSection events={data.events ?? []} />
