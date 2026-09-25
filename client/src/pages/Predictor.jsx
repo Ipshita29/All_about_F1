@@ -96,6 +96,26 @@ function usePrediction() {
     return { ...state, retry };
 }
 
+/* Fetches Phase 14 evaluation data (performance summary + prediction
+   history, which already includes full per-driver detail — no separate
+   per-race call needed to expand a history row). Independent of, and
+   never blocking, the primary upcoming-prediction fetch above; if this
+   fails the page still shows the upcoming prediction normally. */
+function useEvaluation() {
+    const [state, setState] = useState({ loading: true, performance: null, races: [] });
+
+    useEffect(() => {
+        Promise.all([
+            fetch(`${API}/api/predictor/performance`).then((res) => (res.ok ? res.json() : null)),
+            fetch(`${API}/api/predictor/history`).then((res) => (res.ok ? res.json() : { races: [] })),
+        ])
+            .then(([performance, history]) => setState({ loading: false, performance, races: history?.races ?? [] }))
+            .catch(() => setState({ loading: false, performance: null, races: [] }));
+    }, []);
+
+    return state;
+}
+
 /* ── Header ────────────────────────────────────────────────────────── */
 
 function PredictorHeader({ race, generatedAt }) {
@@ -395,6 +415,167 @@ function DataAvailabilityTable({ dataAvailability }) {
     );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   PHASE 14 — MODEL PERFORMANCE / PREDICTION HISTORY / PREDICTION VS
+   REALITY. All from GET /api/predictor/performance and /history — no
+   math happens here, only formatting. Never claims accuracy the data
+   doesn't support: an empty/low race count gets an honest empty state,
+   not a padded-looking percentage.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const STATUS_LABELS = {
+    classified: null,
+    classified_retired: "Retired",
+    dsq: "DSQ",
+    dns: "DNS",
+    unclassified: "Not Classified",
+    no_result: "No Result",
+};
+
+function ModelPerformanceSection({ performance, loading }) {
+    if (loading) return <div className="pr-hub-loading">Loading model performance…</div>;
+
+    if (!performance?.available) {
+        return (
+            <EmptyState
+                title="No evaluated predictions yet"
+                description="Once a predicted Grand Prix has been completed, model performance will appear here."
+            />
+        );
+    }
+
+    const stats = [
+        [performance.racesEvaluated, "Races Evaluated"],
+        [pct(performance.winnerAccuracy), "Winner Accuracy"],
+        [pct(performance.avgPodiumHitRate), "Podium Hit Rate"],
+        [pct(performance.avgTop5HitRate), "Top 5 Hit Rate"],
+        [pct(performance.avgTop10HitRate), "Top 10 Hit Rate"],
+        [performance.meanPositionError ?? "—", "Mean Position Error"],
+    ];
+
+    return (
+        <div className="pr-perf">
+            <div className="pr-perf-grid">
+                {stats.map(([value, label]) => (
+                    <div className="pr-perf-stat" key={label}>
+                        <span className="pr-mono pr-perf-value">{value}</span>
+                        <span className="pr-perf-label">{label}</span>
+                    </div>
+                ))}
+            </div>
+            {performance.driverPerformance?.length > 0 && (
+                <div className="pr-perf-drivers">
+                    <span className="pr-panel-title">Driver-Level Evaluation</span>
+                    {performance.driverPerformance.map((d) => (
+                        <div className="pr-perf-driver-row" key={d.driverId}>
+                            <span className="pr-driver-code pr-mono">{d.driverCode ?? d.driverId}</span>
+                            <span className="pr-driver-name">{d.driverName}</span>
+                            <span className="pr-mono">{d.predictionsEvaluated} races</span>
+                            <span className="pr-mono">avg err {d.avgPositionError}</span>
+                            <span className="pr-mono">best {d.bestPredictionError}</span>
+                            <span className="pr-mono">worst {d.worstPredictionError}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function PredictionVsRealityDetail({ evaluation }) {
+    const sorted = [...evaluation.driverEvaluations].sort((a, b) => a.predictedPosition - b.predictedPosition);
+    return (
+        <div className="pr-vs-reality">
+            <div className="pr-timing-scroll">
+                <table className="pr-table">
+                    <thead>
+                        <tr>
+                            <th>Driver</th>
+                            <th>Predicted</th>
+                            <th>Actual</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sorted.map((d) => (
+                            <tr key={d.driverId}>
+                                <td>
+                                    <span className="pr-driver-chip">
+                                        <span className="pr-driver-code pr-mono">{d.driverCode ?? d.driverId}</span>
+                                        <span className="pr-driver-name">{d.driverName}</span>
+                                    </span>
+                                </td>
+                                <td className="pr-mono">P{d.predictedPosition}</td>
+                                <td className="pr-mono">{d.actualPosition ? `P${d.actualPosition}` : (STATUS_LABELS[d.status] ?? "—")}</td>
+                                <td className="pr-mono">{d.positionError ?? "—"}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+function PredictionHistorySection({ races, loading }) {
+    const [expandedKey, setExpandedKey] = useState(null);
+
+    if (loading) return <div className="pr-hub-loading">Loading prediction history…</div>;
+
+    const eligible = races.filter((r) => r.eligible);
+
+    if (eligible.length === 0) {
+        return (
+            <EmptyState
+                title="No completed evaluated races"
+                description="Predicted races that have since been run will appear here."
+            />
+        );
+    }
+
+    return (
+        <div className="pr-history">
+            {eligible.map((r) => {
+                const key = `${r.season}-${r.round}`;
+                const isOpen = expandedKey === key;
+                return (
+                    <div className="pr-history-item" key={key}>
+                        <button
+                            type="button"
+                            className="pr-history-row"
+                            aria-expanded={isOpen}
+                            onClick={() => setExpandedKey(isOpen ? null : key)}
+                        >
+                            <span className="pr-history-race">{r.raceName}</span>
+                            <span className="pr-history-compare">
+                                <span className="pr-history-label">Predicted</span> {r.predictedWinner ?? "—"}
+                                <span className="pr-history-sep">·</span>
+                                <span className="pr-history-label">Actual</span> {r.actualWinner ?? "—"}
+                            </span>
+                            <span className={`pr-history-badge${r.metrics.winnerCorrect ? " pr-history-badge--correct" : ""}`}>
+                                {r.metrics.winnerCorrect ? "Correct" : "Incorrect"}
+                            </span>
+                        </button>
+                        {isOpen && (
+                            <div className="pr-history-detail">
+                                <div className="pr-detail-grid">
+                                    <div className="pr-detail-stat"><span>{pct(r.metrics.podiumHitRate)}</span><small>Podium</small></div>
+                                    <div className="pr-detail-stat"><span>{pct(r.metrics.top5HitRate)}</span><small>Top 5</small></div>
+                                    <div className="pr-detail-stat"><span>{pct(r.metrics.top10HitRate)}</span><small>Top 10</small></div>
+                                    <div className="pr-detail-stat"><span>{r.metrics.meanPositionError ?? "—"}</span><small>Mean Error</small></div>
+                                    <div className="pr-detail-stat"><span>{r.predictionSource === "backtest" ? "Backtested" : "Live"}</span><small>Source</small></div>
+                                </div>
+                                <span className="pr-panel-title">Prediction vs Reality</span>
+                                <PredictionVsRealityDetail evaluation={r} />
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
 /* ── Section shell ─────────────────────────────────────────────────── */
 
 function Panel({ title, className = "", children }) {
@@ -410,6 +591,7 @@ function Panel({ title, className = "", children }) {
 
 function Predictor() {
     const { loading, error, data, retry } = usePrediction();
+    const evaluation = useEvaluation();
 
     if (loading) {
         return (
@@ -481,6 +663,16 @@ function Predictor() {
                 <p className="pr-disclaimer">
                     Predictions are model estimates based on available historical and race-weekend data. They are not guaranteed race outcomes.
                     {limitations?.length > 0 && ` ${limitations[0]}`}
+                </p>
+
+                <Panel title="Model Performance" className="pr-panel--full">
+                    <ModelPerformanceSection performance={evaluation.performance} loading={evaluation.loading} />
+                </Panel>
+                <Panel title="Prediction History" className="pr-panel--full">
+                    <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
+                </Panel>
+                <p className="pr-disclaimer">
+                    Model performance is calculated from completed races for which a prediction was generated before the race. Metrics may change as additional races are evaluated.
                 </p>
             </main>
         </div>
