@@ -535,6 +535,22 @@ function ForYouTag() {
     return <span className="lp-news-foryou">FOR YOU</span>;
 }
 
+/* Small thumbnail for a supporting story. Same real article.image field
+   the featured story and the News page both use — this was previously
+   just never rendered here at all, not a bad data source; a neutral
+   surface fills in only if the image genuinely has none or fails to load. */
+function NewsThumb({ article }) {
+    const [failed, setFailed] = useState(false);
+    const hasImage = Boolean(article.image) && !failed;
+    return (
+        <span className={`news-item-img${hasImage ? "" : " news-item-img--missing"}`} aria-hidden="true">
+            {hasImage && (
+                <img src={article.image} alt="" loading="lazy" onError={() => setFailed(true)} />
+            )}
+        </span>
+    );
+}
+
 function PaddockNews({ articles, favs, error }) {
     const relevant = (articles || []).filter(isRelevantF1Article);
 
@@ -583,11 +599,14 @@ function PaddockNews({ articles, favs, error }) {
                 <div className="news-side">
                     {supporting.map((article) => (
                         <a key={article.id} href={article.url} target="_blank" rel="noreferrer" className="news-item">
-                            <p className="news-meta">
-                                {article.source?.toUpperCase()} · {formatArticleTime(article.publishedAt)}
-                                {articleIsForYou(article, favs) && <ForYouTag />}
-                            </p>
-                            <h3 className="news-item-title">{article.title}</h3>
+                            <NewsThumb article={article} />
+                            <div className="news-item-body">
+                                <p className="news-meta">
+                                    {article.source?.toUpperCase()} · {formatArticleTime(article.publishedAt)}
+                                    {articleIsForYou(article, favs) && <ForYouTag />}
+                                </p>
+                                <h3 className="news-item-title">{article.title}</h3>
+                            </div>
                         </a>
                     ))}
                 </div>
