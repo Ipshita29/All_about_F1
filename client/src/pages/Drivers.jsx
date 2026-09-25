@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { SearchControls, DriverRoster, DriverCard } from "../components/EntityListing";
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
@@ -22,7 +23,7 @@ function Drivers() {
     const loaded = loadedYear === year;
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/standings/${year}`)
+        fetch(`${API}/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 setDrivers(Array.isArray(data) ? data : []);

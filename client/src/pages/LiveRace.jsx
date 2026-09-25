@@ -14,8 +14,8 @@ import { Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, U
 import { EmptyState, Select, Button } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/LiveRace.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 const POLL_LIVE_MS = 5000;
 const POLL_IDLE_MS = 20000;
 const FLASH_MS = 900;

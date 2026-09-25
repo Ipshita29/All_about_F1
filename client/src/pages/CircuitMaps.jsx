@@ -5,6 +5,7 @@ import CircuitVisualization from "../components/CircuitVisualization";
 import { LoadingSpinner } from "../components/UI";
 import { SearchControls } from "../components/EntityListing";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
 function trackTypeLabel(trackType) {
     if (!trackType) return null;
@@ -27,7 +28,7 @@ function CircuitMaps() {
     const [search, setSearch] = useState("");
 
     useEffect(() => {
-        fetch("http://localhost:3000/circuitmaps")
+        fetch(`${API}/circuitmaps`)
             .then((res) => res.json())
             .then((data) => {
                 setCircuits(Array.isArray(data) ? data : []);

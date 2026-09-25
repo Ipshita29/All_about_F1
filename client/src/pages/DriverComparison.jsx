@@ -9,6 +9,7 @@ import useSeasonResults from "../hooks/useSeasonResults";
 import { getDriverAssets } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
 import "../styles/pages/Comparison.css";
+import { API_BASE_URL as API } from "../config/api";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
@@ -96,14 +97,14 @@ function DriverComparison() {
     const s2 = standings.find((s) => s.Driver.driverId === driver2);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/${year}`)
+        fetch(`${API}/drivers/${year}`)
             .then((res) => res.json())
             .then((data) => setDrivers(Array.isArray(data) ? data : []))
             .catch(() => setDrivers([]));
     }, [year]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/standings/${year}`)
+        fetch(`${API}/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => setStandings(Array.isArray(data) ? data : []))
             .catch(() => setStandings([]));

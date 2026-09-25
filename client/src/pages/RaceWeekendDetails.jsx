@@ -20,8 +20,8 @@ import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { getWeekendSessions } from "../utils/landingHelpers";
 import "../styles/pages/RaceWeekend.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 function pad(n) {
     return String(n).padStart(2, "0");

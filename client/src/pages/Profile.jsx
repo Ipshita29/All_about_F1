@@ -4,8 +4,8 @@ import { LoadingSpinner } from "../components/UI";
 import { getProgress } from "../utils/dictionaryHelpers";
 import { getTeamColor, DRIVER_ID_MAP, FAV_TEAM_TO_CONSTRUCTOR_ID } from "../utils/landingHelpers";
 import "../styles/pages/MyGarage.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 const DRIVERS = Object.keys(DRIVER_ID_MAP).filter((name) => name !== "Andrea Kimi Antonelli");
 

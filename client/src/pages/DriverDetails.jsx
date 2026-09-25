@@ -7,6 +7,7 @@ import { knowMoreInfo } from "../data/knowMoreInfo";
 import { LayeredImage, ExSection, TelemetryStat, AnimatedNumber } from "../components/EntityDetail";
 import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
 /*
  * DRIVER DOSSIER — the editorial profile a Driver Pass unfolds into.
@@ -21,7 +22,7 @@ function DriverDetails() {
     const [selectedTerm, setSelectedTerm] = useState(null);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/${year}`)
+        fetch(`${API}/drivers/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 const selected = data.find((ele) => ele.driverId === id);
@@ -30,7 +31,7 @@ function DriverDetails() {
     }, [year, id]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/standings/${year}`)
+        fetch(`${API}/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 const selectedStanding = data.find((ele) => ele.Driver.driverId === id);

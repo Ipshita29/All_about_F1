@@ -7,6 +7,7 @@ import { knowMoreInfo } from "../data/knowMoreInfo";
 import { LayeredImage, ExSection, TelemetryStat, AnimatedNumber } from "../components/EntityDetail";
 import { getTeamAssets } from "../config/teamAssets";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
 /*
  * INSIDE THE GARAGE — the engineering-focused constructor profile that a
@@ -22,7 +23,7 @@ function TeamDetails() {
     const [selectedTerm, setSelectedTerm] = useState(null);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/teams/${year}`)
+        fetch(`${API}/teams/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 const selected = data.find((ele) => ele.constructorId === id);
@@ -31,7 +32,7 @@ function TeamDetails() {
     }, [year, id]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/teams/standings/${year}`)
+        fetch(`${API}/teams/standings/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 const selectedStanding = data.find(
@@ -42,7 +43,7 @@ function TeamDetails() {
     }, [year, id]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/standings/${year}`)
+        fetch(`${API}/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => setDriverStandings(Array.isArray(data) ? data : []))
             .catch(() => setDriverStandings([]));

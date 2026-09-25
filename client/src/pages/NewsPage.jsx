@@ -22,8 +22,8 @@ import {
     formatArticleTime,
 } from "../utils/landingHelpers";
 import "../styles/pages/NewsPage.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 /* ── Editorial helpers (presentation only) ─────────────────────────── */
 

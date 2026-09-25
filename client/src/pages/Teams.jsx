@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { SearchControls, ConstructorRoster, ConstructorCard } from "../components/EntityListing";
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
@@ -23,7 +24,7 @@ function Teams() {
     const loaded = loadedYear === year;
 
     useEffect(() => {
-        fetch(`http://localhost:3000/teams/${year}`)
+        fetch(`${API}/teams/${year}`)
             .then((res) => res.json())
             .then((data) => {
                 setTeams(Array.isArray(data) ? data : []);
@@ -32,14 +33,14 @@ function Teams() {
     }, [year]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/teams/standings/${year}`)
+        fetch(`${API}/teams/standings/${year}`)
             .then((res) => res.json())
             .then((data) => setStandings(Array.isArray(data) ? data : []))
             .catch(() => setStandings([]));
     }, [year]);
 
     useEffect(() => {
-        fetch(`http://localhost:3000/drivers/standings/${year}`)
+        fetch(`${API}/drivers/standings/${year}`)
             .then((res) => res.json())
             .then((data) => setDriverStandings(Array.isArray(data) ? data : []))
             .catch(() => setDriverStandings([]));

@@ -5,8 +5,8 @@
  */
 import { useState, useEffect } from "react";
 import "../styles/pages/MyGarage.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 function Preferences() {
     const [favoriteTeam, setFavoriteTeam] = useState("");

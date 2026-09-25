@@ -18,8 +18,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/UI";
 import "../styles/pages/AuthPage.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 const DRIVERS = [
   "Charles Leclerc", "Lewis Hamilton", "George Russell", "Kimi Antonelli",

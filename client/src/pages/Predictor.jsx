@@ -13,8 +13,8 @@ import { Fragment, useEffect, useState } from "react";
 import { Button, EmptyState, LoadingSpinner } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/Predictor.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 const FACTOR_LABELS = {
     recentForm: "Recent Form",

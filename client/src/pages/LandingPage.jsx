@@ -34,6 +34,7 @@ import {
 import { getWordOfTheDay } from "../utils/dictionaryHelpers";
 
 import "../styles/pages/LandingPage.css";
+import { API_BASE_URL as API } from "../config/api";
 
 /* ══════════════════════════════════════════════════════════════════
  * Shared section header — a small mono eyebrow over an Inter title,
@@ -843,7 +844,6 @@ function GarageFooter({ isAuthenticated }) {
  * ══════════════════════════════════════════════════════════════════ */
 
 const SEASON = 2026;
-const API = "http://localhost:3000";
 
 function LandingPage() {
     const [races, setRaces] = useState([]);

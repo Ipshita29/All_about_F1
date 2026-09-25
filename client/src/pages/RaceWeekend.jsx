@@ -20,8 +20,8 @@ import { circuitInfo } from "../data/circuitInfo";
 import { formatSessionTime } from "../utils/timeUtils";
 import { getWeekendSessions, formatWeekendRange } from "../utils/landingHelpers";
 import "../styles/pages/RaceWeekend.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
 function pad(n) {

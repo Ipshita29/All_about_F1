@@ -7,8 +7,8 @@ import { knowMoreInfo } from "../data/knowMoreInfo";
 import CircuitVisualization from "../components/CircuitVisualization";
 import { ExSection, TelemetryStat } from "../components/EntityDetail";
 import "../styles/pages/EntityPages.css";
+import { API_BASE_URL as API } from "../config/api";
 
-const API = "http://localhost:3000";
 
 /*
  * CIRCUIT DOSSIER — a technical file, not a generic content page. The
