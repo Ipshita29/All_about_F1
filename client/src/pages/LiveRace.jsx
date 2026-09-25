@@ -913,6 +913,11 @@ function LastRaceStrategy({ hub }) {
         distribution.set(count, (distribution.get(count) || 0) + 1);
     }
 
+    // The winner's completed-laps count is the real race distance — used
+    // only to place pit markers proportionally along the timeline, never
+    // to infer anything about compounds or stint length.
+    const totalLaps = Math.max(1, ...latest.Results.map((r) => Number(r.laps) || 0));
+
     const podiumStrategies = latest.Results.slice(0, 3).map((r) => ({
         driver: r.Driver,
         stops: (stopsByDriver.get(r.Driver.driverId) || []).sort((a, b) => Number(a.lap) - Number(b.lap)),
@@ -920,36 +925,47 @@ function LastRaceStrategy({ hub }) {
 
     return (
         <div className="lr-strategy">
-            <span className="lr-panel-title">Strategy Distribution</span>
-            <div className="lr-strategy-distribution">
+            <span className="lr-panel-title"><Wrench size={13} aria-hidden="true" />Pit Stop Distribution</span>
+            <div className="lr-pitdist-grid">
                 {Array.from(distribution.entries()).sort((a, b) => a[0] - b[0]).map(([stops, count]) => (
-                    <span className="lr-strategy-tag lr-mono" key={stops}>{stops}-STOP · {count} DRIVERS</span>
+                    <div className="lr-pitdist-card" key={stops}>
+                        <span className="lr-mono lr-pitdist-value">{count}</span>
+                        <span className="lr-pitdist-label">{stops === 0 ? "No Stops" : `${stops}-Stop${stops > 1 ? "s" : ""}`}</span>
+                    </div>
                 ))}
             </div>
 
-            <span className="lr-panel-title lr-strategy-subtitle">Strategy Comparison — Podium</span>
-            <div className="lr-strategy-podium">
-                {podiumStrategies.map(({ driver, stops }) => (
-                    <div className="lr-strategy-row" key={driver.driverId}>
-                        <span className="lr-strategy-driver">{driver.familyName}</span>
-                        <span className="lr-strategy-pips" aria-hidden="true">
-                            {Array.from({ length: stops.length + 1 }).map((_, i) => (
-                                <span key={i} className={`lr-strategy-pip${i > 0 ? " lr-strategy-pip--stop" : ""}`} />
+            <span className="lr-panel-title lr-strategy-subtitle"><Timer size={13} aria-hidden="true" />Pit Stop Timing — Podium</span>
+            <div className="lr-pit-timeline-list">
+                {podiumStrategies.map(({ driver, stops }, i) => (
+                    <div className="lr-pit-timeline-row" key={driver.driverId}>
+                        <div className="lr-pit-timeline-head">
+                            <span className="lr-pit-timeline-pos lr-mono">P{i + 1}</span>
+                            <span className="lr-pit-timeline-driver">{driver.familyName}</span>
+                            <span className="lr-mono lr-pit-timeline-stops">{stops.length} {stops.length === 1 ? "STOP" : "STOPS"}</span>
+                        </div>
+                        <div className="lr-pit-timeline-track" aria-hidden="true">
+                            {stops.map((s, idx) => (
+                                <span
+                                    key={idx}
+                                    className="lr-pit-timeline-marker"
+                                    style={{ left: `${Math.min(100, (Number(s.lap) / totalLaps) * 100)}%` }}
+                                >
+                                    <span className="lr-pit-timeline-marker-label lr-mono">L{s.lap}</span>
+                                </span>
                             ))}
-                        </span>
-                        <span className="lr-mono lr-strategy-laps">
-                            {stops.length === 0 ? "No stops" : stops.map((s) => `Lap ${s.lap}`).join(" · ")}
+                        </div>
+                        <span className="lr-pit-timeline-laps">
+                            {stops.length === 0 ? "No pit stops" : stops.map((s) => `Lap ${s.lap}`).join(" · ")}
                         </span>
                     </div>
                 ))}
             </div>
-            <div className="lr-strategy-tyre-note">
-                <CircleDashed size={16} aria-hidden="true" />
-                <div className="lr-strategy-tyre-note-body">
-                    <span className="lr-highlight-label">Tyre Data</span>
-                    <span className="lr-compact-empty-desc">Not available from historical source — pit lap and stop count above are real; compounds are not.</span>
-                </div>
-            </div>
+
+            <p className="lr-strategy-footnote">
+                <CircleDashed size={12} aria-hidden="true" />
+                Historical pit-stop data is available; tyre compounds are not provided by the current data source.
+            </p>
         </div>
     );
 }
