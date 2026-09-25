@@ -945,6 +945,57 @@
     padding: 4px 10px;
 }
 
+/* Pit Stop Timing — Podium: a lap-proportional timeline per driver
+   instead of a plain "Lap 14 · Lap 15" text row. Marker position is
+   real (pit lap / race distance); no compound or stint data implied. */
+.lr-pit-timeline-list { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.lr-pit-timeline-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+    padding: 10px 14px 14px;
+}
+
+.lr-pit-timeline-head { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); }
+.lr-pit-timeline-pos { color: var(--lr-text-secondary); }
+.lr-pit-timeline-driver { font-weight: 700; color: var(--text-primary); }
+.lr-pit-timeline-stops { margin-left: auto; color: var(--accent-text); }
+
+.lr-pit-timeline-track {
+    position: relative;
+    height: 4px;
+    border-radius: var(--radius-full);
+    background: var(--lr-border);
+    margin: 0 4px;
+}
+
+.lr-pit-timeline-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--lr-surface-inner);
+}
+
+.lr-pit-timeline-marker-label {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.lr-pit-timeline-laps { font-size: var(--text-micro); color: var(--lr-text-secondary); margin-top: var(--space-2); }
+
 .lr-strategy-podium { display: flex; flex-direction: column; gap: 6px; }
 
 .lr-strategy-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: 8px 0; border-top: 1px solid var(--lr-border); font-size: var(--text-small); }
