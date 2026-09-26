@@ -124,7 +124,15 @@ function applyChannelUpdate(channel, payload) {
             mergeLines(state.timingData, payload);
             break;
         case "TimingAppData":
+            // TEMP DEBUG — tracing the tyre-age bug (removed once confirmed
+            // against a live session; see the deepMerge fix that follows).
+            if (payload?.Lines?.["18"]) {
+                console.log("[TyreDebug] raw patch for 18:", JSON.stringify(payload.Lines["18"]));
+            }
             mergeLines(state.timingAppData, payload);
+            if (state.timingAppData["18"]) {
+                console.log("[TyreDebug] merged state for 18:", JSON.stringify(state.timingAppData["18"]));
+            }
             break;
         case "TimingStats":
             mergeLines(state.timingStats, payload);
