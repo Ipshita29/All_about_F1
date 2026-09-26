@@ -110,7 +110,6 @@
 .fp-img--missing { display: flex; align-items: center; justify-content: center; }
 .fp-img--missing .fp-mono { font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-faint); }
 
-.fp-card-hit:hover .fp-img img,
 .fp-cover-hit:hover .fp-img img { transform: scale(1.03); }
 
 /* ── Shared card meta ── */
@@ -165,76 +164,99 @@
 
 .fp-cover .fp-card-open { margin-top: var(--space-3); }
 
-/* ── Cards (deck + chapter grid) ── */
+/* ── Netflix-style carousel rows (replaces the old editorial deck +
+   image-left/text-right chapter grid — that layout was the main source
+   of unused page width, since a lead card's text rarely filled the
+   space its 340px image column implied). ─────────────────────────── */
 
-.fp-deck { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+.fp-reels { display: flex; flex-direction: column; gap: var(--space-7); }
 
-.fp-card { }
-.fp-card-hit { display: flex; flex-direction: column; width: 100%; background: none; border: none; padding: 0; text-align: left; color: inherit; cursor: pointer; height: 100%; }
+.fp-reel-heading { font-size: 1.2rem; font-weight: 700; color: var(--text-on-light-primary); margin: 0 0 var(--space-4); }
 
-.fp-card-img { aspect-ratio: 4 / 3; }
+.fp-reel-viewport { position: relative; }
 
-.fp-card-copy { padding-top: var(--space-4); display: flex; flex-direction: column; flex: 1; }
+.fp-reel-track {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+    margin: 0 calc(-1 * var(--space-6));
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+}
 
-.fp-card-category { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.08em; color: var(--accent-text); margin-bottom: var(--space-2); }
-.fp-band--light .fp-card-category { color: var(--accent); }
+.fp-reel-track::-webkit-scrollbar { display: none; }
 
-.fp-card-title { font-size: 1.02rem; font-weight: 600; line-height: 1.35; color: var(--text-primary); margin: 0 0 var(--space-2); transition: color var(--dur-fast) var(--ease); }
-.fp-band--light .fp-card-title { color: var(--text-on-light-primary); }
+/* A flat, wrapping grid for a single filtered/searched result set —
+   same card, no horizontal scroll, since "show everything that matches"
+   is the point once a filter is active. */
+.fp-reel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
 
-.fp-card-desc {
-    font-size: 0.84rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin-bottom: var(--space-3);
+.fp-reel-arrow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-on-light-primary);
+    z-index: 2;
+}
+
+.fp-reel-arrow--left { left: calc(-1 * var(--space-4)); background: linear-gradient(to right, var(--surface-light-1) 40%, transparent); }
+.fp-reel-arrow--right { right: calc(-1 * var(--space-4)); background: linear-gradient(to left, var(--surface-light-1) 40%, transparent); }
+
+.fp-reel-arrow svg {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border-radius: 50%;
+    padding: 8px;
+    width: 34px;
+    height: 34px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Carousel card — a media-library unit, not a miniature article ── */
+
+.fp-reel-card { flex: 0 0 auto; width: 270px; scroll-snap-align: start; }
+
+.fp-reel-hit { display: flex; flex-direction: column; width: 100%; background: none; border: none; padding: 0; text-align: left; color: inherit; cursor: pointer; }
+
+.fp-reel-img { aspect-ratio: 16 / 10; }
+
+.fp-reel-copy { padding-top: var(--space-3); display: flex; flex-direction: column; }
+
+.fp-reel-category { font-size: 0.6rem; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 6px; }
+
+.fp-reel-title {
+    font-size: 0.94rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-on-light-primary);
+    margin: 0 0 8px;
+    min-height: calc(0.94rem * 1.35 * 2);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    transition: color var(--dur-fast) var(--ease);
 }
 
-.fp-band--light .fp-card-desc { color: var(--text-on-light-secondary); }
+.fp-reel-hit:hover .fp-reel-title { color: var(--accent); }
 
-.fp-card-open {
-    margin-top: auto;
-    padding-top: var(--space-3);
-    font-size: 0.66rem;
-    letter-spacing: 0.06em;
-    color: var(--text-faint);
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: color var(--dur-fast) var(--ease), gap var(--dur-fast) var(--ease);
-}
+.fp-reel-meta { display: flex; align-items: center; gap: 8px; font-size: 0.66rem; color: var(--text-on-light-muted); }
 
-.fp-band--light .fp-card-open { color: var(--text-on-light-muted); }
-.fp-card-hit:hover .fp-card-open { color: var(--accent-text); gap: 7px; }
-.fp-band--light .fp-card-hit:hover .fp-card-open { color: var(--accent); }
-.fp-card-hit:hover .fp-card-title { color: var(--accent-text); }
-.fp-band--light .fp-card-hit:hover .fp-card-title { color: var(--accent); }
+.fp-reel-arrow-hint { margin-left: auto; color: var(--accent); opacity: 0; transform: translateX(-3px); transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease); }
+.fp-reel-hit:hover .fp-reel-arrow-hint { opacity: 1; transform: translateX(0); }
 
-/* deck cards get a touch more room for the meta row above the title */
-.fp-card--feature .fp-card-title { font-size: 1.12rem; }
-
-/* ── Chapters (light band) ── */
-
-.fp-chapter { padding: var(--space-7) 0; border-top: 1px solid var(--border-on-light); }
-.fp-chapter:first-of-type { padding-top: 0; border-top: none; }
-
-.fp-chapter-head { display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-5); }
-.fp-chapter-num { font-size: 1.8rem; font-weight: 700; color: var(--border-on-light-strong); line-height: 1; }
-.fp-chapter-title { font-size: 1.25rem; font-weight: 700; color: var(--text-on-light-primary); margin: 0; }
-.fp-chapter-count { font-size: 0.64rem; letter-spacing: 0.08em; color: var(--text-on-light-muted); }
-
-.fp-chapter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
-
-.fp-card--lead { grid-column: span 3; }
-.fp-card--lead .fp-card-hit { display: grid; grid-template-columns: 340px 1fr; gap: var(--space-6); }
-.fp-card--lead .fp-card-img { aspect-ratio: 4 / 3; height: 100%; }
-.fp-card--lead .fp-card-copy { padding-top: 0; justify-content: center; }
-.fp-card--lead .fp-card-title { font-size: 1.18rem; }
-
-.fp-card--text .fp-card-title { font-size: 0.94rem; }
+.fp-reel-hit:hover .fp-reel-img img { transform: scale(1.04); }
 
 .fp-colophon { text-align: center; padding: var(--space-6) 0; margin: 0; font-size: 0.64rem; letter-spacing: 0.1em; color: var(--text-faint); }
 
@@ -249,8 +271,8 @@
 
 .fp-sk-cover { width: 100%; aspect-ratio: 21 / 9; margin-bottom: var(--space-5); }
 .fp-sk-line { height: 14px; margin-bottom: var(--space-3); }
-.fp-sk-card { aspect-ratio: 4 / 3; }
-.fp-skeleton .fp-deck { grid-template-columns: 1fr 1fr; }
+.fp-sk-reel { display: flex; gap: var(--space-4); overflow: hidden; }
+.fp-sk-card { flex: 0 0 270px; aspect-ratio: 16 / 10; }
 
 /* ══════════════════════════════════════════════════════════════════
    READER — in-page story unfold
@@ -376,20 +398,18 @@
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 980px) {
-    .fp-chapter-grid { grid-template-columns: repeat(2, 1fr); }
-    .fp-card--lead { grid-column: span 2; }
-    .fp-card--lead .fp-card-hit { grid-template-columns: 1fr; }
-    .fp-card--lead .fp-card-img { aspect-ratio: 16 / 9; height: auto; }
-}
-
+/* Card width is deliberately fixed across breakpoints (not just the
+   gap/padding) — the horizontal scroll naturally shows fewer of them as
+   the viewport narrows (~4-5 desktop, ~2-3 tablet, ~1.2-1.5 mobile)
+   without needing a card-count media query of its own. */
 @media (max-width: 780px) {
     .fp-masthead, .fp-band-inner { padding-left: var(--space-4); padding-right: var(--space-4); }
-    .fp-deck { grid-template-columns: 1fr; }
-    .fp-chapter-grid { grid-template-columns: 1fr; }
-    .fp-card--lead { grid-column: span 1; }
+    .fp-reel-track { margin: 0 calc(-1 * var(--space-4)); padding-left: var(--space-4); padding-right: var(--space-4); }
+    .fp-reel-card { width: 220px; }
+    .fp-reel-arrow { display: none; }
+    .fp-reel-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
     .fp-cover-img { aspect-ratio: 16 / 9; }
     .fp-cover-title { font-size: 1.4rem; }
     .fp-reader-page { max-width: 100%; }
-    .fp-skeleton .fp-deck { grid-template-columns: 1fr; }
+    .fp-sk-card { flex: 0 0 220px; }
 }

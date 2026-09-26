@@ -1,20 +1,20 @@
 /*
- * FROM THE PADDOCK — the news feed as a premium F1 editorial newsroom.
- *
- * A dark masthead leads into a light featured-story band, a dark deck of
- * secondary stories, and a light "latest news" archive grouped into real
- * chapters — a deliberate light/dark rhythm instead of one long black
- * page. The chapter names already computed from article content now also
- * double as a real, non-fake category filter. Opening a story unfolds an
+ * FROM THE PADDOCK — the news feed as a premium F1 media-browsing page,
+ * not an online magazine. A dark masthead leads into one large featured
+ * story, then Netflix-style horizontal carousels: "Latest News" plus one
+ * row per category, each computed from real article content (never
+ * invented) and doubling as the same non-fake category filter this page
+ * has always had. Selecting a category or searching collapses the rows
+ * into a single flat grid of that result set. Opening a story unfolds an
  * in-page reader (no route change) via a shared-element view transition,
  * with a reading progress bar, contextual driver/team links and editorial
  * recommendations. Same /news endpoint, search and reader mechanics as
- * before; only the presentation changes.
+ * before; only the browsing layout changes.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { SearchInput, EmptyState, Button } from "../components/UI";
 import {
     DRIVER_ID_MAP,
@@ -100,8 +100,6 @@ function entityLinks(article) {
         (l, i) => links.findIndex((o) => o.to === l.to) === i
     ).slice(0, 6);
 }
-
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
 /* ── Article photography with a styled local fallback ─────────────── */
 
@@ -259,31 +257,84 @@ function Reader({ article, related, onClose, onSwitch }) {
     );
 }
 
-/* ── Story cards at different editorial scales ─────────────────────── */
+/* ── Compact media card — the carousel unit ───────────────────────────
+   A media-library card, not a miniature article: image, category,
+   a two-line-clamped headline, source/date. No description — that's
+   what the reader is for. Fixed dimensions (width + aspect-ratio, both
+   in CSS) so every card in a row is visually identical regardless of
+   headline length. ─────────────────────────────────────────────────── */
 
-function StoryCard({ article, scale, onOpen, vtName }) {
+function CarouselCard({ article, onOpen, vtName }) {
     return (
-        <article className={`fp-card fp-card--${scale}`}>
-            <button type="button" className="fp-card-hit" onClick={() => onOpen(article)}>
-                {scale !== "text" && (
-                    <ArticleImage article={article} className="fp-card-img" vtName={vtName} />
-                )}
-                <div className="fp-card-copy">
-                    <span className="fp-card-category fp-mono">F1 · {chapterFor(article).toUpperCase()}</span>
-                    <h3 className="fp-card-title">{article.title}</h3>
-                    {scale !== "small" && scale !== "text" && (
-                        <p className="fp-card-desc">{article.description}</p>
-                    )}
-                    <div className="fp-card-meta fp-mono">
+        <article className="fp-reel-card">
+            <button type="button" className="fp-reel-hit" onClick={() => onOpen(article)}>
+                <ArticleImage article={article} className="fp-reel-img" vtName={vtName} />
+                <div className="fp-reel-copy">
+                    <span className="fp-reel-category fp-mono">F1 · {chapterFor(article).toUpperCase()}</span>
+                    <h3 className="fp-reel-title">{article.title}</h3>
+                    <div className="fp-reel-meta fp-mono">
                         <span className="fp-source">{article.source}</span>
                         <span>{formatNewsDate(article.publishedAt)}</span>
+                        <ArrowUpRight size={13} className="fp-reel-arrow-hint" aria-hidden="true" />
                     </div>
-                    <span className="fp-card-open fp-mono">
-                        READ STORY <ArrowRight size={12} />
-                    </span>
                 </div>
             </button>
         </article>
+    );
+}
+
+/* ── Netflix-style horizontal row — CSS overflow-x scrolling, plain
+   React state for the arrow controls, no carousel dependency. Arrows
+   only render once there's somewhere to scroll to/from, computed from
+   the track's own scroll metrics (cards have a fixed width and the
+   image area reserves its height via aspect-ratio, so this is accurate
+   immediately on mount rather than shifting once images finish loading). */
+function CarouselRow({ title, articles, onOpen, vtFor }) {
+    const trackRef = useRef(null);
+    const [scrollState, setScrollState] = useState({ left: false, right: false });
+
+    const updateScrollState = () => {
+        const el = trackRef.current;
+        if (!el) return;
+        setScrollState({
+            left: el.scrollLeft > 4,
+            right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+        });
+    };
+
+    useEffect(() => {
+        updateScrollState();
+        window.addEventListener("resize", updateScrollState);
+        return () => window.removeEventListener("resize", updateScrollState);
+    }, [articles]);
+
+    if (articles.length === 0) return null;
+
+    const scrollBy = (dir) => {
+        trackRef.current?.scrollBy({ left: dir * trackRef.current.clientWidth * 0.85, behavior: "smooth" });
+    };
+
+    return (
+        <div className="fp-reel">
+            <h2 className="fp-reel-heading">{title}</h2>
+            <div className="fp-reel-viewport">
+                <div className="fp-reel-track" ref={trackRef} onScroll={updateScrollState}>
+                    {articles.map((article) => (
+                        <CarouselCard key={article.id} article={article} onOpen={onOpen} vtName={vtFor(article)} />
+                    ))}
+                </div>
+                {scrollState.left && (
+                    <button type="button" className="fp-reel-arrow fp-reel-arrow--left" onClick={() => scrollBy(-1)} aria-label={`Scroll ${title} left`}>
+                        <ChevronLeft size={20} />
+                    </button>
+                )}
+                {scrollState.right && (
+                    <button type="button" className="fp-reel-arrow fp-reel-arrow--right" onClick={() => scrollBy(1)} aria-label={`Scroll ${title} right`}>
+                        <ChevronRight size={20} />
+                    </button>
+                )}
+            </div>
+        </div>
     );
 }
 
@@ -299,8 +350,10 @@ function NewsSkeleton() {
                     <div className="fp-sk fp-sk-line" style={{ width: "45%" }} />
                 </div>
             </div>
-            <div className="fp-band fp-band--dark">
-                <div className="fp-band-inner fp-deck">
+            <div className="fp-band fp-band--light">
+                <div className="fp-band-inner fp-sk-reel">
+                    <div className="fp-sk fp-sk-card" />
+                    <div className="fp-sk fp-sk-card" />
                     <div className="fp-sk fp-sk-card" />
                     <div className="fp-sk fp-sk-card" />
                 </div>
@@ -371,11 +424,14 @@ function NewsPage() {
 
     const showCinematic = !searching && activeCategory === "All";
     const cover = showCinematic ? categoryFiltered[0] : null;
-    const deck = showCinematic ? categoryFiltered.slice(1, 3) : [];
-    const rest = showCinematic ? categoryFiltered.slice(3) : categoryFiltered;
+    const latestNews = showCinematic ? categoryFiltered.slice(1) : [];
 
+    /* Category rows draw from the full filtered set (not "whatever's left
+       after Latest News") — a story can legitimately appear in both its
+       own category's row and the general Latest News row, same as any
+       genre-row browsing UI. */
     const byName = new Map();
-    for (const article of rest) {
+    for (const article of categoryFiltered) {
         const name = chapterFor(article);
         if (!byName.has(name)) byName.set(name, []);
         byName.get(name).push(article);
@@ -519,56 +575,26 @@ function NewsPage() {
                                 </section>
                             )}
 
-                            {/* ── Secondary stories (dark) ─────────────── */}
-                            {deck.length > 0 && (
-                                <section className="fp-band fp-band--dark" aria-label="Secondary stories">
-                                    <div className="fp-band-inner">
-                                        <span className="fp-section-title fp-mono">SECONDARY STORIES</span>
-                                        <div className="fp-deck">
-                                            {deck.map((article) => (
-                                                <StoryCard
-                                                    key={article.id}
-                                                    article={article}
-                                                    scale="feature"
-                                                    onOpen={openStory}
-                                                    vtName={vtFor(article)}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* ── Latest news / chapters (light) ───────── */}
+                            {/* ── Netflix-style browsing rows (light) ──── */}
                             <section className="fp-band fp-band--light">
-                                <div className="fp-band-inner">
-                                    <span className="fp-section-title fp-mono">
-                                        {showCinematic ? "LATEST NEWS" : searching ? "SEARCH RESULTS" : "FILTERED"}
-                                    </span>
-                                    {chapters.map(([name, items], ci) => (
-                                        <div className="fp-chapter" key={name}>
-                                            <header className="fp-chapter-head">
-                                                <span className="fp-chapter-num fp-mono">{ROMAN[ci] || ci + 1}</span>
-                                                <div>
-                                                    <h2 className="fp-chapter-title">{name}</h2>
-                                                    <span className="fp-chapter-count fp-mono">
-                                                        {items.length} STOR{items.length !== 1 ? "IES" : "Y"}
-                                                    </span>
-                                                </div>
-                                            </header>
-                                            <div className="fp-chapter-grid">
-                                                {items.map((article, i) => (
-                                                    <StoryCard
-                                                        key={article.id}
-                                                        article={article}
-                                                        scale={i === 0 ? "lead" : i <= 2 ? "small" : "text"}
-                                                        onOpen={openStory}
-                                                        vtName={vtFor(article)}
-                                                    />
+                                <div className="fp-band-inner fp-reels">
+                                    {showCinematic ? (
+                                        <>
+                                            <CarouselRow title="Latest News" articles={latestNews} onOpen={openStory} vtFor={vtFor} />
+                                            {chapters.map(([name, items]) => (
+                                                <CarouselRow key={name} title={name} articles={items} onOpen={openStory} vtFor={vtFor} />
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <div className="fp-reel">
+                                            <h2 className="fp-reel-heading">{searching ? "Search Results" : activeCategory}</h2>
+                                            <div className="fp-reel-grid">
+                                                {categoryFiltered.map((article) => (
+                                                    <CarouselCard key={article.id} article={article} onOpen={openStory} vtName={vtFor(article)} />
                                                 ))}
                                             </div>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </section>
                         </>
