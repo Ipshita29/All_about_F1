@@ -740,24 +740,6 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 
 .ex-tg-name { font-size: var(--text-display); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: var(--space-3) 0 var(--space-5); }
 
-.ex-tg-carline {
-    max-width: 420px;
-    height: 150px;
-    margin: 0 auto var(--space-6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-}
-
-.ex-tg-car { max-width: 100%; max-height: 100%; object-fit: contain; filter: grayscale(1) opacity(0.85); }
-.ex-tg-floor { display: none; }
-
-.ex-tg-statline { display: flex; justify-content: center; gap: var(--space-7); flex-wrap: wrap; }
-
 /* ── Team Details' own hero (.exd-tg-*) — a fresh namespace rather than
    restyling .ex-tg-hero/.ex-tg-kicker/.ex-tg-name above, since
    CircuitDetails.jsx reuses those exact classes for its own hero and
