@@ -1310,8 +1310,10 @@ function TeamFocus({ drivers, season }) {
         ["Stops", (d) => d.pitStops],
     ];
 
+    const teamAccent = teamDrivers[0]?.teamColor ?? "var(--border-strong)";
+
     return (
-        <div className="lr-team-focus">
+        <div className="lr-team-focus" style={{ "--lr-team-accent": teamAccent }}>
             <Select value={activeTeam ?? ""} onChange={(e) => setSelected(e.target.value)} className="lr-team-select">
                 {teams.map(([team]) => <option key={team} value={team}>{team}</option>)}
             </Select>

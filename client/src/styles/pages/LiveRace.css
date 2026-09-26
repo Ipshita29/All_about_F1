@@ -439,6 +439,7 @@
     max-height: 220px;
     border-radius: 8px;
     background: linear-gradient(180deg, var(--lr-surface-header), var(--lr-surface-inner));
+    border-top: 3px solid var(--lr-team-accent, var(--border-strong));
 }
 .lr-team-compare-photo .lr-driver-card-photo-fallback { color: var(--lr-text-secondary); }
 
