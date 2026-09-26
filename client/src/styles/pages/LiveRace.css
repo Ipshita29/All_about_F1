@@ -393,6 +393,19 @@
 .lr-pulse-row dt svg { flex-shrink: 0; opacity: 0.8; }
 .lr-pulse-row dd { font-weight: 600; color: var(--text-primary); }
 
+/* ── Session KPI strip — the dashboard's headline instrument row, no
+   card chrome of its own (a bottom rule is enough separation), so it
+   reads as part of the page's fixed frame rather than one more panel
+   in the stack. Reuses the .lr-pulse-tile look below. ─────────────── */
+
+.lr-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-3);
+    padding: var(--space-1) 0 var(--space-2);
+    border-bottom: 1px solid var(--lr-border);
+}
+
 /* ── Session Pulse — compact status grid (WeatherSection keeps the
    .lr-pulse row list above; this is Session Pulse's own tile layout) ── */
 

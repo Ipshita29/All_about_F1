@@ -15,7 +15,7 @@ import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
     Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
-    CloudLightning, ShieldAlert, BarChart2,
+    CloudLightning, ShieldAlert, BarChart2, Gauge,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -1165,26 +1165,24 @@ function LiveTimingTable({ drivers, sessionType }) {
     );
 }
 
-/* ── Session pulse ─────────────────────────────────────────────────── */
+/* ── Session KPI strip ─────────────────────────────────────────────── */
 
-/* Compact visual status grid — one tile per metric (icon, primary value,
-   status/sub-line) instead of a long key-value list, so the most
-   important reads (session live, track flag, fastest lap) are legible
-   at a glance rather than buried in a column of rows. */
-function SessionPulse({ data, drivers }) {
-    const weatherSummary = data.weather
-        ? `${data.weather.airTemperature ?? "—"}°C`
-        : "—";
-    const weatherSub = data.weather ? (data.weather.rainfall > 0 ? "RAIN" : "DRY") : null;
-
+/* The dashboard's top-line instrument strip — five tiles, no card chrome,
+   sitting directly under the header the way a timing-tower or Tableau
+   dashboard leads with headline numbers before any detail module. Lap
+   count comes straight from the live LapCount feed (liveState.lapCount
+   in f1LiveTimingService.js); TotalLaps is frequently null mid-session
+   (F1 doesn't always publish it), so the "/total" half is only appended
+   when it's genuinely present — never guessed from the schedule. */
+function SessionKpiStrip({ data, drivers }) {
     const fastest = drivers
         .map((d) => ({ d, secs: parseLapTime(d.bestLap) }))
         .filter((x) => x.secs !== null)
         .sort((a, b) => a.secs - b.secs)[0];
 
-    const raceLike = isRaceLikeSession(data.race?.session);
-    const totalPitStops = drivers.reduce((sum, d) => sum + (d.pitStops || 0), 0);
     const trackStatus = data.track?.status;
+    const currentLap = data.race?.currentLap;
+    const totalLaps = data.race?.totalLaps;
 
     const tiles = [
         {
@@ -1194,10 +1192,10 @@ function SessionPulse({ data, drivers }) {
             sub: <span className="lr-pulse-live"><span className="lr-badge-dot" aria-hidden="true" />LIVE</span>,
         },
         {
-            icon: <Flag size={15} aria-hidden="true" />,
-            label: "Track",
-            value: trackStatus ? formatFlag(trackStatus) : "—",
-            sub: trackStatus ? <span className={`lr-flag-dot lr-flag-dot--${trackStatus.toLowerCase()}`} aria-hidden="true" /> : null,
+            icon: <Gauge size={15} aria-hidden="true" />,
+            label: "Lap",
+            value: currentLap != null ? `${currentLap}${totalLaps != null ? `/${totalLaps}` : ""}` : "—",
+            sub: null,
         },
         {
             icon: <Users size={15} aria-hidden="true" />,
@@ -1213,27 +1211,15 @@ function SessionPulse({ data, drivers }) {
             accent: true,
         },
         {
-            icon: <Thermometer size={15} aria-hidden="true" />,
-            label: "Weather",
-            value: weatherSummary,
-            sub: weatherSub,
-        },
-        {
-            icon: <Wrench size={15} aria-hidden="true" />,
-            label: "Pit Stops",
-            value: raceLike ? (totalPitStops || "—") : "—",
-            sub: raceLike ? null : "N/A",
-        },
-        {
-            icon: <AlertTriangle size={15} aria-hidden="true" />,
-            label: "Race Control",
-            value: data.events?.length ?? 0,
-            sub: "EVENTS",
+            icon: <Flag size={15} aria-hidden="true" />,
+            label: "Track",
+            value: trackStatus ? formatFlag(trackStatus) : "—",
+            sub: trackStatus ? <span className={`lr-flag-dot lr-flag-dot--${trackStatus.toLowerCase()}`} aria-hidden="true" /> : null,
         },
     ];
 
     return (
-        <div className="lr-pulse-grid">
+        <div className="lr-kpi-strip">
             {tiles.map((tile) => (
                 <div className={`lr-pulse-tile${tile.accent ? " lr-pulse-tile--accent" : ""}`} key={tile.label}>
                     <span className="lr-pulse-tile-icon">{tile.icon}</span>
@@ -1837,6 +1823,8 @@ function LiveRace() {
         <div className="lr">
             <CompactHeader data={data} />
             <main className="lr-main">
+                <SessionKpiStrip data={data} drivers={drivers} />
+
                 <div className="lr-grid lr-grid--primary">
                     <Panel title={<><Timer size={13} aria-hidden="true" />Live Timing</>} className="lr-panel--primary">
                         <LiveTimingTable drivers={drivers} sessionType={sessionType} />
@@ -1847,9 +1835,9 @@ function LiveRace() {
                 </div>
 
                 {/* Two independent columns, not row-paired grids — a short
-                   Team Focus must not leave Session Pulse waiting on a much
-                   taller Tyres & Strategy to finish before it can start.
-                   Each column flows purely from its own content height. */}
+                   module must not leave its row partner waiting on a much
+                   taller one to finish before it can start. Each column
+                   flows purely from its own content height. */}
                 <div className="lr-columns">
                     <div className="lr-column">
                         <Panel title={<><BarChart2 size={13} aria-hidden="true" />Gap to Leader</>}>
@@ -1857,9 +1845,6 @@ function LiveRace() {
                         </Panel>
                         <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
                             <TeamFocus drivers={drivers} season={data.race?.season} />
-                        </Panel>
-                        <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
-                            <SessionPulse data={data} drivers={drivers} />
                         </Panel>
                         <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
                             <WeatherSection weather={data.weather} />
