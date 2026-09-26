@@ -141,12 +141,12 @@ function DriverDetails() {
 
             <main className="ex-main exd-dash">
                 {extraInfo?.description && (
-                    <ExSection eyebrow="Profile" title="The Story" className="exd-card exd-card--light exd-span-4">
+                    <ExSection eyebrow="Profile" title="The Story" className="exd-card">
                         <p className="ex-prose">{extraInfo.description}</p>
                     </ExSection>
                 )}
 
-                <ExSection eyebrow="Credential" title="Driver File" className="exd-card exd-card--chalk exd-span-2">
+                <ExSection eyebrow="Credential" title="Driver File" className="exd-card">
                     <div className="ex-spec exd-spec-grid">
                         <div className="ex-spec-row">
                             <span className="ex-spec-label">Nationality</span>
@@ -177,7 +177,7 @@ function DriverDetails() {
                     </div>
                 </ExSection>
 
-                <ExSection eyebrow="Telemetry" title={`${year} Season`} className="exd-card exd-card--dark exd-span-3">
+                <ExSection eyebrow="Telemetry" title={`${year} Season`} className="exd-card">
                     <div className="ex-stat-row">
                         <TelemetryStat value={standing.position} label="Position" accent />
                         <TelemetryStat
@@ -190,7 +190,7 @@ function DriverDetails() {
                     </div>
                 </ExSection>
 
-                <ExSection eyebrow="Career" title="Career Statistics" className="exd-card exd-card--dark exd-span-3">
+                <ExSection eyebrow="Career" title="Career Statistics" className="exd-card">
                     <div className="ex-stat-row">
                         <TelemetryStat
                             value={extraInfo?.championships ?? "—"}
@@ -228,22 +228,8 @@ function DriverDetails() {
                 </ExSection>
 
                 {extraInfo?.drivingStyle && (
-                    <ExSection eyebrow="On Track" title="Driving Style" className="exd-card exd-card--light exd-span-3">
+                    <ExSection eyebrow="On Track" title="Driving Style" className="exd-card">
                         <p className="ex-prose">{extraInfo.drivingStyle}</p>
-                    </ExSection>
-                )}
-
-                {extraInfo?.famousRaces?.length > 0 && (
-                    <ExSection
-                        eyebrow={<><Flag size={12} aria-hidden="true" /> Signature Drives</>}
-                        title="Famous Races"
-                        className="exd-card exd-card--chalk exd-span-3"
-                    >
-                        <ul className="ex-list exd-icon-list">
-                            {extraInfo.famousRaces.map((race, index) => (
-                                <li key={index}><Trophy size={13} aria-hidden="true" />{race}</li>
-                            ))}
-                        </ul>
                     </ExSection>
                 )}
 
@@ -251,7 +237,7 @@ function DriverDetails() {
                     <ExSection
                         eyebrow={<><Milestone size={12} aria-hidden="true" /> Milestones</>}
                         title="Career Timeline"
-                        className="exd-card exd-card--dark exd-span-4"
+                        className="exd-card"
                     >
                         <ul className="ex-timeline exd-icon-list">
                             {extraInfo.careerHighlights.map((highlight, index) => (
@@ -261,11 +247,25 @@ function DriverDetails() {
                     </ExSection>
                 )}
 
+                {extraInfo?.famousRaces?.length > 0 && (
+                    <ExSection
+                        eyebrow={<><Flag size={12} aria-hidden="true" /> Signature Drives</>}
+                        title="Famous Races"
+                        className="exd-card"
+                    >
+                        <ul className="ex-list exd-icon-list">
+                            {extraInfo.famousRaces.map((race, index) => (
+                                <li key={index}><Trophy size={13} aria-hidden="true" />{race}</li>
+                            ))}
+                        </ul>
+                    </ExSection>
+                )}
+
                 {extraInfo?.funFacts?.length > 0 && (
                     <ExSection
                         eyebrow={<><Sparkles size={12} aria-hidden="true" /> Paddock Notes</>}
                         title="Fun Facts"
-                        className="exd-card exd-card--chalk exd-span-2"
+                        className="exd-card"
                     >
                         <ul className="ex-list exd-icon-list">
                             {extraInfo.funFacts.map((fact, index) => (
@@ -279,7 +279,7 @@ function DriverDetails() {
                     <ExSection
                         eyebrow={<><RadioIcon size={12} aria-hidden="true" /> Team Radio</>}
                         title="In Their Own Words"
-                        className="exd-card exd-card--dark exd-card--quote exd-span-6"
+                        className="exd-card exd-card--quote exd-span-full"
                     >
                         <blockquote className="ex-quote">
                             “{extraInfo.quote}”
