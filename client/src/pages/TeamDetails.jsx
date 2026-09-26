@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Trophy, UserRound, Sparkles } from "lucide-react";
 import teamInfo from "../data/teamInfo";
 import { LoadingSpinner } from "../components/UI";
 import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
@@ -65,78 +66,86 @@ function TeamDetails() {
 
     return (
         <div className="ex" style={{ "--accent": assets.accent }}>
-            {/* ── garage hero: the car under the lights ── */}
-            <header className="ex-tg-hero">
-                <Link to="/teams" viewTransition className="ex-back">
-                    ← BACK TO PIT LANE
-                </Link>
+            <Link to="/teams" viewTransition className="ex-back exd-tg-back">
+                ← BACK TO PIT LANE
+            </Link>
 
-                <p className="ex-tg-kicker" style={{ display: "block", marginTop: 26 }}>
-                    CONSTRUCTOR GARAGE · {year} SEASON
-                </p>
+            {/* ── garage hero: profile card + car under the lights ── */}
+            <header className="exd-tg-hero">
+                <div className="exd-tg-info">
+                    <p className="exd-tg-kicker">CONSTRUCTOR GARAGE · {year} SEASON</p>
 
-                <h1 className="ex-tg-name">{team.name}</h1>
+                    <h1 className="exd-tg-name">{team.name}</h1>
 
-                <div className="ex-dossier-tags" style={{ justifyContent: "center" }}>
-                    <span className="ex-tag ex-tag--accent">{team.nationality}</span>
-                    {extraInfo?.founded && <span className="ex-tag">EST. {extraInfo.founded}</span>}
-                    <span className="ex-tag">
-                        <a href={team.url} target="_blank" rel="noreferrer">WIKIPEDIA ↗</a>
-                    </span>
+                    <div className="ex-dossier-tags exd-tg-tags">
+                        <span className="ex-tag ex-tag--accent">{team.nationality}</span>
+                        {extraInfo?.founded && <span className="ex-tag">EST. {extraInfo.founded}</span>}
+                        {extraInfo?.headquarters && <span className="ex-tag">{extraInfo.headquarters}</span>}
+                        {extraInfo?.teamPrincipal && <span className="ex-tag">{extraInfo.teamPrincipal}</span>}
+                        <span className="ex-tag">
+                            <a href={team.url} target="_blank" rel="noreferrer">WIKIPEDIA ↗</a>
+                        </span>
+                    </div>
+
+                    <div className="ex-dossier-live">
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">P{standing.position}</span>
+                            <span className="ex-dossier-live-label">
+                                <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship</KnowMoreTerm>
+                            </span>
+                        </div>
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">
+                                <AnimatedNumber value={standing.points} />
+                            </span>
+                            <span className="ex-dossier-live-label">
+                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
+                            </span>
+                        </div>
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">
+                                <AnimatedNumber value={standing.wins} />
+                            </span>
+                            <span className="ex-dossier-live-label">Wins · {year}</span>
+                        </div>
+                        <div className="ex-dossier-live-item">
+                            <span className="ex-dossier-live-val">
+                                <AnimatedNumber value={extraInfo?.championships ?? "—"} />
+                            </span>
+                            <span className="ex-dossier-live-label">
+                                <KnowMoreTerm term="constructors_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Titles</KnowMoreTerm>
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-                <div
-                    className="ex-tg-carline"
-                    style={{ viewTransitionName: `team-car-${team.constructorId}` }}
-                >
-                    <LayeredImage
-                        candidates={assets.carCandidates}
-                        alt={`${team.name} Formula 1 car`}
-                        className="ex-tg-car"
-                        fallback={
-                            <div className="ex-entity-fallback" aria-hidden="true">
-                                <span>{team.name.slice(0, 2).toUpperCase()}</span>
-                            </div>
-                        }
-                    />
-                </div>
-                <div className="ex-tg-floor" aria-hidden="true" />
-
-                <div className="ex-tg-statline">
-                    <div className="ex-dossier-live-item">
-                        <span className="ex-dossier-live-val">P{standing.position}</span>
-                        <span className="ex-dossier-live-label">
-                            <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship</KnowMoreTerm>
-                        </span>
-                    </div>
-                    <div className="ex-dossier-live-item">
-                        <span className="ex-dossier-live-val">
-                            <AnimatedNumber value={standing.points} />
-                        </span>
-                        <span className="ex-dossier-live-label">
-                            <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
-                        </span>
-                    </div>
-                    <div className="ex-dossier-live-item">
-                        <span className="ex-dossier-live-val">
-                            <AnimatedNumber value={standing.wins} />
-                        </span>
-                        <span className="ex-dossier-live-label">Wins · {year}</span>
-                    </div>
-                    <div className="ex-dossier-live-item">
-                        <span className="ex-dossier-live-val">
-                            <AnimatedNumber value={extraInfo?.championships ?? "—"} />
-                        </span>
-                        <span className="ex-dossier-live-label">
-                            <KnowMoreTerm term="constructors_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Titles</KnowMoreTerm>
-                        </span>
+                <div className="exd-tg-visual">
+                    {assets.logo && <img src={assets.logo} alt={`${team.name} logo`} className="exd-tg-logo" />}
+                    <div
+                        className="exd-tg-carline"
+                        style={{ viewTransitionName: `team-car-${team.constructorId}` }}
+                    >
+                        <LayeredImage
+                            candidates={assets.carCandidates}
+                            alt={`${team.name} Formula 1 car`}
+                            className="exd-tg-car"
+                            fallback={
+                                <div className="ex-entity-fallback" aria-hidden="true">
+                                    <span>{team.name.slice(0, 2).toUpperCase()}</span>
+                                </div>
+                            }
+                        />
                     </div>
                 </div>
             </header>
 
-            <main className="ex-main">
+            <main className="ex-main exd-dash">
                 {drivers.length > 0 && (
-                    <ExSection eyebrow="Race Crew" title="Current Drivers">
+                    <ExSection
+                        eyebrow={<><UserRound size={12} aria-hidden="true" /> Race Crew</>}
+                        title="Current Drivers"
+                        className="exd-card exd-card--chalk exd-span-4"
+                    >
                         <div className="ex-pitlane" style={{ paddingTop: 0 }}>
                             {drivers.map((d) => (
                                 <Link
