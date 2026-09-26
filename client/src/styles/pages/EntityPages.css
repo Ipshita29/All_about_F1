@@ -705,6 +705,25 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .exd-card--light .ex-stat-meter,
 .exd-card--chalk .ex-stat-meter { background: var(--border-on-light); }
 
+/* Driver File / Team Specification — 2-column compact grid instead of
+   one long stacked list. */
+.exd-spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4) var(--space-5); }
+.exd-spec-grid .ex-spec-row { flex-direction: column; align-items: flex-start; gap: 4px; border-top: none; padding: 0; }
+.exd-spec-grid .ex-spec-value { text-align: left; }
+
+/* Small icon markers on timeline/fact list items — added purely via a
+   leading svg in the <li>, so .ex-timeline/.ex-list themselves (shared
+   with other pages) are never touched. */
+.exd-icon-list li { display: flex; align-items: flex-start; gap: 8px; }
+.exd-icon-list li svg { flex-shrink: 0; margin-top: 3px; color: var(--accent-text); opacity: 0.85; }
+.exd-card--light .exd-icon-list li svg,
+.exd-card--chalk .exd-icon-list li svg { color: var(--accent); }
+
+/* Quote card — red accent line down the side of the card itself, not
+   just the blockquote's own border. */
+.exd-card--quote { border-left: 3px solid var(--accent); }
+.exd-card--quote .ex-quote { border-left: none; padding-left: 0; max-width: 68ch; }
+
 /* ══════════════════════════════════════════════════════════════════
    CONSTRUCTOR GARAGE (Team Details)
    ══════════════════════════════════════════════════════════════════ */
