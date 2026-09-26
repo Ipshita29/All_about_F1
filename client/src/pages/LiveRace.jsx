@@ -1875,11 +1875,12 @@ function DashboardSkeleton() {
                     <div className="lr-skel lr-skel-panel" style={{ height: 420 }} />
                     <div className="lr-skel lr-skel-panel" style={{ height: 420 }} />
                 </div>
-                <div className="lr-grid lr-grid--triple">
-                    <div className="lr-skel lr-skel-panel" style={{ height: 200 }} />
-                    <div className="lr-skel lr-skel-panel" style={{ height: 200 }} />
-                    <div className="lr-skel lr-skel-panel" style={{ height: 200 }} />
-                </div>
+                {[180, 260, 280, 220].map((height, i) => (
+                    <div className="lr-grid lr-grid--6-6" key={i}>
+                        <div className="lr-skel lr-skel-panel" style={{ height }} />
+                        <div className="lr-skel lr-skel-panel" style={{ height }} />
+                    </div>
+                ))}
             </main>
         </div>
     );
