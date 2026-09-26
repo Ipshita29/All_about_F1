@@ -205,7 +205,14 @@ function normalizeDrivers(state) {
         const car = state.carData[num];
         const loc = state.location[num];
 
-        const stints = Array.isArray(appData?.Stints) ? appData.Stints : [];
+        // .filter(Boolean) guards against a sparse array — if an index-keyed
+        // stint patch ever arrives for an index higher than what's been
+        // seen so far (e.g. index 2 before index 1 has ever been set), the
+        // array grows with a genuine hole in between. Without the filter,
+        // stints[stints.length - 1] would still correctly pick the newest
+        // stint by position, but stintNumber/pitStops (derived from
+        // stints.length) would overcount by however many holes exist.
+        const stints = Array.isArray(appData?.Stints) ? appData.Stints.filter(Boolean) : [];
         const currentStint = stints[stints.length - 1];
 
         const status = timing?.Retired ? "retired" : timing?.Stopped ? "stopped" : timing?.InPit ? "pit" : "racing";
