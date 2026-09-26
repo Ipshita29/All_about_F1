@@ -438,12 +438,17 @@
 .pr-history-item { border-top: 1px solid var(--pr-border); }
 .pr-history-item:first-child { border-top: none; }
 
+/* Fixed 3-column grid — race name | predicted/actual | status badge —
+   rather than a flex row, so the middle column always gets a real,
+   consistent width instead of squeezing around whatever the race name
+   happened to need. */
 .pr-history-row {
     width: 100%;
-    display: flex;
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) 100px;
     align-items: center;
     gap: var(--space-4);
-    padding: 12px 0;
+    padding: 14px 0;
     background: none;
     border: none;
     cursor: pointer;
@@ -454,11 +459,37 @@
 
 .pr-history-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.pr-history-race { font-weight: 700; font-size: var(--text-small); color: var(--text-primary); min-width: 160px; }
+.pr-history-race {
+    font-weight: 700;
+    font-size: var(--text-small);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-.pr-history-compare { flex: 1; font-size: var(--text-small); color: var(--pr-text-secondary); }
-.pr-history-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin-right: 4px; }
-.pr-history-sep { margin: 0 var(--space-3); color: var(--text-faint); }
+.pr-history-compare { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.pr-history-compare-row { display: flex; align-items: baseline; gap: var(--space-3); }
+
+.pr-history-label {
+    flex-shrink: 0;
+    width: 62px;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.pr-history-driver {
+    font-size: var(--text-small);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
 
 .pr-history-badge {
     font-family: var(--font-mono);
