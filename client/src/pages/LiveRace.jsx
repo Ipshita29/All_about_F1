@@ -1378,39 +1378,65 @@ function BattlesSection({ drivers }) {
 
     return (
         <div className="lr-battles-list">
-            {battles.map(({ car, ahead, gap }) => (
-                <div className="lr-battle-card" key={car.driverNumber}>
-                    <span className="lr-battle-heading">BATTLE FOR P{car.position}</span>
+            {battles.map(({ car, ahead, gap }) => {
+                // Pace delta from the real lastLap field only — a positive
+                // number means the chasing car is currently lapping slower
+                // than the car ahead. No DRS/telemetry chip here: drs is
+                // confirmed always null on the free feed (no F1TV), so it's
+                // left out rather than shown as a fabricated always-off state.
+                const carSecs = parseLapTime(car.lastLap);
+                const aheadSecs = parseLapTime(ahead.lastLap);
+                const paceDelta = carSecs != null && aheadSecs != null ? carSecs - aheadSecs : null;
 
-                    <div className="lr-battle-side">
-                        <DriverAvatar code={ahead.driverCode} color={ahead.teamColor} />
-                        <div className="lr-battle-side-id">
-                            <span className="lr-battle-side-name">{ahead.name ?? ahead.driverCode}</span>
-                            <span className="lr-battle-side-team">{ahead.team ?? "—"}</span>
+                return (
+                    <div className="lr-battle-card" key={car.driverNumber}>
+                        <span className="lr-battle-heading">BATTLE FOR P{car.position}</span>
+
+                        <div className="lr-battle-duel">
+                            <div className="lr-battle-side">
+                                <DriverAvatar code={ahead.driverCode} color={ahead.teamColor} />
+                                <div className="lr-battle-side-id">
+                                    <span className="lr-battle-side-name">{ahead.name ?? ahead.driverCode}</span>
+                                    <span className="lr-battle-side-team">{ahead.team ?? "—"}</span>
+                                </div>
+                                <span className="lr-mono lr-battle-side-pos">P{ahead.position}</span>
+                            </div>
+
+                            <div className="lr-battle-connector" aria-hidden="true">
+                                <span className="lr-battle-connector-line" />
+                                <span className="lr-battle-gap lr-mono">{gap.toFixed(3)}s</span>
+                                <span className="lr-battle-connector-line" />
+                            </div>
+
+                            <div className="lr-battle-side">
+                                <DriverAvatar code={car.driverCode} color={car.teamColor} />
+                                <div className="lr-battle-side-id">
+                                    <span className="lr-battle-side-name">{car.name ?? car.driverCode}</span>
+                                    <span className="lr-battle-side-team">{car.team ?? "—"}</span>
+                                </div>
+                                <span className="lr-mono lr-battle-side-pos">P{car.position}</span>
+                            </div>
                         </div>
-                        <span className="lr-mono lr-battle-side-pos">P{ahead.position}</span>
-                    </div>
 
-                    <div className="lr-battle-foot">
-                        <Swords size={11} className="lr-battle-icon" aria-hidden="true" />
-                        <span className="lr-battle-gap lr-mono">{gap.toFixed(3)}s</span>
-                        {gap < 0.3 && <span className="lr-battle-tag">CLOSE FIGHT</span>}
-                    </div>
-
-                    <div className="lr-battle-side">
-                        <DriverAvatar code={car.driverCode} color={car.teamColor} />
-                        <div className="lr-battle-side-id">
-                            <span className="lr-battle-side-name">{car.name ?? car.driverCode}</span>
-                            <span className="lr-battle-side-team">{car.team ?? "—"}</span>
+                        <div className="lr-battle-foot">
+                            {gap < 0.3 && <span className="lr-battle-tag">CLOSE FIGHT</span>}
+                            {paceDelta != null && (
+                                <span className="lr-battle-pace lr-mono">
+                                    {car.driverCode} {paceDelta < 0 ? "faster" : "slower"} by {Math.abs(paceDelta).toFixed(3)}s
+                                </span>
+                            )}
                         </div>
-                        <span className="lr-mono lr-battle-side-pos">P{car.position}</span>
-                    </div>
 
-                    {car.currentTyre && ahead.currentTyre && car.currentTyre !== ahead.currentTyre && (
-                        <span className="lr-battle-tyres">{ahead.currentTyre} — {ahead.tyreAge ?? "—"} laps vs {car.currentTyre} — {car.tyreAge ?? "—"} laps</span>
-                    )}
-                </div>
-            ))}
+                        {car.currentTyre && ahead.currentTyre && (
+                            <span className="lr-battle-tyres">
+                                <span className={`lr-tyre lr-tyre--${ahead.currentTyre.toLowerCase()} lr-tyre--mini`}>{COMPOUND_LABELS[ahead.currentTyre] ?? ahead.currentTyre[0]}</span>
+                                {ahead.tyreAge ?? "—"}L vs {car.tyreAge ?? "—"}L
+                                <span className={`lr-tyre lr-tyre--${car.currentTyre.toLowerCase()} lr-tyre--mini`}>{COMPOUND_LABELS[car.currentTyre] ?? car.currentTyre[0]}</span>
+                            </span>
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 }

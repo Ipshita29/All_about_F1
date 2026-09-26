@@ -359,6 +359,8 @@
 .lr-tyre--intermediate,
 .lr-tyre--wet { background: var(--success); border-color: var(--success); color: var(--color-carbon); }
 
+.lr-tyre--mini { width: 16px; height: 16px; font-size: 0.55rem; border-width: 1px; }
+
 .lr-stint-pips { display: inline-flex; gap: 3px; margin-left: var(--space-2); vertical-align: middle; }
 .lr-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--lr-border); }
 .lr-pip--current { background: var(--accent-text); }
@@ -517,6 +519,8 @@
     color: var(--text-faint);
 }
 
+.lr-battle-duel { display: flex; flex-direction: column; }
+
 .lr-battle-side { display: flex; align-items: center; gap: var(--space-2); }
 
 .lr-battle-side-id { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -527,9 +531,21 @@
 
 .lr-battle-icon { color: var(--text-faint); flex-shrink: 0; }
 
-.lr-battle-foot { display: flex; align-items: center; gap: var(--space-2); padding-left: 34px; }
+/* The connecting line between the two drivers — a real visual "duel",
+   not just two stacked rows. A short rule either side of the gap value,
+   centred under the avatar column. */
+.lr-battle-connector {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 3px 0 3px 34px;
+}
 
-.lr-battle-gap { color: var(--accent-text); font-weight: 700; font-size: var(--text-small); }
+.lr-battle-connector-line { flex: 1 1 auto; height: 1px; background: var(--lr-border); }
+
+.lr-battle-gap { color: var(--accent-text); font-weight: 700; font-size: var(--text-small); flex-shrink: 0; }
+
+.lr-battle-foot { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 
 .lr-battle-tag {
     font-family: var(--font-mono);
@@ -542,7 +558,9 @@
     padding: 2px 8px;
 }
 
-.lr-battle-tyres { font-size: var(--text-micro); color: var(--text-faint); padding-left: 34px; }
+.lr-battle-pace { font-size: var(--text-micro); color: var(--lr-text-secondary); }
+
+.lr-battle-tyres { display: flex; align-items: center; gap: 6px; font-size: var(--text-micro); color: var(--text-faint); }
 
 .lr-next-session-divider { height: 1px; background: var(--lr-border); margin: var(--space-4) 0; }
 .lr-panel--light .lr-next-session-divider,
