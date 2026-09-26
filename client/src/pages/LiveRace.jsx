@@ -1682,14 +1682,14 @@ function LiveRace() {
                     <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
                         <TeamFocus drivers={drivers} season={data.race?.season} />
                     </Panel>
-                    <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
-                        <SessionPulse data={data} drivers={drivers} />
+                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
+                        <TyreStrategySection drivers={drivers} sessionType={sessionType} />
                     </Panel>
                 </div>
 
                 <div className="lr-grid lr-grid--6-6">
-                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
-                        <TyreStrategySection drivers={drivers} sessionType={sessionType} />
+                    <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
+                        <SessionPulse data={data} drivers={drivers} />
                     </Panel>
                     <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
                         <RaceControlSection events={data.events ?? []} />
