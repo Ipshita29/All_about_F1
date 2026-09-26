@@ -621,7 +621,7 @@
 
 /* ── Race control feed ─────────────────────────────────────────────── */
 
-.lr-feed { list-style: none; display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; }
+.lr-feed { list-style: none; display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; }
 
 .lr-feed-item {
     display: flex;
