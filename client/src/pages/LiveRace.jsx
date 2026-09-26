@@ -1166,10 +1166,15 @@ function LiveTimingTable({ drivers, sessionType }) {
 
 /* ── Session pulse ─────────────────────────────────────────────────── */
 
+/* Compact visual status grid — one tile per metric (icon, primary value,
+   status/sub-line) instead of a long key-value list, so the most
+   important reads (session live, track flag, fastest lap) are legible
+   at a glance rather than buried in a column of rows. */
 function SessionPulse({ data, drivers }) {
     const weatherSummary = data.weather
-        ? `${data.weather.airTemperature ?? "—"}°C${data.weather.rainfall > 0 ? " · Rain" : " · Dry"}`
+        ? `${data.weather.airTemperature ?? "—"}°C`
         : "—";
+    const weatherSub = data.weather ? (data.weather.rainfall > 0 ? "RAIN" : "DRY") : null;
 
     const fastest = drivers
         .map((d) => ({ d, secs: parseLapTime(d.bestLap) }))
@@ -1178,26 +1183,65 @@ function SessionPulse({ data, drivers }) {
 
     const raceLike = isRaceLikeSession(data.race?.session);
     const totalPitStops = drivers.reduce((sum, d) => sum + (d.pitStops || 0), 0);
+    const trackStatus = data.track?.status;
 
-    const rows = [
-        [<Signal size={14} aria-hidden="true" />, "Connection", data.provider ? `Live · ${data.dataStatus}` : "Schedule only"],
-        [<Flag size={14} aria-hidden="true" />, "Track Status", data.track?.status ? formatFlag(data.track.status) : "—"],
-        [<Users size={14} aria-hidden="true" />, "Drivers Reporting", drivers.length || "—"],
-        [<Timer size={14} aria-hidden="true" />, "Fastest Lap", fastest ? `${fastest.d.driverCode} · ${fastest.d.bestLap}` : "—"],
-        [<Thermometer size={14} aria-hidden="true" />, "Weather", weatherSummary],
-        [<Wrench size={14} aria-hidden="true" />, "Pit Stops", raceLike ? (totalPitStops || "—") : "Not applicable"],
-        [<AlertTriangle size={14} aria-hidden="true" />, "Race Control Events", data.events?.length ?? 0],
+    const tiles = [
+        {
+            icon: <Signal size={15} aria-hidden="true" />,
+            label: "Session",
+            value: sessionShortLabel(data.race?.session),
+            sub: <span className="lr-pulse-live"><span className="lr-badge-dot" aria-hidden="true" />LIVE</span>,
+        },
+        {
+            icon: <Flag size={15} aria-hidden="true" />,
+            label: "Track",
+            value: trackStatus ? formatFlag(trackStatus) : "—",
+            sub: trackStatus ? <span className={`lr-flag-dot lr-flag-dot--${trackStatus.toLowerCase()}`} aria-hidden="true" /> : null,
+        },
+        {
+            icon: <Users size={15} aria-hidden="true" />,
+            label: "Drivers",
+            value: drivers.length || "—",
+            sub: "REPORTING",
+        },
+        {
+            icon: <Timer size={15} aria-hidden="true" />,
+            label: "Fastest Lap",
+            value: fastest ? fastest.d.driverCode : "—",
+            sub: fastest ? fastest.d.bestLap : null,
+            accent: true,
+        },
+        {
+            icon: <Thermometer size={15} aria-hidden="true" />,
+            label: "Weather",
+            value: weatherSummary,
+            sub: weatherSub,
+        },
+        {
+            icon: <Wrench size={15} aria-hidden="true" />,
+            label: "Pit Stops",
+            value: raceLike ? (totalPitStops || "—") : "—",
+            sub: raceLike ? null : "N/A",
+        },
+        {
+            icon: <AlertTriangle size={15} aria-hidden="true" />,
+            label: "Race Control",
+            value: data.events?.length ?? 0,
+            sub: "EVENTS",
+        },
     ];
 
     return (
-        <dl className="lr-pulse">
-            {rows.map(([icon, label, value]) => (
-                <div className="lr-pulse-row" key={label}>
-                    <dt>{icon}{label}</dt>
-                    <dd className="lr-mono">{value}</dd>
+        <div className="lr-pulse-grid">
+            {tiles.map((tile) => (
+                <div className={`lr-pulse-tile${tile.accent ? " lr-pulse-tile--accent" : ""}`} key={tile.label}>
+                    <span className="lr-pulse-tile-icon">{tile.icon}</span>
+                    <span className="lr-pulse-tile-label">{tile.label}</span>
+                    <span className="lr-mono lr-pulse-tile-value">{tile.value}</span>
+                    {tile.sub && <span className="lr-pulse-tile-sub">{tile.sub}</span>}
                 </div>
             ))}
-        </dl>
+        </div>
     );
 }
 
