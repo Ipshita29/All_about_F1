@@ -10,11 +10,12 @@
  * tightens while a session is actually live and relaxes otherwise.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } from "recharts";
 import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
     Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
-    CloudLightning, ShieldAlert,
+    CloudLightning, ShieldAlert, BarChart2,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -1428,7 +1429,119 @@ function BattlesSection({ drivers }) {
     );
 }
 
+/* ── Gap to Leader — real gapToLeader values, dominant leader excluded
+   from the parsed set (its own gap field is null by definition) and
+   re-inserted as an explicit zero baseline so the bar order still reads
+   as full running order. Cars showing "LAP n" (lapped) instead of a
+   "+n.nnn" gap parse to null via parseGapSeconds and are simply left off
+   the chart rather than plotted with an invented gap. Built with
+   recharts — already a dependency (see TeamComparison.jsx's lap-time
+   line chart) — rather than adding a new chart library. ────────────── */
+
+function GapToLeaderChart({ drivers }) {
+    const rows = drivers
+        .filter((d) => d.status === "racing" && d.position != null)
+        .map((d) => ({
+            code: d.driverCode ?? String(d.driverNumber),
+            gap: d.position === 1 ? 0 : parseGapSeconds(d.gapToLeader),
+            color: d.teamColor || "var(--border-strong)",
+        }))
+        .filter((r) => r.gap !== null)
+        .sort((a, b) => a.gap - b.gap);
+
+    if (rows.length === 0) {
+        return (
+            <div className="lr-compact-empty">
+                <BarChart2 size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO GAP DATA YET</span>
+                    <span className="lr-compact-empty-desc">Gaps will appear once the leader has set a reference lap.</span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="lr-bar-chart" style={{ height: rows.length * 22 + 4 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 48, bottom: 0, left: 0 }} barCategoryGap={3}>
+                    <XAxis type="number" hide />
+                    <YAxis
+                        type="category"
+                        dataKey="code"
+                        width={36}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                    />
+                    <Bar dataKey="gap" radius={[0, 3, 3, 0]} barSize={11} isAnimationActive={false}>
+                        {rows.map((r) => <Cell key={r.code} fill={r.color} />)}
+                        <LabelList
+                            dataKey="gap"
+                            position="right"
+                            formatter={(v) => (v === 0 ? "LEADER" : `+${v.toFixed(3)}`)}
+                            style={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                        />
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
 /* ── Tyres & strategy ──────────────────────────────────────────────── */
+
+const COMPOUND_CHART_COLOR = {
+    SOFT: "var(--accent)",
+    MEDIUM: "var(--warning)",
+    HARD: "var(--color-cararra)",
+    INTERMEDIATE: "var(--success)",
+    WET: "var(--success)",
+};
+
+/* Same driver set/order as the Tyres & Strategy table below it — a bar
+   read of tyreAge, the one field in that table that's genuinely suited
+   to a length comparison across the field. Stint/stops stay table-only
+   rather than duplicated here as bars. */
+function TyreAgeChart({ drivers }) {
+    const rows = drivers
+        .filter((d) => d.currentTyre && d.tyreAge != null)
+        .sort((a, b) => (a.position ?? 99) - (b.position ?? 99))
+        .map((d) => ({
+            code: d.driverCode ?? String(d.driverNumber),
+            age: d.tyreAge,
+            color: COMPOUND_CHART_COLOR[d.currentTyre] ?? "var(--border-strong)",
+        }));
+
+    if (rows.length === 0) return null;
+
+    return (
+        <div className="lr-bar-chart" style={{ height: rows.length * 20 + 4 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 34, bottom: 0, left: 0 }} barCategoryGap={2}>
+                    <XAxis type="number" hide />
+                    <YAxis
+                        type="category"
+                        dataKey="code"
+                        width={36}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                    />
+                    <Bar dataKey="age" radius={[0, 3, 3, 0]} barSize={9} isAnimationActive={false}>
+                        {rows.map((r) => <Cell key={r.code} fill={r.color} />)}
+                        <LabelList
+                            dataKey="age"
+                            position="right"
+                            formatter={(v) => `${v}L`}
+                            style={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                        />
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
 
 function StintPips({ count }) {
     if (!count) return null;
@@ -1739,6 +1852,9 @@ function LiveRace() {
                    Each column flows purely from its own content height. */}
                 <div className="lr-columns">
                     <div className="lr-column">
+                        <Panel title={<><BarChart2 size={13} aria-hidden="true" />Gap to Leader</>}>
+                            <GapToLeaderChart drivers={drivers} />
+                        </Panel>
                         <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
                             <TeamFocus drivers={drivers} season={data.race?.season} />
                         </Panel>
@@ -1751,6 +1867,7 @@ function LiveRace() {
                     </div>
                     <div className="lr-column">
                         <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
+                            <TyreAgeChart drivers={drivers} />
                             <TyreStrategySection drivers={drivers} sessionType={sessionType} />
                         </Panel>
                         <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>

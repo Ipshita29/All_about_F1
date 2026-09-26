@@ -474,6 +474,14 @@
 .lr-team-compare-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
 .lr-team-compare-value { font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
 
+/* ── Real-data bar charts (Gap to Leader, Tyre Age) — recharts, the
+   chart library already installed for TeamComparison.jsx's lap-time
+   line chart. No axis lines, no grid, no tooltip: a dense timing-tower
+   read (driver code, bar, value) rather than a general-purpose chart
+   widget bolted onto the dashboard. ──────────────────────────────── */
+
+.lr-bar-chart { width: 100%; }
+
 /* ── Battles (vertical dashboard cards) ───────────────────────────────── */
 
 .lr-battles-list { display: flex; flex-direction: column; gap: var(--space-3); }
