@@ -113,6 +113,7 @@ function ArticleImage({ article, className, vtName }) {
                 style={vtName ? { viewTransitionName: vtName } : undefined}
                 aria-hidden="true"
             >
+                <span className="fp-img-missing-mark fp-mono">F1</span>
                 <span className="fp-mono">FROM THE PADDOCK</span>
             </div>
         );

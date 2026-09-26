@@ -107,8 +107,9 @@
 .fp-img { position: relative; overflow: hidden; background: var(--surface-2); border-radius: var(--radius-md); }
 .fp-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-slow) var(--ease); }
 
-.fp-img--missing { display: flex; align-items: center; justify-content: center; }
+.fp-img--missing { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
 .fp-img--missing .fp-mono { font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-faint); }
+.fp-img-missing-mark { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; color: var(--border-strong); }
 
 .fp-cover-hit:hover .fp-img img { transform: scale(1.03); }
 
