@@ -13,7 +13,7 @@
 .fp-masthead {
     max-width: var(--content-width-wide);
     margin: 0 auto;
-    padding: var(--space-8) var(--space-6) var(--space-7);
+    padding: var(--space-8) var(--space-7) var(--space-7);
 }
 
 .fp-issue {
@@ -87,7 +87,7 @@
 .fp-band--light { background: var(--surface-light-1); color: var(--text-on-light-primary); }
 .fp-band--dark { background: var(--bg); color: var(--text-primary); }
 
-.fp-band-inner { max-width: var(--content-width-wide); margin: 0 auto; padding: var(--space-8) var(--space-6); }
+.fp-band-inner { max-width: var(--content-width-wide); margin: 0 auto; padding: var(--space-8) var(--space-7); }
 
 .fp-section-title {
     display: block;
@@ -183,9 +183,9 @@
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 2px;
-    margin: 0 calc(-1 * var(--space-6));
-    padding-left: var(--space-6);
-    padding-right: var(--space-6);
+    margin: 0 calc(-1 * var(--space-7));
+    padding-left: var(--space-7);
+    padding-right: var(--space-7);
 }
 
 .fp-reel-track::-webkit-scrollbar { display: none; }
