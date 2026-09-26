@@ -160,8 +160,6 @@
 .lr-grid--primary { grid-template-columns: 8fr 4fr; }
 .lr-grid--triple { grid-template-columns: repeat(3, 1fr); }
 .lr-grid--events { grid-template-columns: 65fr 35fr; }
-.lr-grid--6-6 { grid-template-columns: 1fr 1fr; }
-.lr-grid--4-8 { grid-template-columns: 4fr 8fr; }
 .lr-grid--7-5 { grid-template-columns: 7fr 5fr; }
 .lr-grid--5-7 { grid-template-columns: 5fr 7fr; }
 
@@ -172,8 +170,6 @@
 @media (max-width: 900px) {
     .lr-grid--primary,
     .lr-grid--events,
-    .lr-grid--6-6,
-    .lr-grid--4-8,
     .lr-grid--7-5,
     .lr-grid--5-7 { grid-template-columns: 1fr; }
 }
