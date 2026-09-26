@@ -1839,6 +1839,7 @@ function DashboardSkeleton() {
         <div className="lr">
             <div className="lr-skel lr-skel-header" />
             <main className="lr-main">
+                <div className="lr-skel lr-skel-panel" style={{ height: 76 }} />
                 <div className="lr-grid lr-grid--primary">
                     <div className="lr-skel lr-skel-panel" style={{ height: 420 }} />
                     <div className="lr-skel lr-skel-panel" style={{ height: 420 }} />
@@ -1941,8 +1942,8 @@ function LiveRace() {
                         <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
                             <TeamFocus drivers={drivers} season={data.race?.season} />
                         </Panel>
-                        <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
-                            <WeatherSection weather={data.weather} />
+                        <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
+                            <RaceControlSection events={data.events ?? []} />
                         </Panel>
                     </div>
                     <div className="lr-column">
@@ -1953,14 +1954,15 @@ function LiveRace() {
                         <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Performance</>}>
                             <TeamPerformanceSection drivers={drivers} />
                         </Panel>
-                        <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
-                            <RaceControlSection events={data.events ?? []} />
-                        </Panel>
-                        <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
-                            <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
+                        <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
+                            <WeatherSection weather={data.weather} />
                         </Panel>
                     </div>
                 </div>
+
+                <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>} className="lr-panel--full">
+                    <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
+                </Panel>
             </main>
         </div>
     );
