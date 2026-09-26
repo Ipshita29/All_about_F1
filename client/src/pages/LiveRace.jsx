@@ -1232,6 +1232,89 @@ function SessionKpiStrip({ data, drivers }) {
     );
 }
 
+/* ── Session Pulse (full panel) ───────────────────────────────────────
+   The KPI strip up top is a five-tile headline row; this is the fuller
+   status panel paired with Team Focus in the dashboard mosaic — same
+   Session/Lap/Drivers/Fastest/Track reads plus Weather, Pit Stops and
+   Race Control's event count, all real fields already on `data`. ──── */
+function SessionPulsePanel({ data, drivers }) {
+    const fastest = drivers
+        .map((d) => ({ d, secs: parseLapTime(d.bestLap) }))
+        .filter((x) => x.secs !== null)
+        .sort((a, b) => a.secs - b.secs)[0];
+
+    const trackStatus = data.track?.status;
+    const currentLap = data.race?.currentLap;
+    const totalLaps = data.race?.totalLaps;
+    const raceLike = isRaceLikeSession(data.race?.session);
+    const totalPitStops = drivers.reduce((sum, d) => sum + (d.pitStops || 0), 0);
+
+    const tiles = [
+        {
+            icon: <Signal size={15} aria-hidden="true" />,
+            label: "Session",
+            value: sessionShortLabel(data.race?.session),
+            sub: <span className="lr-pulse-live"><span className="lr-badge-dot" aria-hidden="true" />LIVE</span>,
+        },
+        {
+            icon: <Gauge size={15} aria-hidden="true" />,
+            label: "Lap",
+            value: currentLap != null ? `${currentLap}${totalLaps != null ? `/${totalLaps}` : ""}` : "—",
+            sub: null,
+        },
+        {
+            icon: <Users size={15} aria-hidden="true" />,
+            label: "Drivers",
+            value: drivers.length || "—",
+            sub: "REPORTING",
+        },
+        {
+            icon: <Timer size={15} aria-hidden="true" />,
+            label: "Fastest",
+            value: fastest ? fastest.d.driverCode : "—",
+            sub: fastest ? fastest.d.bestLap : null,
+            accent: true,
+        },
+        {
+            icon: <Flag size={15} aria-hidden="true" />,
+            label: "Track",
+            value: trackStatus ? formatFlag(trackStatus) : "—",
+            sub: trackStatus ? <span className={`lr-flag-dot lr-flag-dot--${trackStatus.toLowerCase()}`} aria-hidden="true" /> : null,
+        },
+        {
+            icon: <Thermometer size={15} aria-hidden="true" />,
+            label: "Weather",
+            value: data.weather?.airTemperature != null ? `${data.weather.airTemperature}°C` : "—",
+            sub: data.weather ? (data.weather.rainfall > 0 ? "RAIN" : "DRY") : null,
+        },
+        {
+            icon: <Wrench size={15} aria-hidden="true" />,
+            label: "Pit Stops",
+            value: raceLike ? (totalPitStops || "—") : "—",
+            sub: raceLike ? null : "N/A",
+        },
+        {
+            icon: <AlertTriangle size={15} aria-hidden="true" />,
+            label: "Race Control",
+            value: data.events?.length ?? 0,
+            sub: "EVENTS",
+        },
+    ];
+
+    return (
+        <div className="lr-pulse-grid">
+            {tiles.map((tile) => (
+                <div className={`lr-pulse-tile${tile.accent ? " lr-pulse-tile--accent" : ""}`} key={tile.label}>
+                    <span className="lr-pulse-tile-icon">{tile.icon}</span>
+                    <span className="lr-pulse-tile-label">{tile.label}</span>
+                    <span className="lr-mono lr-pulse-tile-value">{tile.value}</span>
+                    {tile.sub && <span className="lr-pulse-tile-sub">{tile.sub}</span>}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 /* ── Team focus ────────────────────────────────────────────────────── */
 
 /* Championship position isn't part of the live feed at all — this reuses
@@ -1583,7 +1666,7 @@ function TyreStrategySection({ drivers, sessionType }) {
     const sorted = [...withTyres].sort((a, b) => (a.position ?? 99) - (b.position ?? 99));
 
     return (
-        <div className="lr-timing-scroll">
+        <div className="lr-timing-scroll lr-timing-scroll--capped">
             <table className="lr-timing">
                 <thead>
                     <tr>
@@ -1878,38 +1961,47 @@ function LiveRace() {
                     </Panel>
                 </div>
 
-                {/* Two independent columns, not row-paired grids — a short
-                   module must not leave its row partner waiting on a much
-                   taller one to finish before it can start. Each column
-                   flows purely from its own content height. */}
-                <div className="lr-columns">
-                    <div className="lr-column">
-                        <Panel title={<><BarChart2 size={13} aria-hidden="true" />Gap to Leader</>}>
-                            <GapToLeaderChart drivers={drivers} />
-                        </Panel>
-                        <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
-                            <TeamFocus drivers={drivers} season={data.race?.season} />
-                        </Panel>
-                        <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
-                            <RaceControlSection events={data.events ?? []} />
-                        </Panel>
-                    </div>
-                    <div className="lr-column">
-                        <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
-                            <TyreStrategySection drivers={drivers} sessionType={sessionType} />
-                        </Panel>
-                        <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Position</>}>
-                            <TeamPerformanceSection drivers={drivers} />
-                        </Panel>
-                        <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
-                            <WeatherSection weather={data.weather} />
-                        </Panel>
-                    </div>
+                {/* A deliberate mosaic — four stacked, self-contained rows,
+                   each pairing modules of intentionally similar natural
+                   height (KPI-style panels together, both graphs together,
+                   both capped/scrollable feeds together). Each row is its
+                   own grid, so one row's height never carries over into
+                   the next the way a single multi-row grid would. */}
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
+                        <TeamFocus drivers={drivers} season={data.race?.season} />
+                    </Panel>
+                    <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
+                        <SessionPulsePanel data={data} drivers={drivers} />
+                    </Panel>
                 </div>
 
-                <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>} className="lr-panel--full">
-                    <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
-                </Panel>
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><BarChart2 size={13} aria-hidden="true" />Gap to Leader</>}>
+                        <GapToLeaderChart drivers={drivers} />
+                    </Panel>
+                    <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Position</>}>
+                        <TeamPerformanceSection drivers={drivers} />
+                    </Panel>
+                </div>
+
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
+                        <TyreStrategySection drivers={drivers} sessionType={sessionType} />
+                    </Panel>
+                    <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
+                        <RaceControlSection events={data.events ?? []} />
+                    </Panel>
+                </div>
+
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
+                        <WeatherSection weather={data.weather} />
+                    </Panel>
+                    <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
+                        <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
+                    </Panel>
+                </div>
             </main>
         </div>
     );

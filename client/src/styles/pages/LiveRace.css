@@ -165,6 +165,7 @@
 .lr-grid--events { grid-template-columns: 65fr 35fr; }
 .lr-grid--7-5 { grid-template-columns: 7fr 5fr; }
 .lr-grid--5-7 { grid-template-columns: 5fr 7fr; }
+.lr-grid--6-6 { grid-template-columns: 1fr 1fr; }
 
 @media (max-width: 1100px) {
     .lr-grid--triple { grid-template-columns: 1fr 1fr; }
@@ -174,27 +175,12 @@
     .lr-grid--primary,
     .lr-grid--events,
     .lr-grid--7-5,
-    .lr-grid--5-7 { grid-template-columns: 1fr; }
+    .lr-grid--5-7,
+    .lr-grid--6-6 { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
     .lr-grid--triple { grid-template-columns: 1fr; }
-}
-
-/* Team Focus/Session Pulse/Weather and Tyres & Strategy/Race Control/
-   Team Radio — two INDEPENDENT columns, not three row-paired grids.
-   A row-based grid forces each row's height to the taller of its two
-   cards (Tyres & Strategy and Race Control are inherently much taller
-   than Team Focus and Session Pulse), which is exactly what pushed the
-   next section down into empty space. Two separate flex columns have
-   no shared row track at all, so each side flows purely from its own
-   content height. flex-basis (not flex-grow) keeps both columns a true
-   50/50 split regardless of which one is taller. */
-.lr-columns { display: flex; align-items: flex-start; gap: var(--space-5); }
-.lr-column { display: flex; flex-direction: column; gap: var(--space-5); flex: 1 1 0; min-width: 0; }
-
-@media (max-width: 900px) {
-    .lr-columns { flex-direction: column; }
 }
 
 /* ── Panel shell ───────────────────────────────────────────────────── */
@@ -264,6 +250,11 @@
 /* ── Timing table (shared by Live Timing / Tyres) ─────────────────────── */
 
 .lr-timing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+
+/* Tyres & Strategy is paired with Race Control (max-height: 400px) in
+   the dashboard mosaic — capped the same way so a full 20+ driver table
+   doesn't leave Race Control's side of the row mostly empty. */
+.lr-timing-scroll--capped { max-height: 400px; overflow-y: auto; }
 
 .lr-timing { width: 100%; border-collapse: collapse; font-size: var(--text-small); }
 
