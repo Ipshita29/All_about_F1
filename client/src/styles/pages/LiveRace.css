@@ -1122,5 +1122,4 @@
 
 @media (max-width: 640px) {
     .lr-panel { padding: 16px; }
-    .lr-radio { grid-template-columns: 1fr; }
 }
