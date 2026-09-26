@@ -523,23 +523,25 @@ a.ex-spec-value:hover { color: var(--accent-text); }
    DRIVER DOSSIER (Driver Details)
    ══════════════════════════════════════════════════════════════════ */
 
-/* Large profile hero card — light Carrara surface (Part 2/3 of the
-   brief: "major surfaces and important cards" get Carrara/Chalk, and
-   the profile card is the single most important card on the page). A
-   real portrait frame replaces the old 140px circle that cropped every
-   driver down to a tiny floating avatar. */
+/* Compact 2-column hero on the page's own Carbon Black background — no
+   boxed card, no light surface. The portrait keeps its aspect-ratio
+   fix (real source images are ~1042x1460, ≈ 5:7) so the driver stays
+   clearly recognizable, but now fades into the page at its edges
+   (::after) instead of sitting in a bordered box, so it feels part of
+   the hero rather than a floating card. Team colour (the --accent
+   custom property set inline per driver) is used sparingly — the
+   racing number and kicker dot only; Milano Red (--accent-text) stays
+   reserved for the section label and the live stat values. */
 .ex-dossier-hero {
     position: relative;
     max-width: var(--content-width-wide);
-    margin: var(--space-6) auto 0;
-    padding: var(--space-7);
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-6) var(--space-6);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 260px;
+    grid-template-columns: minmax(0, 1fr) 240px;
     gap: var(--space-7);
-    align-items: center;
-    background: var(--surface-light-1);
-    border: 1px solid var(--border-on-light);
-    border-radius: var(--radius-xl);
+    align-items: end;
+    border-bottom: 1px solid var(--border-faint);
 }
 
 .ex-dossier-floor { display: none; }
@@ -550,15 +552,10 @@ a.ex-spec-value:hover { color: var(--accent-text); }
     font-size: 0.72rem;
     letter-spacing: 0.06em;
     color: var(--text-muted);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
 }
 
 .ex-back:hover { color: var(--text-primary); }
-
-/* Scoped to the hero specifically — .ex-tag itself stays untouched for
-   every other page that uses it against a dark surface. */
-.ex-dossier-hero .ex-tag { color: var(--text-on-light-secondary); border-color: var(--border-on-light-strong); }
-.ex-dossier-hero .ex-tag--accent { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
 
 .ex-dossier-kicker {
     display: flex;
@@ -567,8 +564,8 @@ a.ex-spec-value:hover { color: var(--accent-text); }
     font-family: var(--font-mono);
     font-size: var(--text-micro);
     letter-spacing: 0.14em;
-    color: var(--text-on-light-muted);
-    margin-bottom: var(--space-4);
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
 }
 
 .ex-dossier-kicker-accent { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
@@ -576,134 +573,100 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-dossier-name {
     display: flex;
     flex-direction: column;
-    font-size: clamp(2.4rem, 2.4vw + 1.6rem, var(--text-display));
+    font-size: clamp(2.2rem, 2.2vw + 1.5rem, var(--text-display));
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 0.95;
-    color: var(--text-on-light-primary);
-    margin: 0 0 var(--space-4);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-3);
 }
 
-.ex-dossier-name .given { font-weight: 400; color: var(--text-on-light-secondary); font-size: 0.5em; }
+.ex-dossier-name .given { font-weight: 400; color: var(--text-secondary); font-size: 0.5em; }
 .ex-dossier-name .family { text-transform: uppercase; }
 
-.ex-dossier-nickname { font-size: 1.05rem; font-style: italic; color: var(--text-on-light-secondary); margin-bottom: var(--space-5); }
+.ex-dossier-nickname { font-size: 1rem; font-style: italic; color: var(--text-secondary); margin-bottom: var(--space-4); }
 
-.ex-dossier-live { display: flex; gap: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--border-on-light); }
+.ex-dossier-live { display: flex; gap: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-faint); }
 
 .ex-dossier-live-item { display: flex; flex-direction: column; gap: 4px; }
-.ex-dossier-live-val { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700; color: var(--accent); }
-.ex-dossier-live-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-on-light-muted); }
+.ex-dossier-live-val { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; color: var(--accent-text); }
+.ex-dossier-live-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-muted); }
 
-.ex-dossier-visual {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
-}
+.ex-dossier-visual { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
 
 .ex-dossier-num {
     font-family: var(--font-mono);
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
-    color: var(--accent);
+    color: var(--accent, var(--text-faint));
 }
 
 /* Portrait aspect-ratio (not a fixed circle) matching the real source
-   images (~1042x1460, ≈ 5:7), so the driver is clearly recognizable
-   instead of cropped down to a forehead-in-a-circle. */
+   images, cropped at the top of the frame so the face is always in
+   view. The gradient fade at the base — rather than a hard box edge —
+   is what makes the image read as integrated into the hero. */
 .ex-dossier-img-wrap {
+    position: relative;
     width: 100%;
     aspect-ratio: 5 / 7;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--surface-2);
-    border: 1px solid var(--border-on-light);
 }
 
-.ex-dossier-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.ex-dossier-img-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--accent, transparent) 22%, transparent), transparent 65%);
+    z-index: 0;
+}
 
-.ex-dossier-img-wrap .ex-entity-fallback { background: var(--surface-light-2); color: var(--text-on-light-muted); font-size: 2.5rem; }
+.ex-dossier-img-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 62%, var(--bg) 100%);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.ex-dossier-img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+.ex-dossier-img-wrap .ex-entity-fallback { position: relative; z-index: 1; background: transparent; color: var(--text-faint); font-size: 2.5rem; }
 
 /* ══════════════════════════════════════════════════════════════════
-   DOSSIER DASHBOARD GRID (.exd-*) — exclusive to DriverDetails.jsx and
+   DOSSIER EDITORIAL GRID (.exd-*) — exclusive to DriverDetails.jsx and
    TeamDetails.jsx. Every rule here is keyed off a brand-new class name
    that no other page uses, so none of it can affect the Drivers/Teams
    grids, Comparison pages, or CircuitDetails, all of which reuse the
    same ExSection/TelemetryStat components and .ex-spec/.ex-stat/
    .ex-timeline/.ex-list/.ex-quote/.ex-cols classes untouched above.
-   Turns the old stacked, borderless, single-column sections into a
-   dashboard of differently-sized, differently-coloured cards.
+   A plain 2-column editorial layout — NOT a card dashboard: sections
+   stay on the page's own dark surface, separated by a quiet rule, with
+   colour reserved for section labels, key numbers and icon markers.
    ══════════════════════════════════════════════════════════════════ */
 
 .exd-dash {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-auto-flow: row dense;
-    gap: var(--space-5);
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: var(--space-8);
     max-width: var(--content-width-wide);
 }
 
-.exd-span-2 { grid-column: span 2; }
-.exd-span-3 { grid-column: span 3; }
-.exd-span-4 { grid-column: span 4; }
-.exd-span-6 { grid-column: span 6; }
+.exd-span-full { grid-column: 1 / -1; }
 
-/* Card shell — overrides ExSection's own centered-block layout (meant
-   for the plain stacked pages) with real card geometry; the scroll
-   reveal (opacity → is-inview) still comes from .ex-section itself. */
+/* A section, not a card — overrides ExSection's own centered-block
+   layout (meant for the plain stacked pages) with grid-item sizing,
+   keeps the same quiet top rule as the original design, and stays
+   noticeably more compact than the pre-redesign spacing. */
 .exd-card {
     max-width: none;
     margin: 0;
-    padding: var(--space-5) var(--space-6);
-    border-radius: var(--radius-lg);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--border-faint);
     border-bottom: none;
 }
-
-.exd-card--dark { background: var(--surface); border: 1px solid var(--border); }
-.exd-card--light { background: var(--surface-light-1); border: 1px solid var(--border-on-light); }
-.exd-card--chalk { background: var(--surface-light-2); border: 1px solid var(--border-on-light); }
-
-/* Text-colour overrides for the shared content primitives, scoped
-   entirely under the two light card variants above. */
-.exd-card--light .ex-section-title,
-.exd-card--chalk .ex-section-title { color: var(--text-on-light-primary); }
-
-.exd-card--light .ex-eyebrow,
-.exd-card--chalk .ex-eyebrow { color: var(--accent); }
-
-.exd-card--light .ex-prose,
-.exd-card--chalk .ex-prose { color: var(--text-on-light-secondary); }
-
-.exd-card--light .ex-spec-label,
-.exd-card--chalk .ex-spec-label { color: var(--text-on-light-muted); }
-
-.exd-card--light .ex-spec-value,
-.exd-card--chalk .ex-spec-value { color: var(--text-on-light-primary); }
-
-.exd-card--light .ex-spec-row,
-.exd-card--chalk .ex-spec-row { border-top-color: var(--border-on-light); }
-
-.exd-card--light .ex-list li,
-.exd-card--chalk .ex-list li,
-.exd-card--light .ex-timeline li,
-.exd-card--chalk .ex-timeline li { color: var(--text-on-light-secondary); border-left-color: var(--border-on-light-strong); }
-
-.exd-card--light .ex-stat-value,
-.exd-card--chalk .ex-stat-value { color: var(--text-on-light-primary); }
-
-.exd-card--light .ex-stat-label,
-.exd-card--chalk .ex-stat-label { color: var(--text-on-light-muted); }
-
-.exd-card--light .ex-stat,
-.exd-card--chalk .ex-stat { border-left-color: var(--border-on-light); }
-
-.exd-card--light .ex-stat--accent .ex-stat-value,
-.exd-card--chalk .ex-stat--accent .ex-stat-value { color: var(--accent); }
-
-.exd-card--light .ex-stat-meter,
-.exd-card--chalk .ex-stat-meter { background: var(--border-on-light); }
 
 /* Driver File / Team Specification — 2-column compact grid instead of
    one long stacked list. */
@@ -711,17 +674,19 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .exd-spec-grid .ex-spec-row { flex-direction: column; align-items: flex-start; gap: 4px; border-top: none; padding: 0; }
 .exd-spec-grid .ex-spec-value { text-align: left; }
 
-/* Small icon markers on timeline/fact list items — added purely via a
-   leading svg in the <li>, so .ex-timeline/.ex-list themselves (shared
-   with other pages) are never touched. */
+/* Small red icon markers on timeline/fact list items — added purely
+   via a leading svg in the <li>, so .ex-timeline/.ex-list themselves
+   (shared with other pages) are never touched. On .ex-timeline
+   specifically this also recolours the existing per-item left border
+   to read as one continuous accent line down the milestones. */
 .exd-icon-list li { display: flex; align-items: flex-start; gap: 8px; }
-.exd-icon-list li svg { flex-shrink: 0; margin-top: 3px; color: var(--accent-text); opacity: 0.85; }
-.exd-card--light .exd-icon-list li svg,
-.exd-card--chalk .exd-icon-list li svg { color: var(--accent); }
+.exd-icon-list li svg { flex-shrink: 0; margin-top: 3px; color: var(--accent-text); opacity: 0.9; }
+.exd-icon-list.ex-timeline li { border-left-color: var(--accent-border); padding-left: 14px; margin-bottom: var(--space-2); }
+.exd-icon-list.ex-timeline li:last-child { margin-bottom: 0; }
 
-/* Quote card — red accent line down the side of the card itself, not
-   just the blockquote's own border. */
-.exd-card--quote { border-left: 3px solid var(--accent); }
+/* Quote — a red accent edge on the section itself rather than a filled
+   card, so it still reads as "distinct" without becoming a box. */
+.exd-card--quote { border-top: none; border-left: 2px solid var(--accent); padding: var(--space-4) 0 var(--space-4) var(--space-6); }
 .exd-card--quote .ex-quote { border-left: none; padding-left: 0; max-width: 68ch; }
 
 /* ══════════════════════════════════════════════════════════════════
