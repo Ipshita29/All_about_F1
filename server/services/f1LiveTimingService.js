@@ -79,6 +79,21 @@ function isPlainObject(v) {
     return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
+/*
+ * The feed sends a genuine array (e.g. TimingAppData.Lines[num].Stints)
+ * only in a full snapshot. An incremental update to one element of that
+ * array arrives as a plain object keyed by stringified index instead —
+ * e.g. `{ Stints: { "0": { TotalLaps: 3 } } }` to patch just that one
+ * field on the current stint. Confirmed via the temporary logging above:
+ * the first TimingAppData message for a driver is a real array with
+ * Compound/TotalLaps/etc.; every message after that is one of these
+ * index-keyed objects carrying only whatever changed (lap time, lap
+ * number, total laps this stint).
+ */
+function isIndexPatch(v) {
+    return isPlainObject(v) && Object.keys(v).length > 0 && Object.keys(v).every((k) => /^\d+$/.test(k));
+}
+
 function deepMerge(target, patch) {
     if (!isPlainObject(target) || !isPlainObject(patch)) return patch;
     const result = { ...target };
