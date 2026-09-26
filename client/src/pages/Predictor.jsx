@@ -687,16 +687,26 @@ function Predictor() {
             <PredictorHeader race={race} generatedAt={generatedAt} />
             <main className="pr-main">
                 <PredictionStatus stage={stage} race={race} />
+
+                {/* 1. Predicted Winner — full width, compact */}
                 <PredictionSummary winner={winner} />
-                <Panel title="Predicted Podium">
+
+                {/* 2. Predicted Podium — three equal cards */}
+                <Panel title="Predicted Podium" className="pr-panel--light">
                     <PredictedPodium predictions={predictions} />
                 </Panel>
-                <Panel title="Predicted Classification" className="pr-panel--full">
-                    <ClassificationTable predictions={predictions} />
-                </Panel>
-                <Panel title="Why This Prediction?">
-                    <WhyThisPrediction winner={winner} />
-                </Panel>
+
+                {/* 3. Main analysis grid — full classification (~70%) beside
+                   Why This Prediction (~30%), not another stacked section */}
+                <div className="pr-grid pr-grid--main">
+                    <Panel title="Predicted Classification">
+                        <ClassificationTable predictions={predictions} />
+                    </Panel>
+                    <Panel title="Why This Prediction?">
+                        <WhyThisPrediction winner={winner} />
+                    </Panel>
+                </div>
+
                 <div className="pr-grid pr-grid--split">
                     <Panel title="Model">
                         <ModelInfo model={model} stage={stage} generatedAt={generatedAt} driverCount={predictions.length} />
@@ -713,12 +723,16 @@ function Predictor() {
                     {limitations?.length > 0 && ` ${limitations[0]}`}
                 </p>
 
-                <Panel title="Model Performance" className="pr-panel--full">
-                    <ModelPerformanceSection performance={evaluation.performance} loading={evaluation.loading} />
-                </Panel>
-                <Panel title="Prediction History" className="pr-panel--full">
-                    <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
-                </Panel>
+                {/* 4. Prediction History + Model Performance — side by side,
+                   not two giant stacked full-width cards */}
+                <div className="pr-grid pr-grid--split">
+                    <Panel title="Prediction History">
+                        <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
+                    </Panel>
+                    <Panel title="Model Performance">
+                        <ModelPerformanceSection performance={evaluation.performance} loading={evaluation.loading} />
+                    </Panel>
+                </div>
                 <p className="pr-disclaimer">
                     Model performance is calculated from completed races for which a prediction was generated before the race. Metrics may change as additional races are evaluated.
                 </p>

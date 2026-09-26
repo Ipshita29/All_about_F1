@@ -13,6 +13,16 @@
     --pr-surface-header: #2c2c2c;
     --pr-border: #383838;
     --pr-text-secondary: #a9a59f;
+
+    /* Light editorial surfaces — Carrara, for the major result cards
+       (Winner, Podium) so the page isn't entirely black; technical/data
+       panels (grid, factors, availability, history) stay on the dark
+       surfaces above. */
+    --pr-light: var(--color-cararra);
+    --pr-light-border: rgba(25, 25, 25, 0.12);
+    --pr-light-text: var(--color-carbon);
+    --pr-light-text-2: rgba(25, 25, 25, 0.64);
+    --pr-light-text-3: rgba(25, 25, 25, 0.44);
 }
 
 .pr-loading {
@@ -77,6 +87,13 @@
 
 .pr-grid { display: grid; gap: var(--space-4); }
 .pr-grid--split { grid-template-columns: 1fr 1fr; align-items: start; }
+/* Full classification (~70%) beside Why This Prediction (~30%) — the
+   explanation sits next to the grid, not as another section below it. */
+.pr-grid--main { grid-template-columns: 7fr 3fr; align-items: start; }
+
+@media (max-width: 900px) {
+    .pr-grid--main { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 800px) {
     .pr-grid--split { grid-template-columns: 1fr; }
@@ -119,6 +136,13 @@
 }
 
 .pr-panel--full { width: 100%; }
+
+.pr-panel--light {
+    background: var(--pr-light);
+    border-color: var(--pr-light-border);
+    color: var(--pr-light-text);
+}
+.pr-panel--light .pr-panel-title { color: var(--pr-light-text-3); }
 
 .pr-panel-title {
     font-family: var(--font-mono);
