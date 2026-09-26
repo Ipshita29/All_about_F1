@@ -36,11 +36,28 @@
 
 .fp-sub { font-size: 0.94rem; line-height: 1.6; color: var(--text-secondary); max-width: 52ch; margin: 0 0 var(--space-6); }
 
-.fp-controls { display: flex; flex-direction: column; gap: var(--space-4); max-width: 620px; }
+/* No max-width here — the search input keeps its own cap below, but the
+   filter row needs the full masthead width to keep all seven category
+   chips on one line rather than wrapping once the search box narrowed it. */
+.fp-controls { display: flex; flex-direction: column; gap: var(--space-4); }
 
-.fp-search-input { height: 48px; }
+.fp-search-input { height: 48px; max-width: 480px; }
 
-.fp-filter-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* One line, always — nowrap rather than wrap, with overflow-x taking over
+   once the chips genuinely don't fit (narrow desktop, tablet, mobile)
+   instead of ever breaking onto a second row. Scrollbar hidden but the
+   row stays natively scrollable (drag/trackpad/keyboard all still work). */
+.fp-filter-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+}
+
+.fp-filter-row::-webkit-scrollbar { display: none; }
 
 .fp-chip {
     background: var(--surface);
@@ -55,6 +72,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+    white-space: nowrap;
     transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
