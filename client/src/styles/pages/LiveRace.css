@@ -377,6 +377,36 @@
 .lr-pulse-row dt svg { flex-shrink: 0; opacity: 0.8; }
 .lr-pulse-row dd { font-weight: 600; color: var(--text-primary); }
 
+/* ── Session Pulse — compact status grid (WeatherSection keeps the
+   .lr-pulse row list above; this is Session Pulse's own tile layout) ── */
+
+.lr-pulse-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-3); }
+
+.lr-pulse-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--lr-surface-inner);
+    border: 1px solid var(--lr-border);
+    border-radius: 8px;
+}
+
+.lr-pulse-tile--accent { border-color: var(--accent-border); background: var(--accent-dim); }
+
+.lr-pulse-tile-icon { color: var(--text-faint); }
+.lr-pulse-tile--accent .lr-pulse-tile-icon { color: var(--accent-text); }
+
+.lr-pulse-tile-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lr-text-secondary); }
+
+.lr-pulse-tile-value { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+.lr-pulse-tile--accent .lr-pulse-tile-value { color: var(--accent-text); }
+
+.lr-pulse-tile-sub { display: flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--text-faint); }
+
+.lr-pulse-live { display: inline-flex; align-items: center; gap: 5px; color: var(--success); font-weight: 700; letter-spacing: 0.04em; }
+.lr-pulse-live .lr-badge-dot { width: 6px; height: 6px; background: currentColor; animation: lr-pulse 1.6s ease-in-out infinite; }
+
 /* ── Team Focus (live) ─────────────────────────────────────────────── */
 
 .lr-team-focus { display: flex; flex-direction: column; gap: var(--space-3); }
