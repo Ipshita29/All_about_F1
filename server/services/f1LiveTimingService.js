@@ -94,11 +94,31 @@ function isIndexPatch(v) {
     return isPlainObject(v) && Object.keys(v).length > 0 && Object.keys(v).every((k) => /^\d+$/.test(k));
 }
 
+/*
+ * Without special-casing the array-patch shape, a plain "is it a
+ * matching pair of plain objects" merge treats the array as unmergeable
+ * (arrays are never `isPlainObject`) and just replaces it outright with
+ * the index-keyed patch object — which has only the changed fields.
+ * That silently dropped Compound and TotalLaps from every driver's
+ * current stint the moment their SECOND TimingAppData update arrived,
+ * which is exactly why tyre compound/age went missing (or froze at
+ * whatever value happened to be present in the initial snapshot)
+ * shortly after a session went live — not because the feed stopped
+ * sending the data.
+ */
 function deepMerge(target, patch) {
+    if (Array.isArray(target) && isIndexPatch(patch)) {
+        const result = target.slice();
+        for (const [indexStr, value] of Object.entries(patch)) {
+            const index = Number(indexStr);
+            result[index] = deepMerge(result[index], value);
+        }
+        return result;
+    }
     if (!isPlainObject(target) || !isPlainObject(patch)) return patch;
     const result = { ...target };
     for (const [key, value] of Object.entries(patch)) {
-        result[key] = isPlainObject(value) && isPlainObject(target[key]) ? deepMerge(target[key], value) : value;
+        result[key] = deepMerge(target[key], value);
     }
     return result;
 }
