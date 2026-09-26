@@ -627,6 +627,85 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-dossier-img-wrap .ex-entity-fallback { background: var(--surface-light-2); color: var(--text-on-light-muted); font-size: 2.5rem; }
 
 /* ══════════════════════════════════════════════════════════════════
+   DOSSIER DASHBOARD GRID (.exd-*) — exclusive to DriverDetails.jsx and
+   TeamDetails.jsx. Every rule here is keyed off a brand-new class name
+   that no other page uses, so none of it can affect the Drivers/Teams
+   grids, Comparison pages, or CircuitDetails, all of which reuse the
+   same ExSection/TelemetryStat components and .ex-spec/.ex-stat/
+   .ex-timeline/.ex-list/.ex-quote/.ex-cols classes untouched above.
+   Turns the old stacked, borderless, single-column sections into a
+   dashboard of differently-sized, differently-coloured cards.
+   ══════════════════════════════════════════════════════════════════ */
+
+.exd-dash {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-flow: row dense;
+    gap: var(--space-5);
+    max-width: var(--content-width-wide);
+}
+
+.exd-span-2 { grid-column: span 2; }
+.exd-span-3 { grid-column: span 3; }
+.exd-span-4 { grid-column: span 4; }
+.exd-span-6 { grid-column: span 6; }
+
+/* Card shell — overrides ExSection's own centered-block layout (meant
+   for the plain stacked pages) with real card geometry; the scroll
+   reveal (opacity → is-inview) still comes from .ex-section itself. */
+.exd-card {
+    max-width: none;
+    margin: 0;
+    padding: var(--space-5) var(--space-6);
+    border-radius: var(--radius-lg);
+    border-bottom: none;
+}
+
+.exd-card--dark { background: var(--surface); border: 1px solid var(--border); }
+.exd-card--light { background: var(--surface-light-1); border: 1px solid var(--border-on-light); }
+.exd-card--chalk { background: var(--surface-light-2); border: 1px solid var(--border-on-light); }
+
+/* Text-colour overrides for the shared content primitives, scoped
+   entirely under the two light card variants above. */
+.exd-card--light .ex-section-title,
+.exd-card--chalk .ex-section-title { color: var(--text-on-light-primary); }
+
+.exd-card--light .ex-eyebrow,
+.exd-card--chalk .ex-eyebrow { color: var(--accent); }
+
+.exd-card--light .ex-prose,
+.exd-card--chalk .ex-prose { color: var(--text-on-light-secondary); }
+
+.exd-card--light .ex-spec-label,
+.exd-card--chalk .ex-spec-label { color: var(--text-on-light-muted); }
+
+.exd-card--light .ex-spec-value,
+.exd-card--chalk .ex-spec-value { color: var(--text-on-light-primary); }
+
+.exd-card--light .ex-spec-row,
+.exd-card--chalk .ex-spec-row { border-top-color: var(--border-on-light); }
+
+.exd-card--light .ex-list li,
+.exd-card--chalk .ex-list li,
+.exd-card--light .ex-timeline li,
+.exd-card--chalk .ex-timeline li { color: var(--text-on-light-secondary); border-left-color: var(--border-on-light-strong); }
+
+.exd-card--light .ex-stat-value,
+.exd-card--chalk .ex-stat-value { color: var(--text-on-light-primary); }
+
+.exd-card--light .ex-stat-label,
+.exd-card--chalk .ex-stat-label { color: var(--text-on-light-muted); }
+
+.exd-card--light .ex-stat,
+.exd-card--chalk .ex-stat { border-left-color: var(--border-on-light); }
+
+.exd-card--light .ex-stat--accent .ex-stat-value,
+.exd-card--chalk .ex-stat--accent .ex-stat-value { color: var(--accent); }
+
+.exd-card--light .ex-stat-meter,
+.exd-card--chalk .ex-stat-meter { background: var(--border-on-light); }
+
+/* ══════════════════════════════════════════════════════════════════
    CONSTRUCTOR GARAGE (Team Details)
    ══════════════════════════════════════════════════════════════════ */
 
