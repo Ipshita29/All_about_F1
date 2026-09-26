@@ -66,19 +66,34 @@
  * buildBacktestPrediction below) without risking silently including a
  * race's own result.
  *
- * CACHING + PERSISTENCE (Phase 14)
- * An in-memory cache keyed by `${season}-${round}-${stage}` avoids
- * recomputing (and re-hitting Jolpica ~10-15 times) on every request to
- * GET /api/predictor/upcoming; it's invalidated by TTL and by the
- * pre/post-qualifying stage actually changing. Separately, every
- * successfully generated prediction (both the real "live" upcoming one
- * and any reconstructed "backtest" one) is persisted to the
- * RacePrediction Mongo model — that's what makes Phase 14 evaluation
- * possible: it reads back the prediction that genuinely existed before
- * a race, rather than ever recomputing one after the fact.
+ * CACHING + PERSISTENCE (Phase 14, hardened afterward — see below)
+ * Three layers, cheapest first:
+ *   1. An in-memory result cache keyed by `${season}-${round}-${stage}`
+ *      (CACHE_TTL_MS) — an instant hit for repeat requests within the
+ *      same server process.
+ *   2. RacePrediction (Mongo) — a prediction is a historical record, not
+ *      something to regenerate every page view. buildPrediction() checks
+ *      Mongo for an existing doc for this exact race+stage BEFORE
+ *      touching Jolpica at all; only a genuinely new race/stage
+ *      generates fresh. This is also what makes evaluation possible: it
+ *      reads back the prediction that actually existed before a race,
+ *      never one recomputed after the fact.
+ *   3. Every individual Jolpica fetch in this file goes through the
+ *      shared jolpicaCache.js `cached()` helper. This is the fix for the
+ *      predictor's own "Prediction unavailable, works on refresh" bug —
+ *      a single request already fans out into ~10-15 uncached Jolpica
+ *      calls, comfortably enough to trip the documented 3 req/s free
+ *      tier on its own, before /history and /performance's own calls on
+ *      the same page load are even counted. A single quick retry
+ *      (getJsonRetry) additionally covers the two REQUIRED calls (next
+ *      race, standings) against a one-off blip on a cold cache.
+ * buildPrediction() also de-dupes concurrent callers via a shared
+ * in-flight promise, so two near-simultaneous requests share one attempt
+ * instead of each firing their own burst.
  */
 
-const { getJson } = require("./jolpicaClient");
+const { getJson, getJsonRetry } = require("./jolpicaClient");
+const { cached, TTL } = require("./jolpicaCache");
 const { getForecast } = require("./weatherService");
 const RacePrediction = require("../models/RacePrediction");
 
@@ -97,6 +112,14 @@ const WEIGHTS = {
     championshipStanding: 0.1,
 };
 
+const LIMITATIONS = [
+    "This is a statistical estimate from publicly available historical/current-season data, not a guarantee — F1 outcomes depend on many factors (incidents, weather, strategy, reliability) this model does not model.",
+    "Weights and the simulation's ability transform (k=4) are documented, reasoned choices, not fitted against held-out historical results.",
+    "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not yet used as a scoring input to the prediction itself.",
+    "Historical pit-stop counts and timing are available from the data source; tyre compounds are not, so compound/stint strategy is never shown or implied.",
+    "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit).",
+];
+
 // ---------------------------------------------------------------------------
 // In-memory cache — see "CACHING" above
 // ---------------------------------------------------------------------------
@@ -107,15 +130,35 @@ let cache = { key: null, expiresAt: 0, result: null };
 // Data access
 // ---------------------------------------------------------------------------
 
+/*
+ * Every one of these used to call jolpicaClient's plain getJson()
+ * uncached. A single GET /api/predictor/upcoming already fans out into
+ * ~10-15 Jolpica requests (standings x2, up to 5 recent-round results,
+ * a two-step circuit-history fetch, qualifying, pit stops); add /history
+ * and /performance also hitting Jolpica on the same page load (see
+ * evaluationService.js) and a single Predictor page view could easily
+ * fire 20+ concurrent requests against a provider documented at 3 req/s
+ * — the confirmed, reproducible cause of "Prediction unavailable" on
+ * first load that then works after a refresh (the failure is
+ * probabilistic: some bursts trip the limit, some don't). Wiring every
+ * fetch through the shared cache (see jolpicaCache.js) turns repeat
+ * requests for the same data into free in-memory hits instead of new
+ * network calls, which is what actually fixes the flakiness — retrying
+ * a request that's about to be rate-limited again doesn't. The two
+ * REQUIRED calls with no safe fallback (next race, standings) also get
+ * one quick retry (getJsonRetry) to absorb a one-off blip on a cold
+ * cache, before any caching has had a chance to help.
+ */
+
 async function fetchUpcomingRace() {
-    const data = await getJson("/current/next.json");
+    const data = await cached("predictor:next-race", TTL.SCHEDULE, () => getJsonRetry("/current/next.json"));
     return data.MRData.RaceTable.Races[0] || null;
 }
 
 async function fetchStandings(season) {
     const [driverData, constructorData] = await Promise.all([
-        getJson(`/${season}/driverstandings.json?limit=100`),
-        getJson(`/${season}/constructorstandings.json?limit=100`),
+        cached(`predictor:driverstandings:${season}`, TTL.STANDINGS, () => getJsonRetry(`/${season}/driverstandings.json?limit=100`)),
+        cached(`predictor:constructorstandings:${season}`, TTL.STANDINGS, () => getJsonRetry(`/${season}/constructorstandings.json?limit=100`)),
     ]);
     return {
         driverStandings: driverData.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [],
@@ -124,7 +167,10 @@ async function fetchStandings(season) {
 }
 
 // Rounds strictly before `uptoRound` in this season, most recent first —
-// never includes the race being predicted.
+// never includes the race being predicted. Cache key matches
+// grandprixController.js's own results cache exactly (`results:${year}:
+// ${round}`, same TTL.HISTORICAL) so a Race Hub visit and a Predictor
+// visit for the same round share one cache entry instead of two.
 async function fetchRecentResults(season, uptoRound, count) {
     const rounds = [];
     for (let r = uptoRound - 1; r >= 1 && rounds.length < count; r--) rounds.push(r);
@@ -132,7 +178,7 @@ async function fetchRecentResults(season, uptoRound, count) {
 
     const results = await Promise.all(
         rounds.map((round) =>
-            getJson(`/${season}/${round}/results.json`)
+            cached(`results:${season}:${round}`, TTL.HISTORICAL, () => getJson(`/${season}/${round}/results.json`))
                 .then((data) => ({ round, results: data.MRData.RaceTable.Races[0]?.Results || [] }))
                 .catch(() => ({ round, results: [] }))
         )
@@ -140,9 +186,13 @@ async function fetchRecentResults(season, uptoRound, count) {
     return results;
 }
 
+// Short TTL (not HISTORICAL) — this is called for the round currently
+// being predicted, which may still be pre-qualifying; once the session
+// genuinely finishes, the real result should show up within a few
+// minutes rather than being blocked by a stale empty cache entry.
 async function fetchQualifying(season, round) {
     try {
-        const data = await getJson(`/${season}/${round}/qualifying.json`);
+        const data = await cached(`predictor:qualifying:${season}:${round}`, TTL.QUALIFYING, () => getJson(`/${season}/${round}/qualifying.json`));
         return data.MRData.RaceTable.Races[0]?.QualifyingResults || [];
     } catch {
         return [];
@@ -155,7 +205,7 @@ async function fetchQualifying(season, round) {
 // provide at all.
 async function fetchPitStops(season, round) {
     try {
-        const data = await getJson(`/${season}/${round}/pitstops.json?limit=100`);
+        const data = await cached(`predictor:pitstops:${season}:${round}`, TTL.HISTORICAL, () => getJson(`/${season}/${round}/pitstops.json?limit=100`));
         return data.MRData.RaceTable.Races[0]?.PitStops || [];
     } catch {
         return [];
@@ -189,12 +239,12 @@ async function fetchRaceWeather(race) {
 async function fetchCircuitHistory(circuitId) {
     if (!circuitId) return [];
     try {
-        const probe = await getJson(`/circuits/${circuitId}/results.json?limit=1`);
+        const probe = await cached(`predictor:circuit-probe:${circuitId}`, TTL.HISTORICAL, () => getJson(`/circuits/${circuitId}/results.json?limit=1`));
         const total = Number(probe.MRData.total) || 0;
         if (total === 0) return [];
         const limit = 220; // ~10 most recent race editions' worth of result rows
         const offset = Math.max(0, total - limit);
-        const data = await getJson(`/circuits/${circuitId}/results.json?limit=${limit}&offset=${offset}`);
+        const data = await cached(`predictor:circuit-history:${circuitId}`, TTL.HISTORICAL, () => getJson(`/circuits/${circuitId}/results.json?limit=${limit}&offset=${offset}`));
         return data.MRData.RaceTable.Races || [];
     } catch {
         return [];
