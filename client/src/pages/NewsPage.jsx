@@ -20,6 +20,7 @@ import {
     DRIVER_ID_MAP,
     FAV_TEAM_TO_CONSTRUCTOR_ID,
     formatArticleTime,
+    getNewsImage,
 } from "../utils/landingHelpers";
 import "../styles/pages/NewsPage.css";
 import { API_BASE_URL as API } from "../config/api";
@@ -106,7 +107,8 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
 
 function ArticleImage({ article, className, vtName }) {
     const [failed, setFailed] = useState(false);
-    if (!article.image || failed) {
+    const src = getNewsImage(article);
+    if (!src || failed) {
         return (
             <div
                 className={`fp-img fp-img--missing ${className || ""}`}
@@ -123,10 +125,14 @@ function ArticleImage({ article, className, vtName }) {
             style={vtName ? { viewTransitionName: vtName } : undefined}
         >
             <img
-                src={article.image}
+                src={src}
                 alt={article.title}
                 loading="lazy"
-                onError={() => setFailed(true)}
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    setFailed(true);
+                }}
             />
         </div>
     );

@@ -273,3 +273,32 @@ export function isRelevantF1Article(article) {
     if (OTHER_SERIES_ONLY.test(text)) return false;
     return true;
 }
+
+/* Centralized image resolution for news articles — the one place that
+   decides whether an article's image is actually usable, instead of each
+   card component re-deriving that itself. The API controller
+   (server/controllers/newsController.js) already collapses the provider's
+   field name (urlToImage) down to a single `image` field and nulls it out
+   when the provider gave nothing, so this only has to guard against what
+   a third-party newsroom's own CDN can still hand back: a non-string, an
+   empty/whitespace value, a protocol-relative URL ("//host/img.jpg", valid
+   in an <img> but not a URL literal on its own), plain http (mixed-content
+   blocked on an https page), or a scheme a browser will never render as an
+   image (javascript:, data:, ftp:). Anything that fails is treated exactly
+   like "no image" — callers get back a real, https, loadable URL or null,
+   never a value they need to validate again themselves. */
+export function getNewsImage(article) {
+    const raw = article?.image;
+    if (typeof raw !== "string") return null;
+    let trimmed = raw.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith("//")) trimmed = `https:${trimmed}`;
+    try {
+        const url = new URL(trimmed);
+        if (url.protocol === "http:") url.protocol = "https:";
+        if (url.protocol !== "https:") return null;
+        return url.href;
+    } catch {
+        return null;
+    }
+}
