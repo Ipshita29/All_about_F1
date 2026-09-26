@@ -441,6 +441,23 @@
 .lr-pulse-live { display: inline-flex; align-items: center; gap: 5px; color: var(--success); font-weight: 700; letter-spacing: 0.04em; }
 .lr-pulse-live .lr-badge-dot { width: 6px; height: 6px; background: currentColor; animation: lr-pulse 1.6s ease-in-out infinite; }
 
+/* ── Weather — current-snapshot indicator bars, not a trend graph (the
+   feed never carries history, only the latest reading). ─────────────── */
+
+.lr-weather-bars { display: flex; flex-direction: column; gap: 10px; }
+
+.lr-weather-row { display: grid; grid-template-columns: 84px 1fr 56px; align-items: center; gap: var(--space-3); }
+
+.lr-weather-label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-micro); color: var(--lr-text-secondary); }
+.lr-weather-label svg { flex-shrink: 0; opacity: 0.8; }
+
+.lr-weather-track { height: 6px; border-radius: 3px; background: var(--lr-surface-inner); overflow: hidden; }
+.lr-weather-fill { display: block; height: 100%; border-radius: 3px; background: var(--lr-text-technical); }
+.lr-weather-fill--wet { background: var(--accent); }
+.lr-weather-fill--dry { background: var(--success); }
+
+.lr-weather-value { font-size: var(--text-small); text-align: right; color: var(--text-primary); }
+
 /* ── Team Focus (live) ─────────────────────────────────────────────── */
 
 .lr-team-focus { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -738,34 +755,43 @@
 
 /* ── Team radio ────────────────────────────────────────────────────── */
 
-/* A compact single-column feed, capped and internally scrollable —
-   not a wrapping multi-column wall of cards, which is what made this
-   card's natural height balloon past everything around it. */
+/* A compact single-LINE timeline — one row per capture (time, driver,
+   a connecting rule, then the clip), capped and internally scrollable.
+   Not the earlier stacked, multi-line card list: this is the "17:48 GAS
+   ──────── ▶ audio" density a timing feed actually wants. */
 .lr-radio {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    max-height: 420px;
+    max-height: 260px;
     overflow-y: auto;
 }
 
 .lr-radio-item {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: var(--lr-surface-inner);
-    border: 1px solid var(--lr-border);
-    border-radius: 8px;
-    padding: 8px 12px;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 7px 2px;
+    border-top: 1px solid var(--lr-border);
 }
 
-.lr-radio-meta { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); color: var(--lr-text-secondary); }
-.lr-radio-driver { font-weight: 600; color: var(--text-primary); }
-.lr-radio-team { color: var(--lr-text-secondary); font-size: var(--text-micro); }
+.lr-radio-item:first-child { border-top: none; }
+
+.lr-radio-time { color: var(--text-faint); flex-shrink: 0; width: 44px; }
+
+.lr-radio-driver { font-weight: 700; color: var(--text-primary); font-size: var(--text-small); flex-shrink: 0; width: 34px; }
+
+.lr-radio-line {
+    flex: 1 1 auto;
+    min-width: 16px;
+    height: 1px;
+    background-image: linear-gradient(to right, var(--lr-border) 50%, transparent 0%);
+    background-size: 6px 1px;
+    background-repeat: repeat-x;
+}
 
 .lr-radio-new {
-    margin-left: auto;
+    flex-shrink: 0;
     font-family: var(--font-mono);
     font-size: 0.6rem;
     font-weight: 700;
@@ -776,9 +802,9 @@
     padding: 2px 8px;
 }
 
-.lr-radio-player { width: 100%; height: 32px; }
+.lr-radio-player { flex: 1 1 140px; max-width: 220px; min-width: 0; height: 28px; }
 
-.lr-radio-unavailable { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--text-faint); padding-left: 28px; }
+.lr-radio-unavailable { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--text-faint); flex-shrink: 0; }
 
 /* ═══════════════════════════════════════════════════════════════════
    RACE HUB (isLive === false)

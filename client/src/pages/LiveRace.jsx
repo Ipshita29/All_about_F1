@@ -1668,27 +1668,48 @@ function TyreStrategySection({ drivers, sessionType }) {
 
 /* ── Weather ───────────────────────────────────────────────────────── */
 
+/* Current-snapshot indicator bars, not a time-series graph — the live
+   feed's weather.timestamp is always null (no history is ever kept, see
+   liveRaceService.js), so a trend line would have to be invented. These
+   bars only ever encode the single latest reading against a fixed,
+   sensible scale for that metric. */
+const WEATHER_METRICS = [
+    { key: "airTemperature", label: "Air Temp", unit: "°C", Icon: Thermometer, max: 45 },
+    { key: "trackTemperature", label: "Track Temp", unit: "°C", Icon: Thermometer, max: 60 },
+    { key: "humidity", label: "Humidity", unit: "%", Icon: Droplets, max: 100 },
+    { key: "windSpeed", label: "Wind", unit: " m/s", Icon: Wind, max: 15 },
+];
+
 function WeatherSection({ weather }) {
     if (!weather) {
         return <EmptyState title="No weather data" description="Live conditions will appear once the session reports them." />;
     }
-    const rows = [
-        [<Thermometer size={14} aria-hidden="true" />, "Air Temp", weather.airTemperature != null ? `${weather.airTemperature}°C` : null],
-        [<Thermometer size={14} aria-hidden="true" />, "Track Temp", weather.trackTemperature != null ? `${weather.trackTemperature}°C` : null],
-        [<Droplets size={14} aria-hidden="true" />, "Humidity", weather.humidity != null ? `${weather.humidity}%` : null],
-        [<Wind size={14} aria-hidden="true" />, "Wind", weather.windSpeed != null ? `${weather.windSpeed} m/s${weather.windDirection != null ? ` @ ${weather.windDirection}°` : ""}` : null],
-        [<Droplets size={14} aria-hidden="true" />, "Rainfall", weather.rainfall != null ? (weather.rainfall > 0 ? "Rain" : "Dry") : null],
-    ].filter(([, , v]) => v !== null);
+
+    const rows = WEATHER_METRICS
+        .filter((m) => weather[m.key] != null)
+        .map((m) => ({ ...m, value: weather[m.key], pct: Math.max(2, Math.min(100, (weather[m.key] / m.max) * 100)) }));
+
+    const isWet = weather.rainfall != null && weather.rainfall > 0;
 
     return (
-        <dl className="lr-pulse">
-            {rows.map(([icon, label, value]) => (
-                <div className="lr-pulse-row" key={label}>
-                    <dt>{icon}{label}</dt>
-                    <dd className="lr-mono">{value}</dd>
+        <div className="lr-weather-bars">
+            {rows.map((m) => (
+                <div className="lr-weather-row" key={m.key}>
+                    <span className="lr-weather-label"><m.Icon size={13} aria-hidden="true" />{m.label}</span>
+                    <span className="lr-weather-track"><span className="lr-weather-fill" style={{ width: `${m.pct}%` }} /></span>
+                    <span className="lr-mono lr-weather-value">{m.value}{m.unit}</span>
                 </div>
             ))}
-        </dl>
+            {weather.rainfall != null && (
+                <div className="lr-weather-row">
+                    <span className="lr-weather-label"><Droplets size={13} aria-hidden="true" />Track</span>
+                    <span className="lr-weather-track">
+                        <span className={`lr-weather-fill${isWet ? " lr-weather-fill--wet" : " lr-weather-fill--dry"}`} style={{ width: isWet ? "100%" : "10%" }} />
+                    </span>
+                    <span className="lr-mono lr-weather-value">{isWet ? "RAIN" : "DRY"}</span>
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -1776,21 +1797,23 @@ function TeamRadioSection({ teamRadio, drivers }) {
         <ul className="lr-radio">
             {newestFirst.map((r, i) => {
                 const driver = drivers.find((d) => d.driverNumber === r.driverNumber);
+                const time = r.timestamp
+                    ? new Date(r.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+                    : "—";
                 return (
                     <li className="lr-radio-item" key={`${r.driverNumber}-${r.timestamp}-${i}`}>
-                        <div className="lr-radio-meta">
-                            <DriverAvatar code={driver?.driverCode ?? (r.driverNumber ? String(r.driverNumber) : "?")} color={driver?.teamColor} size="sm" />
-                            <span className="lr-radio-driver">{driver?.name ?? (r.driverNumber ? `#${r.driverNumber}` : "Unknown")}</span>
-                            <span className="lr-radio-team">{r.team ?? ""}</span>
-                            {i === 0 && <span className="lr-radio-new">NEW</span>}
-                        </div>
+                        <span className="lr-mono lr-radio-time">{time}</span>
+                        <DriverAvatar code={driver?.driverCode ?? (r.driverNumber ? String(r.driverNumber) : "?")} color={driver?.teamColor} size="sm" />
+                        <span className="lr-radio-driver" title={driver?.name ?? r.team ?? ""}>{driver?.driverCode ?? (r.driverNumber ? `#${r.driverNumber}` : "?")}</span>
+                        <span className="lr-radio-line" aria-hidden="true" />
                         {r.recordingUrl ? (
                             <audio controls preload="none" src={r.recordingUrl} className="lr-radio-player" />
                         ) : (
                             <span className="lr-radio-unavailable">
-                                <RadioIcon size={12} aria-hidden="true" /> Recording unavailable
+                                <RadioIcon size={12} aria-hidden="true" /> unavailable
                             </span>
                         )}
+                        {i === 0 && <span className="lr-radio-new">NEW</span>}
                     </li>
                 );
             })}
