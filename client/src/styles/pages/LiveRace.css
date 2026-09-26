@@ -17,6 +17,9 @@
     --lr-border: #383838;
     --lr-text-secondary: #a9a59f;
     --lr-text-technical: var(--color-slate);
+    /* Distinct from --warning (amber flag colour) — safety car / VSC get
+       their own hue so the two states never read as the same event. */
+    --lr-orange: #d97a2b;
 
     /* Light editorial surfaces — Carrara/Chalk, real F1 paddock-magazine
        tone rather than another black card. */
@@ -497,6 +500,31 @@
 
 .lr-bar-chart { width: 100%; }
 
+/* ── Team / driver performance — compact bar-per-driver visualization,
+   grouped by team, from real current positions only. ────────────────── */
+
+.lr-team-perf { display: flex; flex-direction: column; gap: 10px; }
+
+.lr-team-perf-row { display: flex; align-items: center; gap: var(--space-3); }
+
+.lr-team-perf-name {
+    width: 92px;
+    flex-shrink: 0;
+    font-size: var(--text-micro);
+    color: var(--lr-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lr-team-perf-bars { display: flex; flex-direction: column; gap: 3px; flex: 1 1 auto; min-width: 0; }
+
+.lr-team-perf-bar-wrap { display: flex; align-items: center; gap: 6px; height: 12px; }
+
+.lr-team-perf-bar { display: block; height: 6px; border-radius: 3px; min-width: 4px; }
+
+.lr-team-perf-pos { font-size: 0.62rem; color: var(--lr-text-secondary); flex-shrink: 0; }
+
 /* ── Battles (vertical dashboard cards) ───────────────────────────────── */
 
 .lr-battles-list { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -687,6 +715,7 @@
 .lr-rc-icon { flex-shrink: 0; position: relative; top: 1px; }
 .lr-rc-icon--green { color: var(--success); }
 .lr-rc-icon--yellow { color: var(--warning); }
+.lr-rc-icon--orange { color: var(--lr-orange); }
 .lr-rc-icon--red { color: var(--accent-text); }
 .lr-rc-icon--neutral { color: var(--text-muted); }
 
@@ -701,6 +730,7 @@
 }
 .lr-feed-type.lr-rc-icon--green { color: var(--success); }
 .lr-feed-type.lr-rc-icon--yellow { color: var(--warning); }
+.lr-feed-type.lr-rc-icon--orange { color: var(--lr-orange); }
 .lr-feed-type.lr-rc-icon--red { color: var(--accent-text); }
 .lr-feed-type.lr-rc-icon--neutral { color: var(--text-muted); }
 

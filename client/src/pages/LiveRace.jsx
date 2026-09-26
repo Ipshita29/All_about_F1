@@ -15,7 +15,7 @@ import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
     Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
-    CloudLightning, ShieldAlert, BarChart2, Gauge,
+    CloudLightning, ShieldAlert, BarChart2, Gauge, Shuffle,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -1346,6 +1346,52 @@ function TeamFocus({ drivers, season }) {
     );
 }
 
+/* ── Team / driver performance — real current positions only, grouped
+   by team and ordered by each team's best-placed car. Bar length is a
+   simple inverse-of-position read (P1 = full bar) so the field's shape
+   is visible at a glance; the "TeamName P1 · P9" pairing from the brief
+   is the pos label printed at the end of each bar. ───────────────────── */
+
+function TeamPerformanceSection({ drivers }) {
+    const fieldSize = drivers.length || 20;
+
+    const byTeam = new Map();
+    for (const d of drivers) {
+        if (!d.team || d.position == null) continue;
+        if (!byTeam.has(d.team)) byTeam.set(d.team, { color: d.teamColor, drivers: [] });
+        byTeam.get(d.team).drivers.push(d);
+    }
+
+    const teams = Array.from(byTeam.entries())
+        .map(([team, v]) => ({ team, color: v.color, drivers: v.drivers.sort((a, b) => a.position - b.position) }))
+        .sort((a, b) => a.drivers[0].position - b.drivers[0].position);
+
+    if (teams.length === 0) {
+        return <EmptyState title="No positions yet" description="Team performance will appear once drivers are classified." />;
+    }
+
+    return (
+        <div className="lr-team-perf">
+            {teams.map((t) => (
+                <div className="lr-team-perf-row" key={t.team}>
+                    <span className="lr-team-perf-name">{t.team}</span>
+                    <div className="lr-team-perf-bars">
+                        {t.drivers.map((d) => (
+                            <span className="lr-team-perf-bar-wrap" key={d.driverNumber} title={`${d.driverCode ?? d.driverNumber} P${d.position}`}>
+                                <span
+                                    className="lr-team-perf-bar"
+                                    style={{ width: `${Math.max(8, ((fieldSize - d.position + 1) / fieldSize) * 100)}%`, background: t.color }}
+                                />
+                                <span className="lr-mono lr-team-perf-pos">P{d.position}</span>
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 /* ── Battles — derived only from position + live gap-to-ahead ────────── */
 
 const MAX_BATTLES = 6;
@@ -1656,7 +1702,7 @@ function raceControlSeverity(type) {
     if (t.includes("GREEN") || t.includes("CLEAR")) return { Icon: Flag, className: "lr-rc-icon--green" };
     if (t.includes("YELLOW")) return { Icon: Flag, className: "lr-rc-icon--yellow" };
     if (t.includes("RED")) return { Icon: Flag, className: "lr-rc-icon--red" };
-    if (t.includes("SC") || t.includes("VSC") || t.includes("SAFETY")) return { Icon: ShieldAlert, className: "lr-rc-icon--yellow" };
+    if (t.includes("SC") || t.includes("VSC") || t.includes("SAFETY")) return { Icon: ShieldAlert, className: "lr-rc-icon--orange" };
     if (t.includes("PENALTY") || t.includes("INCIDENT")) return { Icon: AlertTriangle, className: "lr-rc-icon--red" };
     return { Icon: AlertTriangle, className: "lr-rc-icon--neutral" };
 }
@@ -1880,6 +1926,9 @@ function LiveRace() {
                         <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
                             <TyreAgeChart drivers={drivers} />
                             <TyreStrategySection drivers={drivers} sessionType={sessionType} />
+                        </Panel>
+                        <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Performance</>}>
+                            <TeamPerformanceSection drivers={drivers} />
                         </Panel>
                         <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
                             <RaceControlSection events={data.events ?? []} />
