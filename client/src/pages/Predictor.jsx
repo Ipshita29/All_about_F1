@@ -10,7 +10,7 @@
  * period, weather, tyre strategy), it's left out rather than invented.
  */
 import { Fragment, useEffect, useState } from "react";
-import { CheckCircle2, Clock, Info, Circle, CloudSun, Thermometer, Droplets, Wind } from "lucide-react";
+import { CheckCircle2, Clock, Info, Circle, CloudSun, Thermometer, Droplets, Wind, BarChart3, History } from "lucide-react";
 import { Button, EmptyState, LoadingSpinner } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/Predictor.css";
@@ -479,10 +479,13 @@ function ModelPerformanceSection({ performance, loading }) {
 
     if (!performance?.available) {
         return (
-            <EmptyState
-                title="No evaluated predictions yet"
-                description="Once a predicted Grand Prix has been completed, model performance will appear here."
-            />
+            <div className="pr-compact-empty">
+                <BarChart3 size={18} aria-hidden="true" />
+                <div className="pr-compact-empty-body">
+                    <span className="pr-compact-empty-title">No evaluated races yet</span>
+                    <span className="pr-compact-empty-desc">Predictions will be scored automatically once their races are completed.</span>
+                </div>
+            </div>
         );
     }
 
@@ -568,10 +571,13 @@ function PredictionHistorySection({ races, loading }) {
 
     if (eligible.length === 0) {
         return (
-            <EmptyState
-                title="No completed evaluated races"
-                description="Predicted races that have since been run will appear here."
-            />
+            <div className="pr-compact-empty">
+                <History size={18} aria-hidden="true" />
+                <div className="pr-compact-empty-body">
+                    <span className="pr-compact-empty-title">No evaluated predictions yet</span>
+                    <span className="pr-compact-empty-desc">Prediction history will populate automatically after predictions are saved and their races are completed.</span>
+                </div>
+            </div>
         );
     }
 
