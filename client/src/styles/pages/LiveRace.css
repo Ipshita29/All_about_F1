@@ -323,6 +323,9 @@
     text-overflow: ellipsis;
 }
 
+/* Filled compound circles (not just a coloured border on a dark
+   background) — the actual F1 tyre colour convention, so the compound
+   reads at a glance rather than needing the letter to be parsed. */
 .lr-tyre {
     display: inline-flex;
     align-items: center;
@@ -331,17 +334,18 @@
     height: 22px;
     border-radius: 50%;
     font-family: var(--font-mono);
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.65rem;
     border: 2px solid var(--lr-border);
+    background: var(--lr-border);
     color: var(--text-primary);
 }
 
-.lr-tyre--soft { border-color: var(--accent); color: var(--accent-text); }
-.lr-tyre--medium { border-color: var(--warning); color: var(--warning); }
-.lr-tyre--hard { border-color: var(--color-cararra); color: var(--color-cararra); }
+.lr-tyre--soft { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+.lr-tyre--medium { background: var(--warning); border-color: var(--warning); color: var(--color-carbon); }
+.lr-tyre--hard { background: var(--color-cararra); border-color: var(--color-cararra); color: var(--color-carbon); }
 .lr-tyre--intermediate,
-.lr-tyre--wet { border-color: var(--success); color: var(--success); }
+.lr-tyre--wet { background: var(--success); border-color: var(--success); color: var(--color-carbon); }
 
 .lr-stint-pips { display: inline-flex; gap: 3px; margin-left: var(--space-2); vertical-align: middle; }
 .lr-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--lr-border); }
