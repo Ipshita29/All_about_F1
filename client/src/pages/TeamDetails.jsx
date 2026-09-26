@@ -264,7 +264,7 @@ function TeamDetails() {
                 )}
 
                 {(extraInfo?.strengths?.length > 0 || extraInfo?.weaknesses?.length > 0) && (
-                    <ExSection eyebrow="Engineering Readout" title="Strengths & Weaknesses">
+                    <ExSection eyebrow="Engineering Readout" title="Strengths & Weaknesses" className="exd-card exd-card--dark exd-span-3">
                         <div className="ex-cols">
                             {extraInfo?.strengths?.length > 0 && (
                                 <div>
@@ -291,16 +291,20 @@ function TeamDetails() {
                 )}
 
                 {extraInfo?.funFacts?.length > 0 && (
-                    <ExSection eyebrow="Paddock Notes" title="Fun Facts">
-                        <ul className="ex-list">
-                            {extraInfo.funFacts.map((f, i) => <li key={i}>{f}</li>)}
+                    <ExSection
+                        eyebrow={<><Sparkles size={12} aria-hidden="true" /> Paddock Notes</>}
+                        title="Fun Facts"
+                        className="exd-card exd-card--chalk exd-span-3"
+                    >
+                        <ul className="ex-list exd-icon-list">
+                            {extraInfo.funFacts.map((f, i) => <li key={i}><Sparkles size={13} aria-hidden="true" />{f}</li>)}
                         </ul>
                     </ExSection>
                 )}
 
                 {(extraInfo?.socials?.instagram || extraInfo?.socials?.twitter || extraInfo?.socials?.website) && (
-                    <ExSection eyebrow="Comms" title="Official Channels">
-                        <div className="ex-spec">
+                    <ExSection eyebrow="Comms" title="Official Channels" className="exd-card exd-card--dark exd-span-3">
+                        <div className="ex-spec exd-spec-grid">
                             {extraInfo.socials.instagram && (
                                 <div className="ex-spec-row">
                                     <span className="ex-spec-label">Instagram</span>
