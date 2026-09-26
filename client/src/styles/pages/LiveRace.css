@@ -613,12 +613,15 @@
 
 .lr-feed-item {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: var(--space-2);
     padding: 9px 0;
     border-top: 1px solid var(--lr-border);
     font-size: var(--text-small);
 }
+
+.lr-feed-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lr-feed-headline { display: flex; align-items: baseline; gap: var(--space-2); }
 
 .lr-feed-item:first-child { border-top: none; }
 
@@ -637,8 +640,20 @@
 .lr-rc-icon--neutral { color: var(--text-muted); }
 
 .lr-feed-time { color: var(--text-faint); flex-shrink: 0; font-size: var(--text-micro); }
-.lr-feed-body { color: var(--lr-text-secondary); line-height: 1.45; }
-.lr-feed-body b { color: var(--text-primary); font-size: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; margin-right: 4px; }
+
+.lr-feed-type {
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+}
+.lr-feed-type.lr-rc-icon--green { color: var(--success); }
+.lr-feed-type.lr-rc-icon--yellow { color: var(--warning); }
+.lr-feed-type.lr-rc-icon--red { color: var(--accent-text); }
+.lr-feed-type.lr-rc-icon--neutral { color: var(--text-muted); }
+
+.lr-feed-body { color: var(--lr-text-secondary); line-height: 1.45; padding-left: 1px; }
 
 /* ── Team radio ────────────────────────────────────────────────────── */
 

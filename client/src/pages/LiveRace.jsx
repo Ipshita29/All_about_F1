@@ -14,7 +14,7 @@ import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
     Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
-    CloudLightning,
+    CloudLightning, ShieldAlert,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -1523,12 +1523,17 @@ function WeatherSection({ weather }) {
 
 /* ── Race control ──────────────────────────────────────────────────── */
 
-function raceControlIcon(type) {
+/* Returns the icon + severity class together so the type label can be
+   coloured to match the icon instead of only the icon itself standing
+   out — see RaceControlSection below. */
+function raceControlSeverity(type) {
     const t = (type || "").toUpperCase();
-    if (t.includes("GREEN") || t.includes("CLEAR")) return <Flag size={13} className="lr-rc-icon lr-rc-icon--green" aria-hidden="true" />;
-    if (t.includes("YELLOW")) return <Flag size={13} className="lr-rc-icon lr-rc-icon--yellow" aria-hidden="true" />;
-    if (t.includes("RED")) return <Flag size={13} className="lr-rc-icon lr-rc-icon--red" aria-hidden="true" />;
-    return <AlertTriangle size={13} className="lr-rc-icon lr-rc-icon--neutral" aria-hidden="true" />;
+    if (t.includes("GREEN") || t.includes("CLEAR")) return { Icon: Flag, className: "lr-rc-icon--green" };
+    if (t.includes("YELLOW")) return { Icon: Flag, className: "lr-rc-icon--yellow" };
+    if (t.includes("RED")) return { Icon: Flag, className: "lr-rc-icon--red" };
+    if (t.includes("SC") || t.includes("VSC") || t.includes("SAFETY")) return { Icon: ShieldAlert, className: "lr-rc-icon--yellow" };
+    if (t.includes("PENALTY") || t.includes("INCIDENT")) return { Icon: AlertTriangle, className: "lr-rc-icon--red" };
+    return { Icon: AlertTriangle, className: "lr-rc-icon--neutral" };
 }
 
 function useNewestId(currentId) {
@@ -1561,16 +1566,20 @@ function RaceControlSection({ events }) {
             {newestFirst.map((e, i) => {
                 const t = (e.type || "").toUpperCase();
                 const serious = t.includes("RED") || t.includes("SC") || t.includes("VSC") || t.includes("PENALTY") || t.includes("INCIDENT");
+                const { Icon, className } = raceControlSeverity(e.type);
                 return (
-                <li className={`lr-feed-item${i === 0 && isNew ? " lr-feed-item--new" : ""}${serious ? " lr-feed-item--serious" : ""}`} key={e.id}>
-                    {raceControlIcon(e.type)}
-                    <span className="lr-feed-time lr-mono">
-                        {e.timestamp ? new Date(`${e.timestamp}Z`).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
-                    </span>
-                    <span className="lr-feed-body">
-                        {e.type && <b>{e.type.replace(/_/g, " ")}</b>} {e.message}
-                    </span>
-                </li>
+                    <li className={`lr-feed-item${i === 0 && isNew ? " lr-feed-item--new" : ""}${serious ? " lr-feed-item--serious" : ""}`} key={e.id}>
+                        <Icon size={14} className={`lr-rc-icon ${className}`} aria-hidden="true" />
+                        <div className="lr-feed-content">
+                            <div className="lr-feed-headline">
+                                <span className="lr-feed-time lr-mono">
+                                    {e.timestamp ? new Date(`${e.timestamp}Z`).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—"}
+                                </span>
+                                {e.type && <b className={`lr-feed-type ${className}`}>{e.type.replace(/_/g, " ")}</b>}
+                            </div>
+                            <span className="lr-feed-body">{e.message}</span>
+                        </div>
+                    </li>
                 );
             })}
         </ul>
