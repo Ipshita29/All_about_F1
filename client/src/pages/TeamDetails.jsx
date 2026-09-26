@@ -172,14 +172,8 @@ function TeamDetails() {
                     </ExSection>
                 )}
 
-                {extraInfo?.history && (
-                    <ExSection eyebrow="Heritage" title="History">
-                        <p className="ex-prose">{extraInfo.history}</p>
-                    </ExSection>
-                )}
-
-                <ExSection eyebrow="Technical File" title="Team Specification">
-                    <div className="ex-spec">
+                <ExSection eyebrow="Technical File" title="Team Specification" className="exd-card exd-card--light exd-span-2">
+                    <div className="ex-spec exd-spec-grid">
                         <div className="ex-spec-row">
                             <span className="ex-spec-label">Nationality</span>
                             <span className="ex-spec-value">{team.nationality}</span>
@@ -211,7 +205,13 @@ function TeamDetails() {
                     </div>
                 </ExSection>
 
-                <ExSection eyebrow="Telemetry" title={`${year} Season`}>
+                {extraInfo?.history && (
+                    <ExSection eyebrow="Heritage" title="History" className="exd-card exd-card--dark exd-span-4">
+                        <p className="ex-prose">{extraInfo.history}</p>
+                    </ExSection>
+                )}
+
+                <ExSection eyebrow="Telemetry" title={`${year} Season`} className="exd-card exd-card--dark exd-span-2">
                     <div className="ex-stat-row">
                         <TelemetryStat value={standing.position} label="Position" accent />
                         <TelemetryStat value={standing.points} label="Points" />
@@ -225,23 +225,31 @@ function TeamDetails() {
                 </ExSection>
 
                 {extraInfo?.achievements?.length > 0 && (
-                    <ExSection eyebrow="Honours" title="Championship Record">
-                        <ul className="ex-timeline">
-                            {extraInfo.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                    <ExSection
+                        eyebrow={<><Trophy size={12} aria-hidden="true" /> Honours</>}
+                        title="Championship Record"
+                        className="exd-card exd-card--dark exd-span-3"
+                    >
+                        <ul className="ex-timeline exd-icon-list">
+                            {extraInfo.achievements.map((a, i) => <li key={i}><Trophy size={13} aria-hidden="true" />{a}</li>)}
                         </ul>
                     </ExSection>
                 )}
 
                 {extraInfo?.famousDrivers?.length > 0 && (
-                    <ExSection eyebrow="Hall of Fame" title="Famous Drivers">
-                        <ul className="ex-list">
-                            {extraInfo.famousDrivers.map((d, i) => <li key={i}>{d}</li>)}
+                    <ExSection
+                        eyebrow={<><UserRound size={12} aria-hidden="true" /> Hall of Fame</>}
+                        title="Famous Drivers"
+                        className="exd-card exd-card--chalk exd-span-3"
+                    >
+                        <ul className="ex-list exd-icon-list">
+                            {extraInfo.famousDrivers.map((d, i) => <li key={i}><UserRound size={13} aria-hidden="true" />{d}</li>)}
                         </ul>
                     </ExSection>
                 )}
 
                 {extraInfo?.strategyStyle && (
-                    <ExSection eyebrow="Pit Wall" title="Strategy Style">
+                    <ExSection eyebrow="Pit Wall" title="Strategy Style" className="exd-card exd-card--light exd-span-3">
                         <p className="ex-prose">{extraInfo.strategyStyle}</p>
                         <p className="ex-prose" style={{ marginTop: 14 }}>
                             {"Key tools: "}
