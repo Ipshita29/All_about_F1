@@ -15,8 +15,11 @@
  * stops) never changes once posted, so it's cached for a long time;
  * season schedules and "latest race" change occasionally, so they get a
  * shorter TTL. This is deliberately simple — a single Map, no eviction
- * policy beyond TTL — matching the same pattern already used in
- * predictorService.js rather than introducing a new caching library.
+ * policy beyond TTL — the same generic cache is also used by
+ * weatherService.js and (see predictorService.js / evaluationService.js)
+ * the Predictor, which used to fire its ~10-15 Jolpica calls per page
+ * load completely uncached — the confirmed cause of the Predictor's own
+ * intermittent "Prediction unavailable" behavior.
  */
 
 const store = new Map();
@@ -36,6 +39,8 @@ const TTL = {
     SCHEDULE: 10 * 60 * 1000, // a season's schedule rarely changes within a session
     LATEST: 2 * 60 * 1000, // "current/last" can advance to a new race
     FORECAST: 30 * 60 * 1000, // weatherService — Open-Meteo forecasts drift slowly; no need to refetch per request
+    STANDINGS: 10 * 60 * 1000, // current-season standings only change once a race weekend finishes
+    QUALIFYING: 5 * 60 * 1000, // short — once quali is genuinely done the real result should show up promptly
 };
 
 module.exports = { cached, TTL };
