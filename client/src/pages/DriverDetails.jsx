@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Trophy, Milestone, Flag, Sparkles, Radio as RadioIcon } from "lucide-react";
 import driverInfo from "../data/driverInfo";
 import { LoadingSpinner } from "../components/UI";
 import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
@@ -138,15 +139,15 @@ function DriverDetails() {
                 <div className="ex-dossier-floor" aria-hidden="true" />
             </header>
 
-            <main className="ex-main">
+            <main className="ex-main exd-dash">
                 {extraInfo?.description && (
-                    <ExSection eyebrow="Profile" title="The Story">
+                    <ExSection eyebrow="Profile" title="The Story" className="exd-card exd-card--light exd-span-4">
                         <p className="ex-prose">{extraInfo.description}</p>
                     </ExSection>
                 )}
 
-                <ExSection eyebrow="Credential" title="Driver File">
-                    <div className="ex-spec">
+                <ExSection eyebrow="Credential" title="Driver File" className="exd-card exd-card--chalk exd-span-2">
+                    <div className="ex-spec exd-spec-grid">
                         <div className="ex-spec-row">
                             <span className="ex-spec-label">Nationality</span>
                             <span className="ex-spec-value">{driver.nationality}</span>
@@ -176,7 +177,7 @@ function DriverDetails() {
                     </div>
                 </ExSection>
 
-                <ExSection eyebrow="Telemetry" title={`${year} Season`}>
+                <ExSection eyebrow="Telemetry" title={`${year} Season`} className="exd-card exd-card--dark exd-span-3">
                     <div className="ex-stat-row">
                         <TelemetryStat value={standing.position} label="Position" accent />
                         <TelemetryStat
@@ -189,7 +190,7 @@ function DriverDetails() {
                     </div>
                 </ExSection>
 
-                <ExSection eyebrow="Career" title="Career Statistics">
+                <ExSection eyebrow="Career" title="Career Statistics" className="exd-card exd-card--dark exd-span-3">
                     <div className="ex-stat-row">
                         <TelemetryStat
                             value={extraInfo?.championships ?? "—"}
