@@ -494,12 +494,18 @@ async function persistPrediction(result, source) {
                 circuit: result.race.circuit,
                 circuitId: result.race.circuitId,
                 raceDate: result.race.date,
+                country: result.race.country,
+                qualifyingDate: result.race.qualifyingDate,
+                sprintDate: result.race.sprintDate,
+                hasSprint: result.race.hasSprint,
                 stage: result.stage,
                 source,
                 modelName: result.model.name,
                 modelVersion: result.model.version,
                 weights: result.weights,
                 dataAvailability: result.dataAvailability,
+                weather: result.weather ?? null,
+                limitations: result.limitations,
                 generatedAt: result.generatedAt,
                 predictions: result.predictions.map((p) => ({
                     driverId: p.driverId,
@@ -514,12 +520,54 @@ async function persistPrediction(result, source) {
                     top5Probability: p.top5Probability,
                     top10Probability: p.top10Probability,
                     confidence: p.confidence,
+                    factors: p.factors,
                 })),
             },
             { upsert: true, returnDocument: "after" }
         );
     } catch (error) {
         console.error(`[Predictor] Failed to persist prediction: ${error.message}`);
+    }
+}
+
+/*
+ * A prediction is a historical record, not something to regenerate on
+ * every page view — a stored doc for this exact race+stage IS the
+ * prediction that existed for it, whether it's being served 10 seconds
+ * or 10 days after generation. Reused by buildPrediction() (Part 2:
+ * "if a prediction already exists, load it") so a page refresh doesn't
+ * fire a fresh ~10-request Jolpica burst for data that hasn't changed.
+ */
+async function loadStoredPrediction(season, round, stage) {
+    try {
+        const doc = await RacePrediction.findOne({ season: String(season), round: Number(round), stage }).lean();
+        if (!doc) return null;
+        return {
+            race: {
+                season: doc.season,
+                round: doc.round,
+                name: doc.raceName,
+                circuit: doc.circuit,
+                circuitId: doc.circuitId,
+                country: doc.country ?? null,
+                date: doc.raceDate,
+                qualifyingDate: doc.qualifyingDate ?? null,
+                sprintDate: doc.sprintDate ?? null,
+                hasSprint: Boolean(doc.hasSprint),
+            },
+            stage: doc.stage,
+            generatedAt: doc.generatedAt.toISOString(),
+            model: { name: doc.modelName, version: doc.modelVersion },
+            weights: doc.weights,
+            dataAvailability: doc.dataAvailability,
+            weather: doc.weather ?? null,
+            predictions: doc.predictions,
+            // Older documents saved before `limitations` was persisted fall
+            // back to the current copy rather than showing an empty list.
+            limitations: doc.limitations?.length ? doc.limitations : LIMITATIONS,
+        };
+    } catch {
+        return null;
     }
 }
 
@@ -631,13 +679,7 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         },
         weather,
         predictions,
-        limitations: [
-            "This is a statistical estimate from publicly available historical/current-season data, not a guarantee — F1 outcomes depend on many factors (incidents, weather, strategy, reliability) this model does not model.",
-            "Weights and the simulation's ability transform (k=4) are documented, reasoned choices, not fitted against held-out historical results.",
-            "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not yet used as a scoring input to the prediction itself.",
-            "Historical pit-stop counts and timing are available from the data source; tyre compounds are not, so compound/stint strategy is never shown or implied.",
-            "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit).",
-        ],
+        limitations: LIMITATIONS,
     };
 
     return result;
@@ -647,7 +689,25 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
 // Orchestrators
 // ---------------------------------------------------------------------------
 
+let inFlightRequest = null;
+
+/*
+ * Guards against duplicate simultaneous prediction requests (Part 1) —
+ * e.g. React StrictMode's double-invoked effect, a fast double page
+ * load, or two browser tabs open at once. Without this, two concurrent
+ * calls would each independently fire their own full Jolpica burst;
+ * with it, the second caller just awaits the first one's in-flight
+ * promise instead.
+ */
 async function buildPrediction() {
+    if (inFlightRequest) return inFlightRequest;
+    inFlightRequest = buildPredictionInternal().finally(() => {
+        inFlightRequest = null;
+    });
+    return inFlightRequest;
+}
+
+async function buildPredictionInternal() {
     const race = await fetchUpcomingRace();
     if (!race) return { error: "no_upcoming_race" };
 
@@ -663,6 +723,15 @@ async function buildPrediction() {
     const cacheKey = `${season}-${round}-${stage}`;
     if (cache.key === cacheKey && cache.expiresAt > Date.now()) {
         return cache.result;
+    }
+
+    // Part 2 — a stored prediction for this exact race+stage already
+    // exists means there's nothing to regenerate: load it instead of
+    // firing a fresh Jolpica burst for data that hasn't changed.
+    const stored = await loadStoredPrediction(season, round, stage);
+    if (stored) {
+        cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result: stored };
+        return stored;
     }
 
     const { driverStandings, constructorStandings } = await fetchStandings(season);
@@ -714,9 +783,9 @@ async function buildBacktestPrediction(season, round) {
     if (asOfRound < 1) return { error: "no_prior_standings" };
 
     const [driverData, constructorData, raceData] = await Promise.all([
-        getJson(`/${season}/${asOfRound}/driverstandings.json?limit=100`).catch(() => null),
-        getJson(`/${season}/${asOfRound}/constructorstandings.json?limit=100`).catch(() => null),
-        getJson(`/${season}/${round}.json`),
+        cached(`predictor:standings-asof:${season}:${asOfRound}:driver`, TTL.HISTORICAL, () => getJson(`/${season}/${asOfRound}/driverstandings.json?limit=100`)).catch(() => null),
+        cached(`predictor:standings-asof:${season}:${asOfRound}:constructor`, TTL.HISTORICAL, () => getJson(`/${season}/${asOfRound}/constructorstandings.json?limit=100`)).catch(() => null),
+        cached(`predictor:race:${season}:${round}`, TTL.HISTORICAL, () => getJson(`/${season}/${round}.json`)),
     ]);
 
     const race = raceData.MRData.RaceTable.Races[0];
