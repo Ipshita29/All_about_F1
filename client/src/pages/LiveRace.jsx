@@ -1733,31 +1733,33 @@ function LiveRace() {
                     </Panel>
                 </div>
 
-                <div className="lr-grid lr-grid--6-6">
-                    <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
-                        <TeamFocus drivers={drivers} season={data.race?.season} />
-                    </Panel>
-                    <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
-                        <TyreStrategySection drivers={drivers} sessionType={sessionType} />
-                    </Panel>
-                </div>
-
-                <div className="lr-grid lr-grid--6-6">
-                    <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
-                        <SessionPulse data={data} drivers={drivers} />
-                    </Panel>
-                    <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
-                        <RaceControlSection events={data.events ?? []} />
-                    </Panel>
-                </div>
-
-                <div className="lr-grid lr-grid--4-8">
-                    <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
-                        <WeatherSection weather={data.weather} />
-                    </Panel>
-                    <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
-                        <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
-                    </Panel>
+                {/* Two independent columns, not row-paired grids — a short
+                   Team Focus must not leave Session Pulse waiting on a much
+                   taller Tyres & Strategy to finish before it can start.
+                   Each column flows purely from its own content height. */}
+                <div className="lr-columns">
+                    <div className="lr-column">
+                        <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>}>
+                            <TeamFocus drivers={drivers} season={data.race?.season} />
+                        </Panel>
+                        <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
+                            <SessionPulse data={data} drivers={drivers} />
+                        </Panel>
+                        <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
+                            <WeatherSection weather={data.weather} />
+                        </Panel>
+                    </div>
+                    <div className="lr-column">
+                        <Panel title={<><CircleDashed size={13} aria-hidden="true" />{tyresTitle}</>}>
+                            <TyreStrategySection drivers={drivers} sessionType={sessionType} />
+                        </Panel>
+                        <Panel title={<><AlertTriangle size={13} aria-hidden="true" />Race Control</>}>
+                            <RaceControlSection events={data.events ?? []} />
+                        </Panel>
+                        <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
+                            <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />
+                        </Panel>
+                    </div>
                 </div>
             </main>
         </div>
