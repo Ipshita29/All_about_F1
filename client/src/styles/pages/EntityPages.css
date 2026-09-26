@@ -708,57 +708,59 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 /* ── Team Details' own hero (.exd-tg-*) — a fresh namespace rather than
    restyling .ex-tg-hero/.ex-tg-kicker/.ex-tg-name above, since
    CircuitDetails.jsx reuses those exact classes for its own hero and
-   must not change. Same light-Carrara profile-card treatment as the
-   Driver Dossier hero, with the team logo genuinely shown for the
-   first time. ── */
-
-.exd-tg-back { display: block; max-width: var(--content-width-wide); margin: var(--space-6) auto 0; padding: 0 var(--space-7); }
+   must not change. Same compact, dark, integrated-image treatment as
+   the Driver Dossier hero above — no boxed card, team colour used
+   sparingly, Milano Red reserved for labels and key stat values. ── */
 
 .exd-tg-hero {
     max-width: var(--content-width-wide);
-    margin: var(--space-4) auto 0;
-    padding: var(--space-7);
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-6) var(--space-6);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: var(--space-7);
-    align-items: center;
-    background: var(--surface-light-1);
-    border: 1px solid var(--border-on-light);
-    border-radius: var(--radius-xl);
+    align-items: end;
+    border-bottom: 1px solid var(--border-faint);
 }
 
-.exd-tg-hero .ex-tag { color: var(--text-on-light-secondary); border-color: var(--border-on-light-strong); }
-.exd-tg-hero .ex-tag--accent { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
-.exd-tg-tags { justify-content: flex-start; margin-bottom: var(--space-5); }
+.exd-tg-tags { justify-content: flex-start; margin-bottom: var(--space-4); }
 
-.exd-tg-kicker { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.14em; color: var(--text-on-light-muted); }
+.exd-tg-kicker { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.14em; color: var(--text-muted); }
 
 .exd-tg-name {
-    font-size: clamp(2.2rem, 2.2vw + 1.5rem, 3.2rem);
+    font-size: clamp(2rem, 2vw + 1.4rem, 3rem);
     font-weight: 800;
     letter-spacing: -0.03em;
-    color: var(--text-on-light-primary);
-    margin: var(--space-2) 0 var(--space-4);
+    color: var(--text-primary);
+    margin: var(--space-2) 0 var(--space-3);
 }
 
-.exd-tg-visual { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+.exd-tg-visual { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
 
-.exd-tg-logo { height: 40px; width: auto; max-width: 100%; object-fit: contain; }
+.exd-tg-logo { height: 36px; width: auto; max-width: 100%; object-fit: contain; }
 
+/* Integrated, not boxed — a subtle team-colour glow instead of a hard
+   border/background container. */
 .exd-tg-carline {
+    position: relative;
     width: 100%;
-    height: 170px;
+    height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-carbon);
-    border: 1px solid var(--border-on-light);
-    border-radius: var(--radius-md);
     padding: var(--space-4);
 }
 
-.exd-tg-car { max-width: 100%; max-height: 100%; object-fit: contain; }
-.exd-tg-carline .ex-entity-fallback { background: transparent; color: var(--text-faint); }
+.exd-tg-carline::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--accent, transparent) 16%, transparent), transparent 70%);
+    z-index: 0;
+}
+
+.exd-tg-car { position: relative; z-index: 1; max-width: 100%; max-height: 100%; object-fit: contain; }
+.exd-tg-carline .ex-entity-fallback { position: relative; z-index: 1; background: transparent; color: var(--text-faint); }
 
 /* ══════════════════════════════════════════════════════════════════
    CIRCUIT ROSTER — .cr-*
