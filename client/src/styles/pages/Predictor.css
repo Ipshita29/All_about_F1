@@ -156,9 +156,12 @@
 
 /* ── Prediction summary ────────────────────────────────────────────── */
 
+/* Winner card — a light Carrara surface (Part 14: major result cards
+   shouldn't just be another dark panel), Milano Red reserved for the
+   probability figure itself. */
 .pr-summary {
-    background: var(--pr-surface-inner);
-    border: 1px solid var(--pr-border);
+    background: var(--pr-light);
+    border: 1px solid var(--pr-light-border);
     border-radius: 10px;
     padding: 20px 24px;
 }
@@ -168,14 +171,14 @@
 .pr-team-bar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--pr-team-color, var(--pr-border)); }
 
 .pr-summary-id { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.pr-summary-name { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.pr-summary-team { font-size: var(--text-small); color: var(--pr-text-secondary); }
+.pr-summary-name { font-size: var(--text-h3); font-weight: 700; color: var(--pr-light-text); }
+.pr-summary-team { font-size: var(--text-small); color: var(--pr-light-text-2); }
 
 .pr-summary-prob { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.pr-summary-prob-value { font-size: var(--text-h3); font-weight: 700; color: var(--accent-text); }
-.pr-summary-prob-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.pr-summary-prob-value { font-size: var(--text-h3); font-weight: 700; color: var(--accent); }
+.pr-summary-prob-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pr-light-text-3); }
 
-/* ── Podium ────────────────────────────────────────────────────────── */
+/* ── Podium (sits inside a .pr-panel--light) ──────────────────────────── */
 
 .pr-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
 
@@ -184,17 +187,17 @@
     flex-direction: column;
     gap: 4px;
     padding: 16px;
-    background: var(--pr-surface-inner);
-    border: 1px solid var(--pr-border);
-    border-top: 3px solid var(--pr-team-color, var(--pr-border));
+    background: rgba(25, 25, 25, 0.03);
+    border: 1px solid var(--pr-light-border);
+    border-top: 3px solid var(--pr-team-color, var(--pr-light-border));
     border-radius: 8px;
 }
 
-.pr-podium-pos { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.pr-podium-name { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
-.pr-podium-team { font-size: var(--text-micro); color: var(--pr-text-secondary); margin-bottom: 6px; }
-.pr-podium-prob { font-size: var(--text-small); color: var(--accent-text); font-weight: 700; }
-.pr-podium-prob small { font-family: var(--font-sans); color: var(--text-faint); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 4px; }
+.pr-podium-pos { font-size: var(--text-h3); font-weight: 700; color: var(--pr-light-text); }
+.pr-podium-name { font-size: var(--text-small); font-weight: 700; color: var(--pr-light-text); }
+.pr-podium-team { font-size: var(--text-micro); color: var(--pr-light-text-2); margin-bottom: 6px; }
+.pr-podium-prob { font-size: var(--text-small); color: var(--accent); font-weight: 700; }
+.pr-podium-prob small { font-family: var(--font-sans); color: var(--pr-light-text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 4px; }
 
 @media (max-width: 640px) {
     .pr-podium { grid-template-columns: 1fr; }
@@ -360,6 +363,31 @@
    ══════════════════════════════════════════════════════════════════ */
 
 .pr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
+
+/* ── Compact empty states — a small icon + heading + line, never a big
+   empty black box ── */
+
+.pr-compact-empty {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+}
+
+.pr-compact-empty svg { flex-shrink: 0; margin-top: 2px; color: var(--text-faint); }
+
+.pr-compact-empty-body { display: flex; flex-direction: column; gap: 2px; }
+
+.pr-compact-empty-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.pr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
 
 /* ── Model performance ─────────────────────────────────────────────── */
 
