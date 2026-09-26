@@ -38,7 +38,8 @@
  * ensureBacktestSeeded), never on every page load.
  */
 
-const { getJson } = require("./jolpicaClient");
+const { getJson, getJsonRetry } = require("./jolpicaClient");
+const { cached, TTL } = require("./jolpicaCache");
 const RacePrediction = require("../models/RacePrediction");
 const { buildBacktestPrediction } = require("./predictorService");
 
@@ -57,7 +58,13 @@ const evaluationCache = new Map(); // "season-round" -> evaluation result
 // identical to a genuinely future race.
 async function fetchActualResults(season, round) {
     try {
-        const data = await getJson(`/${season}/${round}/results.json`);
+        // Short TTL (not HISTORICAL) — this is called for rounds that may
+        // not have completed yet; caching an empty "not run yet" answer
+        // for too long would delay evaluateRace() from ever noticing the
+        // race actually finished. Once a race IS evaluated, evaluateRace's
+        // own outer cache means this never gets called for it again, so
+        // the short TTL only ever matters for the still-pending case.
+        const data = await cached(`predictor:actual-results:${season}:${round}`, TTL.LATEST, () => getJson(`/${season}/${round}/results.json`));
         return { results: data.MRData.RaceTable.Races[0]?.Results || [], failed: false };
     } catch {
         return { results: [], failed: true };
@@ -222,8 +229,12 @@ async function ensureBacktestSeeded(season, currentRound) {
 // History + aggregate performance
 // ---------------------------------------------------------------------------
 
+// Same endpoint, same cache key as predictorService.js's fetchUpcomingRace
+// — /history and /performance requesting "the current race" on the same
+// page load as /upcoming now share one cached response instead of each
+// firing their own request.
 async function fetchCurrentSeasonAndRound() {
-    const data = await getJson("/current/next.json");
+    const data = await cached("predictor:next-race", TTL.SCHEDULE, () => getJsonRetry("/current/next.json"));
     const race = data.MRData.RaceTable.Races[0];
     if (!race) return null;
     return { season: race.season, round: Number(race.round) };
