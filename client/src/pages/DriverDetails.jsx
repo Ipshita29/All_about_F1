@@ -228,43 +228,59 @@ function DriverDetails() {
                 </ExSection>
 
                 {extraInfo?.drivingStyle && (
-                    <ExSection eyebrow="On Track" title="Driving Style">
+                    <ExSection eyebrow="On Track" title="Driving Style" className="exd-card exd-card--light exd-span-3">
                         <p className="ex-prose">{extraInfo.drivingStyle}</p>
                     </ExSection>
                 )}
 
-                {extraInfo?.careerHighlights?.length > 0 && (
-                    <ExSection eyebrow="Milestones" title="Career Timeline">
-                        <ul className="ex-timeline">
-                            {extraInfo.careerHighlights.map((highlight, index) => (
-                                <li key={index}>{highlight}</li>
+                {extraInfo?.famousRaces?.length > 0 && (
+                    <ExSection
+                        eyebrow={<><Flag size={12} aria-hidden="true" /> Signature Drives</>}
+                        title="Famous Races"
+                        className="exd-card exd-card--chalk exd-span-3"
+                    >
+                        <ul className="ex-list exd-icon-list">
+                            {extraInfo.famousRaces.map((race, index) => (
+                                <li key={index}><Trophy size={13} aria-hidden="true" />{race}</li>
                             ))}
                         </ul>
                     </ExSection>
                 )}
 
-                {extraInfo?.famousRaces?.length > 0 && (
-                    <ExSection eyebrow="Signature Drives" title="Famous Races">
-                        <ul className="ex-list">
-                            {extraInfo.famousRaces.map((race, index) => (
-                                <li key={index}>{race}</li>
+                {extraInfo?.careerHighlights?.length > 0 && (
+                    <ExSection
+                        eyebrow={<><Milestone size={12} aria-hidden="true" /> Milestones</>}
+                        title="Career Timeline"
+                        className="exd-card exd-card--dark exd-span-4"
+                    >
+                        <ul className="ex-timeline exd-icon-list">
+                            {extraInfo.careerHighlights.map((highlight, index) => (
+                                <li key={index}><Milestone size={13} aria-hidden="true" />{highlight}</li>
                             ))}
                         </ul>
                     </ExSection>
                 )}
 
                 {extraInfo?.funFacts?.length > 0 && (
-                    <ExSection eyebrow="Paddock Notes" title="Fun Facts">
-                        <ul className="ex-list">
+                    <ExSection
+                        eyebrow={<><Sparkles size={12} aria-hidden="true" /> Paddock Notes</>}
+                        title="Fun Facts"
+                        className="exd-card exd-card--chalk exd-span-2"
+                    >
+                        <ul className="ex-list exd-icon-list">
                             {extraInfo.funFacts.map((fact, index) => (
-                                <li key={index}>{fact}</li>
+                                <li key={index}><Sparkles size={13} aria-hidden="true" />{fact}</li>
                             ))}
                         </ul>
                     </ExSection>
                 )}
 
                 {extraInfo?.quote && (
-                    <ExSection eyebrow="Team Radio" title="In Their Own Words">
+                    <ExSection
+                        eyebrow={<><RadioIcon size={12} aria-hidden="true" /> Team Radio</>}
+                        title="In Their Own Words"
+                        className="exd-card exd-card--dark exd-card--quote exd-span-6"
+                    >
                         <blockquote className="ex-quote">
                             “{extraInfo.quote}”
                             <cite>{fullName.toUpperCase()}</cite>
