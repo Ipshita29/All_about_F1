@@ -31,6 +31,10 @@ const driverPredictionSchema = new mongoose.Schema(
         top5Probability: Number,
         top10Probability: Number,
         confidence: String,
+        // Per-factor breakdown behind "Why This Prediction?" — without this
+        // a prediction served back from storage (rather than freshly
+        // generated) would have nothing to show there.
+        factors: mongoose.Schema.Types.Mixed,
     },
     { _id: false }
 );
@@ -43,12 +47,21 @@ const racePredictionSchema = new mongoose.Schema(
         circuit: String,
         circuitId: String,
         raceDate: String,
+        // The rest of the race identity the API response carries — stored
+        // too so a served-from-storage prediction round-trips losslessly
+        // through the frontend instead of losing its header details.
+        country: String,
+        qualifyingDate: String,
+        sprintDate: String,
+        hasSprint: Boolean,
         stage: { type: String, enum: ["pre_qualifying", "post_qualifying"], required: true },
         source: { type: String, enum: ["live", "backtest"], default: "live" },
         modelName: String,
         modelVersion: String,
         weights: mongoose.Schema.Types.Mixed,
         dataAvailability: mongoose.Schema.Types.Mixed,
+        weather: mongoose.Schema.Types.Mixed,
+        limitations: [String],
         generatedAt: { type: Date, required: true },
         predictions: [driverPredictionSchema],
     },
