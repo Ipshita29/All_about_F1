@@ -805,25 +805,19 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 
 @media (max-width: 900px) {
     .ex-dossier-hero,
-    .exd-tg-hero { grid-template-columns: 1fr; }
-    .ex-dossier-visual { max-width: 240px; margin: 0 auto; }
-    .exd-tg-visual { order: -1; }
+    .exd-tg-hero { grid-template-columns: 1fr; align-items: start; }
+    .ex-dossier-visual,
+    .exd-tg-visual { max-width: 220px; margin: 0 auto; order: -1; }
     .ex-cols,
     .ex-about-cols { grid-template-columns: 1fr; }
 
     .dp-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
     .cc-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-
-    .exd-dash { grid-template-columns: repeat(2, 1fr); }
-    .exd-span-2,
-    .exd-span-3,
-    .exd-span-4,
-    .exd-span-6 { grid-column: span 2; }
 }
 
 @media (max-width: 700px) {
     .ex-main, .ex-dossier-hero, .ex-tg-hero,
-    .exd-tg-hero, .exd-tg-back,
+    .exd-tg-hero,
     .dr-hero, .gr-overview-inner, .gr-cta-inner {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
@@ -842,11 +836,7 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 }
 
 @media (max-width: 560px) {
-    .exd-dash { grid-template-columns: 1fr; }
-    .exd-span-2,
-    .exd-span-3,
-    .exd-span-4,
-    .exd-span-6 { grid-column: span 1; }
+    .exd-dash { grid-template-columns: 1fr; column-gap: 0; }
     .exd-spec-grid { grid-template-columns: 1fr; }
 }
 
