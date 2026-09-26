@@ -501,7 +501,8 @@
     border-radius: var(--radius-full);
     border: 1px solid var(--pr-border);
     color: var(--text-faint);
-    flex-shrink: 0;
+    justify-self: end;
+    align-self: center;
 }
 
 .pr-history-badge--correct { color: var(--success); border-color: rgba(47, 191, 106, 0.35); background: var(--success-dim); }
