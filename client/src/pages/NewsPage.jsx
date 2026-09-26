@@ -546,11 +546,16 @@ function NewsPage() {
                             </div>
                         </div>
                     ) : (
-                        <>
-                            {/* ── Featured story (light) ───────────────── */}
-                            {cover && (
-                                <section className="fp-band fp-band--light" aria-label="Featured story">
-                                    <div className="fp-band-inner">
+                        /* Featured story + all browsing rows share one light
+                           band — two separate bands here meant two lots of
+                           vertical band padding stacking into a ~128px gap
+                           between "Featured Story" and "Latest News", which
+                           read as exactly the kind of dead space this page
+                           was rebuilt to get rid of. */
+                        <section className="fp-band fp-band--light">
+                            <div className="fp-band-inner fp-news-body">
+                                {cover && (
+                                    <section aria-label="Featured story">
                                         <span className="fp-section-title fp-mono">FEATURED STORY</span>
                                         <article className="fp-cover">
                                             <button type="button" className="fp-cover-hit" onClick={() => openStory(cover)}>
@@ -572,13 +577,10 @@ function NewsPage() {
                                                 </div>
                                             </button>
                                         </article>
-                                    </div>
-                                </section>
-                            )}
+                                    </section>
+                                )}
 
-                            {/* ── Netflix-style browsing rows (light) ──── */}
-                            <section className="fp-band fp-band--light">
-                                <div className="fp-band-inner fp-reels">
+                                <div className="fp-reels">
                                     {showCinematic ? (
                                         <>
                                             <CarouselRow title="Latest News" articles={latestNews} onOpen={openStory} vtFor={vtFor} />
@@ -597,8 +599,8 @@ function NewsPage() {
                                         </div>
                                     )}
                                 </div>
-                            </section>
-                        </>
+                            </div>
+                        </section>
                     )}
 
                     <footer className="fp-band fp-band--dark">

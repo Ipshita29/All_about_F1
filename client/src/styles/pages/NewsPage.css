@@ -170,6 +170,7 @@
    of unused page width, since a lead card's text rarely filled the
    space its 340px image column implied). ─────────────────────────── */
 
+.fp-news-body { display: flex; flex-direction: column; gap: var(--space-7); }
 .fp-reels { display: flex; flex-direction: column; gap: var(--space-7); }
 
 .fp-reel-heading { font-size: 1.2rem; font-weight: 700; color: var(--text-on-light-primary); margin: 0 0 var(--space-4); }
