@@ -595,11 +595,16 @@ function PredictionHistorySection({ races, loading }) {
                             onClick={() => setExpandedKey(isOpen ? null : key)}
                         >
                             <span className="pr-history-race">{r.raceName}</span>
-                            <span className="pr-history-compare">
-                                <span className="pr-history-label">Predicted</span> {r.predictedWinner ?? "—"}
-                                <span className="pr-history-sep">·</span>
-                                <span className="pr-history-label">Actual</span> {r.actualWinner ?? "—"}
-                            </span>
+                            <div className="pr-history-compare">
+                                <div className="pr-history-compare-row">
+                                    <span className="pr-history-label">Predicted</span>
+                                    <span className="pr-history-driver">{r.predictedWinner ?? "—"}</span>
+                                </div>
+                                <div className="pr-history-compare-row">
+                                    <span className="pr-history-label">Actual</span>
+                                    <span className="pr-history-driver">{r.actualWinner ?? "—"}</span>
+                                </div>
+                            </div>
                             <span className={`pr-history-badge${r.metrics.winnerCorrect ? " pr-history-badge--correct" : ""}`}>
                                 {r.metrics.winnerCorrect ? "Correct" : "Incorrect"}
                             </span>
