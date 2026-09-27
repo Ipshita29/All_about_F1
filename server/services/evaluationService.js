@@ -250,7 +250,19 @@ async function getPredictionHistory() {
     const sorted = rounds.map(Number).sort((a, b) => a - b);
 
     const evaluations = await Promise.all(sorted.map((round) => evaluateRace(upcoming.season, round)));
-    return { races: evaluations };
+
+    // The history card only needs the race name and whether the predicted
+    // winner was correct, and getPerformanceSummary's aggregates below only
+    // read from `metrics` — the full per-driver comparison (driverEvaluations,
+    // predictedWinner/actualWinner, etc.) stays available via the dedicated
+    // per-race evaluateRace()/getRaceEvaluation() instead of round-tripping
+    // through every /history response.
+    return {
+        races: evaluations.map((r) => (r.eligible
+            ? { eligible: true, season: r.season, round: r.round, raceName: r.raceName, metrics: r.metrics }
+            : { eligible: false, season: r.season, round: r.round, reason: r.reason }
+        )),
+    };
 }
 
 async function getRaceEvaluation(season, round) {
@@ -271,33 +283,6 @@ async function getPerformanceSummary() {
         return values.length ? Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(3)) : null;
     };
 
-    // Driver-level aggregation across all evaluated races.
-    const byDriver = new Map();
-    for (const race of eligible) {
-        for (const d of race.driverEvaluations) {
-            if (d.positionError === null) continue;
-            if (!byDriver.has(d.driverId)) {
-                byDriver.set(d.driverId, { driverId: d.driverId, driverName: d.driverName, driverCode: d.driverCode, errors: [], predicted: [], actual: [] });
-            }
-            const entry = byDriver.get(d.driverId);
-            entry.errors.push(d.positionError);
-            entry.predicted.push(d.predictedPosition);
-            entry.actual.push(d.actualPosition);
-        }
-    }
-
-    const driverPerformance = Array.from(byDriver.values()).map((d) => ({
-        driverId: d.driverId,
-        driverName: d.driverName,
-        driverCode: d.driverCode,
-        predictionsEvaluated: d.errors.length,
-        avgPredictedPosition: Number((d.predicted.reduce((a, b) => a + b, 0) / d.predicted.length).toFixed(2)),
-        avgActualPosition: Number((d.actual.reduce((a, b) => a + b, 0) / d.actual.length).toFixed(2)),
-        avgPositionError: Number((d.errors.reduce((a, b) => a + b, 0) / d.errors.length).toFixed(2)),
-        bestPredictionError: Math.min(...d.errors),
-        worstPredictionError: Math.max(...d.errors),
-    }));
-
     return {
         available: true,
         racesEvaluated: eligible.length,
@@ -306,7 +291,6 @@ async function getPerformanceSummary() {
         avgTop5HitRate: avg("top5HitRate"),
         avgTop10HitRate: avg("top10HitRate"),
         meanPositionError: avg("meanPositionError"),
-        driverPerformance: driverPerformance.sort((a, b) => a.avgPositionError - b.avgPositionError),
     };
 }
 

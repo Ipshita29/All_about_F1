@@ -94,7 +94,6 @@
 
 const { getJson, getJsonRetry } = require("./jolpicaClient");
 const { cached, TTL } = require("./jolpicaCache");
-const { getForecast } = require("./weatherService");
 const RacePrediction = require("../models/RacePrediction");
 
 const MODEL_NAME = "AllAboutF1 Weighted Power-Rank + Plackett-Luce Simulation";
@@ -196,39 +195,6 @@ async function fetchQualifying(season, round) {
         return data.MRData.RaceTable.Races[0]?.QualifyingResults || [];
     } catch {
         return [];
-    }
-}
-
-// Used only to confirm the historical source genuinely has pit-stop
-// records for a recent round — a real availability check, not an
-// assumption. Never used to infer tyre compounds, which Jolpica does not
-// provide at all.
-async function fetchPitStops(season, round) {
-    try {
-        const data = await cached(`predictor:pitstops:${season}:${round}`, TTL.HISTORICAL, () => getJson(`/${season}/${round}/pitstops.json?limit=100`));
-        return data.MRData.RaceTable.Races[0]?.PitStops || [];
-    } catch {
-        return [];
-    }
-}
-
-// Forecast for the upcoming race session itself — reuses the same
-// Open-Meteo integration as the Race Hub's "Next Race Weather" (see
-// weatherService.js), keyed off this race's own circuit coordinates
-// (never hardcoded). Returns null when coordinates are missing or the
-// race is further out than Open-Meteo's ~16-day forecast window; that's
-// a genuine "not available yet", not a fabricated value.
-async function fetchRaceWeather(race) {
-    const location = race.Circuit?.Location;
-    const lat = location?.lat != null ? Number(location.lat) : null;
-    const lon = location?.long != null ? Number(location.long) : null;
-    if (lat == null || lon == null || !race.date) return null;
-
-    const targetIso = `${race.date}T${race.time || "00:00:00Z"}`;
-    try {
-        return await getForecast(lat, lon, targetIso);
-    } catch {
-        return null;
     }
 }
 
@@ -504,13 +470,13 @@ async function persistPrediction(result, source) {
                 modelVersion: result.model.version,
                 weights: result.weights,
                 dataAvailability: result.dataAvailability,
-                weather: result.weather ?? null,
                 limitations: result.limitations,
                 generatedAt: result.generatedAt,
                 predictions: result.predictions.map((p) => ({
                     driverId: p.driverId,
                     driverName: p.driverName,
                     driverCode: p.driverCode,
+                    driverNumber: p.driverNumber,
                     constructorId: p.constructorId,
                     constructor: p.constructor,
                     predictedPosition: p.predictedPosition,
@@ -520,7 +486,6 @@ async function persistPrediction(result, source) {
                     top5Probability: p.top5Probability,
                     top10Probability: p.top10Probability,
                     confidence: p.confidence,
-                    factors: p.factors,
                 })),
             },
             { upsert: true, returnDocument: "after" }
@@ -555,16 +520,35 @@ async function loadStoredPrediction(season, round, stage) {
                 sprintDate: doc.sprintDate ?? null,
                 hasSprint: Boolean(doc.hasSprint),
             },
-            stage: doc.stage,
-            generatedAt: doc.generatedAt.toISOString(),
-            model: { name: doc.modelName, version: doc.modelVersion },
-            weights: doc.weights,
-            dataAvailability: doc.dataAvailability,
-            weather: doc.weather ?? null,
-            predictions: doc.predictions,
-            // Older documents saved before `limitations` was persisted fall
-            // back to the current copy rather than showing an empty list.
-            limitations: doc.limitations?.length ? doc.limitations : LIMITATIONS,
+            // Only the keys the Data Used card reads — older documents may
+            // still carry the retired weatherForecast/pitStopStrategy/
+            // tyreCompounds keys, which are simply not copied forward. No
+            // model/version/stage/generatedAt/limitations here either —
+            // none of that is read by anything on the page anymore.
+            dataAvailability: {
+                historicalStandings: doc.dataAvailability?.historicalStandings,
+                currentSeasonData: doc.dataAvailability?.currentSeasonData,
+                circuitHistory: doc.dataAvailability?.circuitHistory,
+                qualifying: doc.dataAvailability?.qualifying,
+            },
+            // Explicit field list rather than a passthrough — an older
+            // document can still carry a legacy `factors` blob (retired
+            // along with "Why This Prediction?"); never round-trip that.
+            predictions: doc.predictions.map((p) => ({
+                driverId: p.driverId,
+                driverName: p.driverName,
+                driverCode: p.driverCode,
+                driverNumber: p.driverNumber ?? null,
+                constructor: p.constructor,
+                constructorId: p.constructorId,
+                predictedPosition: p.predictedPosition,
+                expectedFinish: p.expectedFinish,
+                winProbability: p.winProbability,
+                podiumProbability: p.podiumProbability,
+                top5Probability: p.top5Probability,
+                top10Probability: p.top10Probability,
+                confidence: p.confidence,
+            })),
         };
     } catch {
         return null;
@@ -580,7 +564,7 @@ async function loadStoredPrediction(season, round, stage) {
 // feeding it differ.
 // ---------------------------------------------------------------------------
 
-function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, weather = null, pitStopsAvailable = false }) {
+function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults }) {
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -637,13 +621,6 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         top5Probability: round2(d.top5Probability),
         top10Probability: round2(d.top10Probability),
         confidence: confidenceFor(d.features),
-        factors: {
-            recentForm: summarizeFeature(d.features.recentForm),
-            qualifying: summarizeFeature(d.features.qualifying),
-            constructorStrength: summarizeFeature(d.features.constructorStrength),
-            circuitHistory: summarizeFeature(d.features.circuitHistory),
-            championshipPosition: summarizeFeature(d.features.championshipStanding),
-        },
     }));
 
     const result = {
@@ -664,10 +641,12 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         model: { name: MODEL_NAME, version: MODEL_VERSION },
         weights: WEIGHTS,
         // Each entry is a genuine status, not a plain yes/no: "pending" means
-        // the data hasn't happened yet (never an integration failure),
-        // "limited" means the source only partially covers that topic, and
+        // the data hasn't happened yet (never an integration failure), and
         // "unavailable" is reserved for data that should exist but couldn't
         // be fetched — never used just because a provider isn't integrated.
+        // Only the sources the Data Used card can actually surface — no
+        // weather/pit-stop/tyre-compound keys, since nothing computes those
+        // anymore (see the removed fetchRaceWeather/fetchPitStops).
         dataAvailability: {
             historicalStandings: { status: "available" },
             currentSeasonData: { status: recentRaces.length > 0 ? "available" : "unavailable" },
@@ -675,11 +654,7 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
             qualifying: {
                 status: !qualifyingCompleted ? "pending" : qualifyingResults.length > 0 ? "available" : "unavailable",
             },
-            weatherForecast: { status: weather ? "available" : "unavailable" },
-            pitStopStrategy: { status: pitStopsAvailable ? "available" : "unavailable" },
-            tyreCompounds: { status: "limited" },
         },
-        weather,
         predictions,
         limitations: LIMITATIONS,
     };
@@ -741,27 +716,26 @@ async function buildPredictionInternal() {
         return { error: "insufficient_historical_data" };
     }
 
-    const [recentRaces, circuitRaces, qualifyingResults, weather] = await Promise.all([
+    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
         fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
         fetchCircuitHistory(circuitId),
         qualifyingCompleted ? fetchQualifying(season, round) : Promise.resolve([]),
-        fetchRaceWeather(race),
     ]);
-
-    // Genuine availability check against the most recent completed round
-    // rather than assuming the source always has pit-stop records.
-    const mostRecentRound = recentRaces[0]?.round ?? null;
-    const pitStops = mostRecentRound ? await fetchPitStops(season, mostRecentRound) : [];
 
     const result = assemblePrediction({
         season, round, race, circuitId, stage, qualifyingCompleted,
         driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
-        weather, pitStopsAvailable: pitStops.length > 0,
     });
 
-    cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result };
+    // persistPrediction still needs the full internal shape (model,
+    // weights, generatedAt, stage, limitations — the historical record);
+    // none of that goes out over the API, which only ever gets what the
+    // page actually reads.
     persistPrediction(result, "live");
-    return result;
+    const apiResult = { race: result.race, dataAvailability: result.dataAvailability, predictions: result.predictions };
+
+    cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result: apiResult };
+    return apiResult;
 }
 
 /*
@@ -817,12 +791,6 @@ async function buildBacktestPrediction(season, round) {
 
 function round2(n) {
     return Math.round(n * 1000) / 1000;
-}
-
-function summarizeFeature(feature) {
-    if (!feature || !feature.available) return { available: false, score: feature?.score ?? null };
-    const { score, ...rest } = feature;
-    return { available: true, score: Number(score.toFixed(3)), ...rest };
 }
 
 module.exports = { buildPrediction, buildBacktestPrediction };
