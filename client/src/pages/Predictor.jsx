@@ -25,6 +25,23 @@ const FACTOR_LABELS = {
     championshipPosition: "Championship",
 };
 
+/* Prose phrasing for the same five factors, for the "Why This Prediction?"
+   intro sentence — FACTOR_LABELS above is tuned for a compact label next
+   to a score bar, not for reading naturally in a sentence. */
+const FACTOR_PROSE = {
+    championshipPosition: "current championship position",
+    recentForm: "recent race form",
+    qualifying: "qualifying performance",
+    circuitHistory: "circuit history",
+    constructorStrength: "constructor strength",
+};
+
+function joinWithAnd(items) {
+    if (items.length <= 1) return items[0] ?? "";
+    if (items.length === 2) return `${items[0]} and ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
 /* Every status the backend can send for a dataAvailability entry, and how
    to show it — "pending"/"limited" are genuine states, not a lesser
    version of "unavailable": pending means the data hasn't happened yet,
@@ -313,28 +330,53 @@ function ClassificationTable({ predictions }) {
     );
 }
 
-/* ── Why this prediction (headline explanation, for the predicted winner) ── */
+/* ── Why this prediction — the page's main explanation, for the predicted
+   winner. Distinguishes two different things instead of conflating them:
+   what actually went INTO this specific winner's prediction (the intro
+   sentence + factor rows below, built from winner.factors[key].available,
+   which can genuinely differ per driver — e.g. a winner racing at a
+   circuit for the first time has circuitHistory.available === false even
+   when circuit history as a data source is generally available) versus
+   what data sources exist AT ALL for this race weekend, regardless of
+   whether this winner's prediction used them (Data Coverage below,
+   sourced from the global dataAvailability — includes states like
+   "Pending"/"Limited" that a used/unused list alone can't express). ── */
 
-function WhyThisPrediction({ winner }) {
+function WhyThisPrediction({ winner, dataAvailability, weather }) {
     if (!winner) return null;
+
+    const usedFactors = Object.keys(FACTOR_PROSE).filter((key) => winner.factors?.[key]?.available);
+    const intro = usedFactors.length > 0
+        ? `The prediction is based on a combination of ${joinWithAnd(usedFactors.map((k) => FACTOR_PROSE[k]))}.`
+        : "This prediction is based on the model's baseline power ranking — none of the usual per-race factors are available yet.";
+
     return (
-        <div className="pr-why">
-            {Object.entries(FACTOR_LABELS).map(([key, label]) => {
-                const factor = winner.factors?.[key];
-                return (
-                    <div className="pr-factor-row" key={key}>
-                        <span className="pr-factor-label">{label}</span>
-                        {factor?.available ? (
-                            <>
-                                <ProbabilityBar value={factor.score} />
-                                <span className="pr-mono pr-factor-value">{scoreLabel(factor.score)}</span>
-                            </>
-                        ) : (
-                            <span className="pr-factor-unavailable">Not available</span>
-                        )}
-                    </div>
-                );
-            })}
+        <div className="pr-why-wrap">
+            <p className="pr-why-intro">{intro}</p>
+
+            <div className="pr-why">
+                {Object.entries(FACTOR_LABELS).map(([key, label]) => {
+                    const factor = winner.factors?.[key];
+                    return (
+                        <div className="pr-factor-row" key={key}>
+                            <span className="pr-factor-label">{label}</span>
+                            {factor?.available ? (
+                                <>
+                                    <ProbabilityBar value={factor.score} />
+                                    <span className="pr-mono pr-factor-value">{scoreLabel(factor.score)}</span>
+                                </>
+                            ) : (
+                                <span className="pr-factor-unavailable">Not available</span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="pr-why-coverage">
+                <span className="pr-panel-title">Data Coverage</span>
+                <DataAvailabilityTable dataAvailability={dataAvailability} weather={weather} />
+            </div>
         </div>
     );
 }
@@ -650,13 +692,10 @@ function Predictor() {
                         <ClassificationTable predictions={predictions} />
                     </Panel>
                     <Panel title="Why This Prediction?">
-                        <WhyThisPrediction winner={winner} />
+                        <WhyThisPrediction winner={winner} dataAvailability={dataAvailability} weather={weather} />
                     </Panel>
                 </div>
 
-                <Panel title="Data Availability">
-                    <DataAvailabilityTable dataAvailability={dataAvailability} weather={weather} />
-                </Panel>
                 <p className="pr-disclaimer">
                     Predictions are model estimates based on available historical and race-weekend data. They are not guaranteed race outcomes.
                     {limitations?.length > 0 && ` ${limitations[0]}`}

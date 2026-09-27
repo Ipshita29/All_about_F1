@@ -265,6 +265,15 @@
     .pr-detail-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ── Why This Prediction — intro sentence, factor rows, then Data
+   Coverage nested underneath rather than as its own top-level section. ── */
+
+.pr-why-wrap { display: flex; flex-direction: column; gap: var(--space-4); }
+.pr-why-intro { font-size: var(--text-small); color: var(--pr-text-secondary); line-height: 1.55; margin: 0; }
+
+.pr-why-coverage { padding-top: var(--space-3); border-top: 1px solid var(--pr-border); }
+.pr-why-coverage .pr-panel-title { margin-bottom: var(--space-2); }
+
 /* ── Factor rows (shared by Why-This-Prediction + per-driver detail) ──── */
 
 .pr-detail-factors, .pr-why { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -282,7 +291,7 @@
     .pr-factor-row { grid-template-columns: 100px 1fr auto; }
 }
 
-/* ── Model / Data Used / Data Availability ────────────────────────── */
+/* ── Data Coverage (nested inside Why This Prediction) ─────────────── */
 
 .pr-kv { display: flex; flex-direction: column; gap: 2px; }
 
