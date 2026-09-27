@@ -95,10 +95,7 @@ function Hero() {
                 </p>
                 <div className="hero-actions">
                     <Button variant="primary" to="/grandprixdashboard" arrow>
-                        Enter Race HQ
-                    </Button>
-                    <Button variant="secondary" href="#next-grand-prix" arrow>
-                        Explore The Season
+                        Explore Race Weekend
                     </Button>
                 </div>
             </div>
