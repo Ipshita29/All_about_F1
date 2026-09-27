@@ -249,10 +249,9 @@ function GridInvite({ isAuthenticated }) {
 
 const AREAS = [
     { n: "01", to: "/grandprixdashboard", title: "Race Weekend", copy: "Schedules, sessions, results and circuit intelligence for every round." },
-    { n: "02", to: "/drivers", title: "Drivers", copy: "Profiles, careers and performance." },
+    { n: "02", to: "/drivers", title: "Drivers", copy: "Profiles, careers and performance — compare any two head-to-head." },
     { n: "03", to: "/teams", title: "Constructors", copy: "Teams, standings and engineering context." },
-    { n: "04", to: "/compare-drivers", title: "Comparison", copy: "Put drivers and teams head-to-head." },
-    { n: "05", to: "/dictionary", title: "F1 Dictionary", copy: "Understand the language of the sport." },
+    { n: "04", to: "/dictionary", title: "F1 Dictionary", copy: "Understand the language of the sport." },
 ];
 
 function PlatformOverview() {
@@ -686,8 +685,6 @@ const TILES = [
     { to: "/grandprixdashboard", n: "03", label: "Race Weekend", copy: "Schedules, results and circuit data, 2020–2026." },
     { to: "/dictionary", n: "04", label: "F1 Dictionary", copy: "Every term on the pit wall, explained." },
     { to: "/news", n: "05", label: "News", copy: "The latest stories from the paddock." },
-    { to: "/compare-drivers", n: "06", label: "Driver Comparison", copy: "Head-to-head, season by season." },
-    { to: "/compare-teams", n: "07", label: "Team Comparison", copy: "Engineering, benchmarked." },
 ];
 
 function ExploreGrid() {
@@ -721,13 +718,6 @@ const FOOTER_GROUPS = [
             { to: "/grandprixdashboard", label: "Race Weekend" },
             { to: "/drivers", label: "Drivers" },
             { to: "/teams", label: "Constructors" },
-        ],
-    },
-    {
-        title: "ANALYSE",
-        links: [
-            { to: "/compare-drivers", label: "Driver Comparison" },
-            { to: "/compare-teams", label: "Team Comparison" },
         ],
     },
     {

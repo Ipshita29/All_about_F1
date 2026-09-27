@@ -446,10 +446,6 @@ function Profile() {
                                 <span className="mg-shortcut-num mg-mono">03</span>
                                 <span>Pit Wall Briefing</span>
                             </Link>
-                            <Link to="/compare-drivers" className="mg-shortcut">
-                                <span className="mg-shortcut-num mg-mono">04</span>
-                                <span>Wheel To Wheel</span>
-                            </Link>
                         </nav>
                     </section>
                 </div>

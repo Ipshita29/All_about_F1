@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
+import { ArrowLeftRight } from "lucide-react";
 import { SearchControls, ConstructorRoster, ConstructorCard } from "../components/EntityListing";
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
+import { CompareModal } from "../components/Compare";
+import teamInfo from "../data/teamInfo";
 import "../styles/pages/EntityPages.css";
+import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
@@ -9,10 +13,12 @@ const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 /*
  * THE CONSTRUCTORS — the paddock, not a copy of the Drivers grid. A light
  * Cararra hero (the inverse of the Drivers page's dark one) → a dark
- * championship overview → the team grid → a dark "compare the grid"
- * close. No car photography (none of the available sources are
- * consistent or high-quality enough — see config/teamAssets.js); each
- * card leans on the team's real logo and its actual standings instead.
+ * championship overview → the team grid. No car photography (none of
+ * the available sources are consistent or high-quality enough — see
+ * config/teamAssets.js); each card leans on the team's real logo and
+ * its actual standings instead. "Compare Teams" next to the search bar
+ * opens a compact head-to-head modal in place — no separate comparison
+ * page.
  */
 function Teams() {
     const [teams, setTeams] = useState([]);
@@ -21,7 +27,26 @@ function Teams() {
     const [driverStandings, setDriverStandings] = useState([]);
     const [search, setSearch] = useState("");
     const [year, setYear] = useState("2026");
+    const [compareOpen, setCompareOpen] = useState(false);
     const loaded = loadedYear === year;
+
+    /* The six metrics the Compare Teams modal shows — reuses this page's
+       own already-fetched standings (position/points/wins-this-season)
+       plus the shared teamInfo career data (championships/founded).
+       Team podiums have no data source anywhere in the app, so that
+       metric honestly shows as unavailable rather than a guess. */
+    const teamCompareMetrics = (team) => {
+        const s = standings.find((s) => s.Constructor.constructorId === team.constructorId);
+        const info = teamInfo[team.constructorId];
+        return {
+            position: s?.position,
+            points: s?.points,
+            wins: s?.wins,
+            podiums: undefined,
+            championships: info?.championships,
+            debut: info?.founded,
+        };
+    };
 
     useEffect(() => {
         fetch(`${API}/teams/${year}`)
@@ -81,7 +106,11 @@ function Teams() {
                         onSearchChange={setSearch}
                         searchPlaceholder="SEARCH TEAMS"
                         count={`${filtered.length} TEAMS`}
-                    />
+                    >
+                        <Button variant="primary" size="sm" onClick={() => setCompareOpen(true)}>
+                            <ArrowLeftRight size={14} aria-hidden="true" /> Compare Teams
+                        </Button>
+                    </SearchControls>
                 </div>
             </div>
 
@@ -119,16 +148,18 @@ function Teams() {
                 </main>
             )}
 
-            <section className="gr-cta gr-cta--dark">
-                <div className="gr-cta-inner">
-                    <div>
-                        <span className="gr-cta-eyebrow">ENGINEERING, BENCHMARKED</span>
-                        <h2 className="gr-cta-title">Compare The Grid</h2>
-                        <p className="gr-cta-copy">Put two constructors head-to-head.</p>
-                    </div>
-                    <Button variant="primary" to="/compare-teams" arrow>Compare Teams</Button>
-                </div>
-            </section>
+            <CompareModal
+                open={compareOpen}
+                onClose={() => setCompareOpen(false)}
+                title="Compare Teams"
+                entityLabel="Team"
+                searchPlaceholder="Search constructors…"
+                options={teams}
+                getId={(t) => t.constructorId}
+                getLabel={(t) => t.name}
+                getSubLabel={(t) => t.nationality}
+                getMetrics={teamCompareMetrics}
+            />
         </div>
     );
 }

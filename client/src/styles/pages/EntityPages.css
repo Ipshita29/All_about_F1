@@ -116,37 +116,6 @@
 
 .sc--on-light .sc-count { color: var(--text-on-light-muted); }
 
-/* ── Bottom comparison CTA band — .gr-cta-* ── */
-
-.gr-cta { background: var(--surface-light-1); color: var(--text-on-light-primary); }
-.gr-cta--dark { background: var(--surface); color: var(--text-primary); }
-
-.gr-cta-inner {
-    max-width: var(--content-width-wide);
-    margin: 0 auto;
-    padding: var(--space-8) var(--space-6);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-6);
-    flex-wrap: wrap;
-}
-
-.gr-cta-eyebrow {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--text-meta);
-    letter-spacing: 0.14em;
-    color: var(--accent);
-    margin-bottom: var(--space-2);
-}
-
-.gr-cta--dark .gr-cta-eyebrow { color: var(--accent-text); }
-
-.gr-cta-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 4px; }
-.gr-cta-copy { font-size: 0.88rem; color: var(--text-on-light-secondary); margin: 0; }
-.gr-cta--dark .gr-cta-copy { color: var(--text-secondary); }
-
 /* ══════════════════════════════════════════════════════════════════
    DRIVER GRID — .dp-grid / .dc-*
    ══════════════════════════════════════════════════════════════════ */
@@ -781,7 +750,7 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 @media (max-width: 700px) {
     .ex-main, .ex-dossier-hero, .ex-tg-hero,
     .exd-tg-hero,
-    .dr-hero, .gr-overview-inner, .gr-cta-inner {
+    .dr-hero, .gr-overview-inner {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
     }
@@ -794,8 +763,6 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 
     .cc-grid { grid-template-columns: 1fr; }
     .cc-card { padding: var(--space-5); }
-
-    .gr-cta-inner { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 560px) {

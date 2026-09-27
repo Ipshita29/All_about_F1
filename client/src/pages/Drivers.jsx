@@ -1,25 +1,47 @@
 import { useState, useEffect } from "react";
+import { ArrowLeftRight } from "lucide-react";
 import { SearchControls, DriverRoster, DriverCard } from "../components/EntityListing";
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
+import { CompareModal } from "../components/Compare";
+import driverInfo from "../data/driverInfo";
 import "../styles/pages/EntityPages.css";
+import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
 
 const YEARS = ["2020", "2021", "2022", "2023", "2024", "2025", "2026"];
 
+/* The six metrics the Compare Drivers modal shows — reuses this page's
+   own already-fetched standings (position/points/wins-this-season) plus
+   the shared driverInfo career data (championships/career wins/podiums/
+   debut), never a second fetch or a duplicate lookup. */
+function driverCompareMetrics(standing) {
+    const info = driverInfo[`${standing.Driver.givenName} ${standing.Driver.familyName}`];
+    return {
+        position: standing.position,
+        points: standing.points,
+        wins: info?.raceWins,
+        podiums: info?.podiums,
+        championships: info?.championships,
+        debut: info?.debut,
+    };
+}
+
 /*
  * THE DRIVERS — a premium grid, not a database table. Dark hero → a light
  * Cararra overview band (grid size, at a glance) → the dark driver grid
- * itself → a light "compare the grid" close. Every driver's racing
- * number and championship position are always visible; a real portrait
- * cutout is used where one genuinely exists (see config/driverAssets.js)
- * and a bold ghost number stands in where it doesn't — never a random
- * low-quality photo.
+ * itself. Every driver's racing number and championship position are
+ * always visible; a real portrait cutout is used where one genuinely
+ * exists (see config/driverAssets.js) and a bold ghost number stands in
+ * where it doesn't — never a random low-quality photo. "Compare Drivers"
+ * next to the search bar opens a compact head-to-head modal in place —
+ * no separate comparison page.
  */
 function Drivers() {
     const [drivers, setDrivers] = useState([]);
     const [loadedYear, setLoadedYear] = useState(null);
     const [search, setSearch] = useState("");
     const [year, setYear] = useState("2026");
+    const [compareOpen, setCompareOpen] = useState(false);
     const loaded = loadedYear === year;
 
     useEffect(() => {
@@ -65,7 +87,11 @@ function Drivers() {
                         searchPlaceholder="SEARCH DRIVERS"
                         count={`${filtered.length} ON GRID`}
                         onLight
-                    />
+                    >
+                        <Button variant="dark" size="sm" onClick={() => setCompareOpen(true)}>
+                            <ArrowLeftRight size={14} aria-hidden="true" /> Compare Drivers
+                        </Button>
+                    </SearchControls>
                 </div>
             </div>
 
@@ -88,16 +114,18 @@ function Drivers() {
                 </main>
             )}
 
-            <section className="gr-cta">
-                <div className="gr-cta-inner">
-                    <div>
-                        <span className="gr-cta-eyebrow">HEAD TO HEAD</span>
-                        <h2 className="gr-cta-title">Compare The Grid</h2>
-                        <p className="gr-cta-copy">Put any two drivers head-to-head, season by season.</p>
-                    </div>
-                    <Button variant="dark" to="/compare-drivers" arrow>Compare Drivers</Button>
-                </div>
-            </section>
+            <CompareModal
+                open={compareOpen}
+                onClose={() => setCompareOpen(false)}
+                title="Compare Drivers"
+                entityLabel="Driver"
+                searchPlaceholder="Search drivers…"
+                options={drivers}
+                getId={(s) => s.Driver.driverId}
+                getLabel={(s) => `${s.Driver.givenName} ${s.Driver.familyName}`}
+                getSubLabel={(s) => s.Constructors?.[0]?.name ?? s.Driver.nationality}
+                getMetrics={driverCompareMetrics}
+            />
         </div>
     );
 }

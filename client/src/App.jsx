@@ -12,8 +12,6 @@ import AuthPage from "./pages/AuthPage";
 import Preferences from "./pages/Preferences";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
-import DriverComparison from "./pages/DriverComparison";
-import TeamComparison from "./pages/TeamComparison";
 import F1Dictionary from "./pages/F1Dictionary";
 import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
@@ -46,8 +44,6 @@ function AppShell() {
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/compare-drivers" element={<DriverComparison />} />
-        <Route path="/compare-teams" element={<TeamComparison />} />
         <Route path="/dictionary" element={<F1Dictionary />} />
         <Route path="/dictionary/category/:categorySlug" element={<DictionaryCategory />} />
         <Route path="/dictionary/:slug" element={<DictionaryTerm />} />

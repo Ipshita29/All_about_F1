@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { AnimatedNumber } from "./EntityDetail";
-import { LoadingSpinner } from "./UI";
 
 /*
- * The Driver/Team Comparison pages' shared building blocks: the
- * searchable driver/constructor picker, the pre-selection empty state,
- * the two stat-reading styles (neutral side-by-side vs. proportional
- * bar), the "not yet selected" placeholder, and the round-by-round
- * timeline. Always used together on those two pages.
+ * Shared building blocks behind the compact Compare Drivers / Compare
+ * Teams modal (opened from the Drivers/Teams pages, next to the search
+ * bar): the searchable entity picker, the pre-selection empty state, the
+ * two stat-reading styles (neutral side-by-side vs. proportional bar),
+ * and the modal shell itself.
  */
 
-/* Searchable dropdown used by Wheel to Wheel and Constructor Battle to
-   pick a driver/constructor. Replaces the native <select> with a trigger
-   styled like the rest of the .ex-field control row, opening a panel
-   with a search box and a filtered, keyboard-navigable option list. */
+/* Searchable dropdown used by the Compare modal to pick a driver/
+   constructor. Replaces the native <select> with a trigger styled like
+   the rest of the .ex-field control row, opening a panel with a search
+   box and a filtered, keyboard-navigable option list. */
 export function EntitySelect({
     label,
     placeholder = "Select…",
@@ -154,10 +154,10 @@ export function EntitySelect({
     );
 }
 
-/* The pre-selection state for both comparison pages. Rather than a blank
-   canvas, it pre-renders the shape of the analysis to come — a rail per
-   metric category that mirrors CompareBar/CompareStat's own layout — so
-   the page reads as designed before anything is picked. */
+/* The pre-selection state inside the Compare modal. Rather than a blank
+   canvas, it pre-renders the shape of the comparison to come — a rail
+   per metric that mirrors CompareBar/CompareStat's own layout — so the
+   modal reads as designed before anything is picked. */
 export function CompareEmptyState({ eyebrow, title, description, metrics }) {
     return (
         <div className="cmp-empty">
@@ -259,59 +259,112 @@ export function CompareBar({ label, a, b }) {
     );
 }
 
-/* Stand-in for the not-yet-selected side once exactly one driver/team has
-   been picked — an intentional placeholder, never a broken or empty card. */
-export function PendingSlot({ label }) {
-    return (
-        <div className="cmp-pending" aria-hidden="true">
-            <span className="cmp-pending-mark">?</span>
-            <span className="cmp-pending-label">{label}</span>
-        </div>
-    );
-}
+/* The compact comparison modal, opened from the Drivers/Teams pages —
+   two EntitySelect pickers, then exactly six metrics (championship
+   position, championship points, wins, podiums, career championships,
+   F1 debut/first season) once both sides are chosen. Generic over
+   driver vs team via the same getter-prop pattern EntitySelect already
+   uses, plus a getMetrics(entity) callback each page supplies with its
+   own data — never a second copy of driver/team lookup logic. */
+const METRIC_PREVIEW = [
+    "CHAMPIONSHIP POSITION",
+    "CHAMPIONSHIP POINTS",
+    "WINS",
+    "PODIUMS",
+    "CHAMPIONSHIPS",
+    "F1 DEBUT",
+];
 
-/* Round-by-round comparison timeline shared by Driver and Team
-   comparison — a vertical, scannable list rather than a wide table, so
-   it collapses cleanly on mobile. Each page supplies its own per-round
-   cell content (a single finishing position for a driver, two for a
-   constructor). */
-export function RaceTimeline({ rows, loading, error, labelA, labelB }) {
-    if (loading) {
-        return (
-            <div className="cmp-timeline-loading">
-                <LoadingSpinner />
+export function CompareModal({
+    open,
+    onClose,
+    title,
+    entityLabel,
+    searchPlaceholder,
+    options,
+    getId,
+    getLabel,
+    getSubLabel,
+    getMetrics,
+}) {
+    const [aId, setAId] = useState("");
+    const [bId, setBId] = useState("");
+
+    useEffect(() => {
+        if (!open) return undefined;
+        const onKey = (e) => { if (e.key === "Escape") onClose(); };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [open, onClose]);
+
+    if (!open) return null;
+
+    const a = options.find((o) => getId(o) === aId);
+    const b = options.find((o) => getId(o) === bId);
+    const bothSelected = Boolean(a && b);
+    const mA = bothSelected ? getMetrics(a) : null;
+    const mB = bothSelected ? getMetrics(b) : null;
+
+    return (
+        <div className="cmp-modal-overlay" onClick={onClose}>
+            <div className="cmp-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
+                <div className="cmp-modal-head">
+                    <h2 className="cmp-modal-title">{title}</h2>
+                    <button type="button" className="cmp-modal-close" onClick={onClose} aria-label="Close">
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div className="cmp-modal-body">
+                    <div className="cmp-controls">
+                        <EntitySelect
+                            label={`${entityLabel} 01`}
+                            placeholder={`Select ${entityLabel.toLowerCase()}`}
+                            searchPlaceholder={searchPlaceholder}
+                            value={aId}
+                            onChange={setAId}
+                            options={options}
+                            getId={getId}
+                            getLabel={getLabel}
+                            getSubLabel={getSubLabel}
+                        />
+                        <EntitySelect
+                            label={`${entityLabel} 02`}
+                            placeholder={`Select ${entityLabel.toLowerCase()}`}
+                            searchPlaceholder={searchPlaceholder}
+                            value={bId}
+                            onChange={setBId}
+                            options={options}
+                            getId={getId}
+                            getLabel={getLabel}
+                            getSubLabel={getSubLabel}
+                        />
+                    </div>
+
+                    {!bothSelected ? (
+                        <CompareEmptyState
+                            eyebrow="GETTING STARTED"
+                            title="Build your comparison"
+                            description="Select two to compare:"
+                            metrics={METRIC_PREVIEW}
+                        />
+                    ) : (
+                        <div className="cmp-grid cmp-modal-grid">
+                            <div className="cmp-modal-vs">
+                                <span>{getLabel(a)}</span>
+                                <span className="cmp-mono">VS</span>
+                                <span>{getLabel(b)}</span>
+                            </div>
+                            <CompareStat label="Championship Position" prefix="P" valueA={mA.position} valueB={mB.position} lowerIsBetter />
+                            <CompareBar label="Championship Points" a={{ name: getLabel(a), value: mA.points }} b={{ name: getLabel(b), value: mB.points }} />
+                            <CompareBar label="Wins" a={{ name: getLabel(a), value: mA.wins }} b={{ name: getLabel(b), value: mB.wins }} />
+                            <CompareBar label="Podiums" a={{ name: getLabel(a), value: mA.podiums }} b={{ name: getLabel(b), value: mB.podiums }} />
+                            <CompareBar label="Championships" a={{ name: getLabel(a), value: mA.championships }} b={{ name: getLabel(b), value: mB.championships }} />
+                            <CompareStat label="F1 Debut / First Season" valueA={mA.debut} valueB={mB.debut} lowerIsBetter />
+                        </div>
+                    )}
+                </div>
             </div>
-        );
-    }
-
-    if (error) {
-        return <p className="cmp-stat-na">DATA NOT AVAILABLE</p>;
-    }
-
-    if (!rows.length) {
-        return <p className="cmp-stat-na">NO ROUNDS COMPLETED YET THIS SEASON</p>;
-    }
-
-    return (
-        <ol className="cmp-timeline">
-            {rows.map((row) => (
-                <li key={row.round} className="cmp-timeline-row">
-                    <div className="cmp-timeline-round">
-                        <span className="cmp-timeline-num">ROUND {String(row.round).padStart(2, "0")}</span>
-                        <span className="cmp-timeline-name">{row.raceName}</span>
-                    </div>
-                    <div className="cmp-timeline-results">
-                        <div className="cmp-timeline-cell">
-                            <span className="cmp-timeline-who">{labelA}</span>
-                            <span className="cmp-timeline-pos">{row.a}</span>
-                        </div>
-                        <div className="cmp-timeline-cell cmp-timeline-cell--b">
-                            <span className="cmp-timeline-who">{labelB}</span>
-                            <span className="cmp-timeline-pos">{row.b}</span>
-                        </div>
-                    </div>
-                </li>
-            ))}
-        </ol>
+        </div>
     );
 }

@@ -1122,8 +1122,8 @@ function BattlesSection({ drivers }) {
    as full running order. Cars showing "LAP n" (lapped) instead of a
    "+n.nnn" gap parse to null via parseGapSeconds and are simply left off
    the chart rather than plotted with an invented gap. Built with
-   recharts — already a dependency (see TeamComparison.jsx's lap-time
-   line chart) — rather than adding a new chart library. ────────────── */
+   recharts, already a project dependency, rather than adding a new
+   chart library. ────────────────────────────────────────────────── */
 
 function GapToLeaderChart({ drivers }) {
     const rows = drivers
