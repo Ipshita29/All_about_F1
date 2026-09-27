@@ -348,11 +348,14 @@
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-6);
 }
 
 .rw-back:hover { color: var(--text-primary); }
 
+/* Tight to the title below it — the eyebrow reads as a label for the
+   headline, not a separate line, so it stays close while the nav link
+   above gets its own clear breathing room (.rw-back's margin-bottom). */
 .rw-hq-status {
     display: inline-flex;
     align-items: center;
@@ -361,7 +364,7 @@
     font-size: 0.66rem;
     letter-spacing: 0.06em;
     color: var(--text-muted);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
 }
 
 .rw-hq-title { font-size: var(--text-hero); font-weight: 800; letter-spacing: -0.03em; line-height: 1.02; color: var(--text-primary); margin: 0 0 var(--space-3); }
@@ -383,56 +386,74 @@
 /* ── Small label above the podium / weekend-schedule columns ── */
 .rw-hq-subeyebrow { display: block; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-4); }
 
-/* ── Weekend session rail — a real timeline, connected by a line ── */
+/* ── Weekend Schedule — a clean white card, icon per session type ── */
 
-.rw-rail {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    position: relative;
+.rw-schedule-card {
+    background: var(--surface-light-1);
+    color: var(--text-on-light-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
 }
 
-.rw-rail::before { content: ''; position: absolute; left: 2px; top: 8px; bottom: 8px; width: 1px; background: var(--border); }
+.rw-schedule-title {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--text-on-light-muted);
+    margin-bottom: var(--space-4);
+}
 
-.rw-rail-stop {
-    position: relative;
+.rw-schedule-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+
+.rw-schedule-row {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
+    align-items: center;
     gap: var(--space-3);
-    padding: 10px 0 10px var(--space-5);
+    padding: 10px 0;
+    border-top: 1px solid var(--border-on-light);
 }
 
-.rw-rail-dot {
-    position: absolute;
-    left: -3px;
-    top: 15px;
-    width: 6px;
-    height: 6px;
+.rw-schedule-list li:first-child { border-top: none; }
+
+.rw-schedule-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
     border-radius: 50%;
-    background: var(--surface);
-    border: 1px solid var(--text-faint);
+    background: rgba(25, 25, 25, 0.05);
+    color: var(--text-on-light-muted);
 }
 
-.rw-rail-stop--past .rw-rail-dot { background: var(--success); border-color: var(--success); }
-.rw-rail-stop--next .rw-rail-dot { background: var(--accent); border-color: var(--accent); width: 9px; height: 9px; left: -4.5px; animation: rwPulse 1.6s ease-in-out infinite; }
+.rw-schedule-row--past .rw-schedule-icon { color: var(--success); }
+.rw-schedule-row--next .rw-schedule-icon { background: var(--accent-dim); color: var(--accent); }
 
-.rw-rail-name { flex: 1; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
-.rw-rail-stop--past .rw-rail-name { color: var(--text-muted); }
-.rw-rail-stop--next .rw-rail-name { color: var(--accent-text); font-weight: 700; }
+.rw-schedule-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-on-light-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-.rw-rail-next {
-    font-family: var(--font-mono);
+.rw-schedule-row--past .rw-schedule-name { color: var(--text-on-light-muted); }
+.rw-schedule-row--next .rw-schedule-name { font-weight: 700; color: var(--accent); }
+
+.rw-schedule-next-badge {
     font-size: 0.56rem;
     letter-spacing: 0.08em;
-    color: var(--accent-text);
+    color: var(--accent);
     border: 1px solid var(--accent-border);
     padding: 1px 6px;
     border-radius: var(--radius-full);
 }
 
-.rw-rail-time { font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-muted); white-space: nowrap; }
-.rw-rail-stop--race .rw-rail-name { font-weight: 600; }
+.rw-schedule-time { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-on-light-muted); white-space: nowrap; }
 
 /* ── Section scaffolding (dark sections on the HQ page) ── */
 
@@ -529,23 +550,39 @@
 .rw-team-driver { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px; }
 .rw-team-pts { display: block; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-faint); margin-top: var(--space-2); }
 
-/* ── Circuit Essentials — 8 compact dashboard-style metric boxes ── */
+/* ── Circuit Essentials — 8 compact dashboard-style metric boxes. Every
+   box shares the same min-height and icon treatment regardless of value
+   length, so the grid stays visually balanced; a long string value (track
+   type, a length with its imperial conversion) drops to the --long size
+   rather than being forced to the same scale as a short number. ── */
 
 .rw-essentials { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
 
 .rw-essential {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    min-height: 122px;
     padding: var(--space-4);
     background: var(--surface);
     border: 1px solid var(--border-faint);
     border-radius: var(--radius-md);
 }
 
-.rw-essential-icon { color: var(--accent-text); }
-.rw-essential-value { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); line-height: 1.15; }
-.rw-essential-label { font-size: 0.6rem; letter-spacing: 0.08em; color: var(--text-muted); }
+.rw-essential-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent-text);
+}
+
+.rw-essential-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
+.rw-essential-value--long { font-size: 0.92rem; font-weight: 600; line-height: 1.35; overflow-wrap: break-word; }
+.rw-essential-label { font-size: 0.6rem; letter-spacing: 0.08em; color: var(--text-muted); margin-top: auto; }
 .rw-essential-sub { font-size: 0.66rem; color: var(--text-faint); }
 
 /* ══════════════════════════════════════════════════════════════════

@@ -4,23 +4,32 @@
  * Weekend Header → Podium + Weekend Schedule (side-by-side) → Complete
  * Driver Results → Race Highlights → Weekend Team Performance → Circuit
  * Essentials. All data comes from the same endpoints as before (plus one
- * new sprint-results endpoint, only ever called on a sprint weekend) and
- * every KnowMore term / modal is preserved. Shares RaceWeekend.css
- * (.rw namespace) with the Race Weekend journey.
+ * new sprint-results endpoint, only ever called on a sprint weekend).
+ * Shares RaceWeekend.css (.rw namespace) with the Race Weekend journey.
  */
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Flag, Map, Repeat, RotateCw, Ruler, Timer, Zap } from "lucide-react";
+import { CalendarDays, Flag, Gauge, Map, Repeat, RotateCw, Ruler, Timer, Wrench, Zap } from "lucide-react";
 import { circuitInfo } from "../data/circuitInfo";
 import { LoadingSpinner } from "../components/UI";
-import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
-import { knowMoreInfo } from "../data/knowMoreInfo";
 import { formatSessionTime } from "../utils/timeUtils";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { getWeekendSessions } from "../utils/landingHelpers";
 import "../styles/pages/RaceWeekend.css";
 import { API_BASE_URL as API } from "../config/api";
+
+/* Session-type icon, reused across every weekend regardless of format —
+   all three practice sessions share one icon, the rest are distinct. */
+const SESSION_ICONS = {
+    FirstPractice: Wrench,
+    SecondPractice: Wrench,
+    ThirdPractice: Wrench,
+    SprintQualifying: Gauge,
+    Sprint: Zap,
+    Qualifying: Timer,
+    Race: Flag,
+};
 
 
 function pad(n) {
@@ -78,7 +87,6 @@ function GrandPrixDetails() {
     const [results, setResults] = useState([]);
     const [qualifying, setQualifying] = useState([]);
     const [sprintResults, setSprintResults] = useState([]);
-    const [selectedTerm, setSelectedTerm] = useState(null);
 
     useEffect(() => {
         fetch(`${API}/grandprixdashboard/${year}`)
@@ -130,12 +138,8 @@ function GrandPrixDetails() {
         year: "numeric",
     });
 
-    /* the first session still ahead of us, highlighted on the session rail */
+    /* the first session still ahead of us, highlighted on the schedule card */
     const nextSession = sessions.find((s) => s.start > now) || null;
-
-    /* KnowMore slugs for the session rail rows */
-    const sessionTermFor = (key) =>
-        ({ FirstPractice: "fp1", SecondPractice: "fp2", ThirdPractice: "fp3", Sprint: "sprint", Qualifying: "qualifying" }[key] || null);
 
     const fastestLap = results.find((r) => r.FastestLap?.rank === "1") || null;
 
@@ -194,7 +198,13 @@ function GrandPrixDetails() {
                 sub: circuitData.lapRecordHolder ? `${circuitData.lapRecordHolder} · ${circuitData.lapRecordYear}` : null,
             },
             { icon: CalendarDays, value: circuitData.firstGrandPrix, label: "First F1 Grand Prix" },
-        ].filter((e) => e.value !== undefined && e.value !== null)
+        ]
+            .filter((e) => e.value !== undefined && e.value !== null)
+            // A long string (track type, length/distance with the imperial
+            // conversion in parentheses) reads better small than forced to
+            // the same size as a short number like "58" — keeps every box
+            // legible without ever breaking the grid.
+            .map((e) => ({ ...e, long: String(e.value).length > 14 }))
         : [];
 
     return (
@@ -296,34 +306,26 @@ function GrandPrixDetails() {
                             )}
                         </div>
 
-                        <div>
-                            <span className="rw-hq-subeyebrow rw-mono">WEEKEND SCHEDULE</span>
-                            <ol className="rw-rail">
+                        <div className="rw-schedule-card">
+                            <span className="rw-schedule-title rw-mono">WEEKEND SCHEDULE</span>
+                            <ol className="rw-schedule-list">
                                 {sessions.map((s) => {
                                     const isNext = nextSession?.key === s.key;
                                     const isPast = s.start <= now && !isNext;
-                                    const term = sessionTermFor(s.key);
+                                    const Icon = SESSION_ICONS[s.key] || Flag;
                                     return (
                                         <li
                                             key={s.key}
-                                            className={`rw-rail-stop${isNext ? " rw-rail-stop--next" : ""}${isPast ? " rw-rail-stop--past" : ""}${s.key === "Race" ? " rw-rail-stop--race" : ""}`}
+                                            className={`rw-schedule-row${isNext ? " rw-schedule-row--next" : ""}${isPast ? " rw-schedule-row--past" : ""}`}
                                         >
-                                            <span className="rw-rail-dot" aria-hidden="true" />
-                                            <span className="rw-rail-name">
-                                                {term ? (
-                                                    <KnowMoreTerm
-                                                        term={term}
-                                                        setSelectedTerm={setSelectedTerm}
-                                                        knowMoreInfo={knowMoreInfo}
-                                                    >
-                                                        {s.label}
-                                                    </KnowMoreTerm>
-                                                ) : (
-                                                    s.label
-                                                )}
-                                                {isNext && <span className="rw-rail-next rw-mono">NEXT</span>}
+                                            <span className="rw-schedule-icon" aria-hidden="true">
+                                                <Icon size={15} />
                                             </span>
-                                            <span className="rw-rail-time rw-mono">
+                                            <span className="rw-schedule-name">
+                                                {s.label}
+                                                {isNext && <span className="rw-schedule-next-badge rw-mono">NEXT</span>}
+                                            </span>
+                                            <span className="rw-schedule-time rw-mono">
                                                 {formatSessionTime(s.date, s.time)}
                                             </span>
                                         </li>
@@ -373,13 +375,7 @@ function GrandPrixDetails() {
                                                     </td>
                                                     <td className="rw-mono">P{result.grid}</td>
                                                     <td className="rw-mono">
-                                                        {dnf ? (
-                                                            <KnowMoreTerm term="retirement" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>
-                                                                {`DNF — ${result.status}`}
-                                                            </KnowMoreTerm>
-                                                        ) : (
-                                                            result.status
-                                                        )}
+                                                        {dnf ? `DNF — ${result.status}` : result.status}
                                                     </td>
                                                     <td className="rw-mono">{result.points} PTS</td>
                                                 </tr>
@@ -395,11 +391,7 @@ function GrandPrixDetails() {
                             <div className="rw-highlights">
                                 {qualifying.length > 0 && (
                                     <div className="rw-highlight">
-                                        <span className="rw-highlight-label rw-mono">
-                                            <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>
-                                                POLE POSITION
-                                            </KnowMoreTerm>
-                                        </span>
+                                        <span className="rw-highlight-label rw-mono">POLE POSITION</span>
                                         <span className="rw-highlight-value">
                                             {qualifying[0].Driver.givenName} {qualifying[0].Driver.familyName}
                                         </span>
@@ -410,11 +402,7 @@ function GrandPrixDetails() {
                                 )}
                                 {fastestLap && (
                                     <div className="rw-highlight">
-                                        <span className="rw-highlight-label rw-mono">
-                                            <KnowMoreTerm term="fastest_lap" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>
-                                                FASTEST LAP
-                                            </KnowMoreTerm>
-                                        </span>
+                                        <span className="rw-highlight-label rw-mono">FASTEST LAP</span>
                                         <span className="rw-highlight-value">
                                             {fastestLap.Driver.givenName} {fastestLap.Driver.familyName}
                                         </span>
@@ -461,10 +449,12 @@ function GrandPrixDetails() {
                 {essentials.length > 0 && (
                     <HqSection eyebrow="ENGINEERING" title="Circuit Essentials">
                         <div className="rw-essentials">
-                            {essentials.map(({ icon: Icon, value, label, sub }) => (
+                            {essentials.map(({ icon: Icon, value, label, sub, long }) => (
                                 <div className="rw-essential" key={label}>
-                                    <Icon size={16} className="rw-essential-icon" aria-hidden="true" />
-                                    <span className="rw-essential-value rw-mono"><CountUp value={value} /></span>
+                                    <span className="rw-essential-icon" aria-hidden="true"><Icon size={16} /></span>
+                                    <span className={`rw-essential-value rw-mono${long ? " rw-essential-value--long" : ""}`}>
+                                        <CountUp value={value} />
+                                    </span>
                                     <span className="rw-essential-label rw-mono">{label}</span>
                                     {sub && <span className="rw-essential-sub rw-mono">{sub}</span>}
                                 </div>
@@ -473,8 +463,6 @@ function GrandPrixDetails() {
                     </HqSection>
                 )}
             </main>
-
-            <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>
     );
 }
