@@ -83,20 +83,6 @@ function formatDate(dateStr, withWeekday = true) {
     return d.toLocaleDateString(undefined, { weekday: withWeekday ? "short" : undefined, day: "numeric", month: "short", year: "numeric" });
 }
 
-function formatCountdown(dateStr) {
-    if (!dateStr) return null;
-    // Race date from Jolpica has no time component here, so this counts
-    // down to the start of that calendar day (UTC) — a day-level
-    // countdown, not a to-the-minute one.
-    const diffMs = new Date(`${dateStr}T00:00:00Z`).getTime() - Date.now();
-    if (Number.isNaN(diffMs) || diffMs <= 0) return null;
-    const days = Math.floor(diffMs / 86400000);
-    const hours = Math.floor((diffMs % 86400000) / 3600000);
-    if (days > 0) return `${days}d ${hours}h`;
-    const minutes = Math.floor((diffMs % 3600000) / 60000);
-    return `${hours}h ${minutes}m`;
-}
-
 /* ── Data hook — fetch once, manual retry only, never polled ─────────── */
 
 function usePrediction() {
@@ -144,75 +130,44 @@ function useEvaluation() {
 /* ── Header ────────────────────────────────────────────────────────── */
 
 function PredictorHeader({ race }) {
-    const countdown = formatCountdown(race.date);
     return (
         <header className="pr-header">
             <div className="pr-header-inner">
-                <span className="pr-eyebrow">Predictor</span>
+                <span className="pr-eyebrow">Race Predictor</span>
                 <h1 className="pr-header-gp">{race.name}</h1>
-                <p className="pr-header-loc">{race.circuit}{race.country ? `, ${race.country}` : ""}</p>
-                <div className="pr-header-meta">
-                    <span className="pr-meta-item pr-mono">{formatDate(race.date)}</span>
-                    {countdown && <span className="pr-meta-item pr-countdown pr-mono">{countdown}</span>}
-                    {race.hasSprint && <span className="pr-meta-item pr-sprint-tag">Sprint Weekend</span>}
-                </div>
+                <p className="pr-header-loc">{race.circuit} · {formatDate(race.date)}</p>
             </div>
         </header>
     );
 }
 
-/* ── Prediction status banner ─────────────────────────────────────── */
+/* ── Podium — an actual F1 podium presentation: no driver photos, the
+   racing number carries the visual weight instead. P1 sits centered on
+   a taller riser (extra top padding under a shared flex-end baseline,
+   not a fabricated height) on the site's light surface, exactly the
+   "major result gets a light card" treatment already used elsewhere;
+   P2/P3 stay on the dark surface either side. ─────────────────────── */
 
-function PredictionStatus({ stage, race }) {
-    const isPost = stage === "post_qualifying";
+function PodiumStep({ p, place, label }) {
+    if (!p) return null;
     return (
-        <div className={`pr-status${isPost ? " pr-status--post" : ""}`}>
-            <span className="pr-status-label">{isPost ? "Post-Qualifying" : "Pre-Qualifying"}</span>
-            <p className="pr-status-desc">
-                {isPost
-                    ? `Updated using qualifying results${race.qualifyingDate ? ` from ${formatDate(race.qualifyingDate, false)}` : ""}.`
-                    : "Qualifying results aren't available yet. This prediction uses historical performance, current-season form, circuit history, and constructor strength."}
-            </p>
+        <div className={`pr-podium-step pr-podium-step--${place}`} style={{ "--pr-team-color": getTeamAccent(p.constructorId) }}>
+            <span className="pr-podium-place pr-mono">{label}</span>
+            <span className="pr-podium-number pr-mono">{p.driverNumber ?? "—"}</span>
+            <span className="pr-podium-driver">{p.driverName}</span>
+            <span className="pr-podium-constructor">{p.constructor}</span>
         </div>
     );
 }
-
-/* ── Prediction summary ───────────────────────────────────────────── */
-
-function PredictionSummary({ winner }) {
-    if (!winner) return null;
-    return (
-        <div className="pr-summary" style={{ "--pr-team-color": getTeamAccent(winner.constructorId) }}>
-            <span className="pr-panel-title">Predicted Winner</span>
-            <div className="pr-summary-body">
-                <span className="pr-team-bar" aria-hidden="true" />
-                <div className="pr-summary-id">
-                    <span className="pr-summary-name">{winner.driverName}</span>
-                    <span className="pr-summary-team">{winner.constructor}</span>
-                </div>
-                <div className="pr-summary-prob">
-                    <span className="pr-mono pr-summary-prob-value">{pct(winner.winProbability)}</span>
-                    <span className="pr-summary-prob-label">Win Probability</span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-/* ── Podium ────────────────────────────────────────────────────────── */
 
 function PredictedPodium({ predictions }) {
-    const podium = predictions.slice(0, 3);
+    const [first, second, third] = predictions;
+    if (!first) return null;
     return (
         <div className="pr-podium">
-            {podium.map((p) => (
-                <div className="pr-podium-card" key={p.driverId} style={{ "--pr-team-color": getTeamAccent(p.constructorId) }}>
-                    <span className="pr-mono pr-podium-pos">P{p.predictedPosition}</span>
-                    <span className="pr-podium-name">{p.driverName}</span>
-                    <span className="pr-podium-team">{p.constructor}</span>
-                    <span className="pr-mono pr-podium-prob">{pct(p.podiumProbability)} <small>podium</small></span>
-                </div>
-            ))}
+            <PodiumStep p={second} place="second" label="P2" />
+            <PodiumStep p={first} place="first" label="P1" />
+            <PodiumStep p={third} place="third" label="P3" />
         </div>
     );
 }
@@ -668,20 +623,14 @@ function Predictor() {
         );
     }
 
-    const { race, stage, dataAvailability, weather, predictions, limitations } = data;
+    const { race, dataAvailability, weather, predictions, limitations } = data;
     const winner = predictions?.[0] ?? null;
 
     return (
         <div className="pr">
             <PredictorHeader race={race} />
             <main className="pr-main">
-                <PredictionStatus stage={stage} race={race} />
-
-                {/* 1. Predicted Winner — full width, compact */}
-                <PredictionSummary winner={winner} />
-
-                {/* 2. Predicted Podium — three equal cards */}
-                <Panel title="Predicted Podium" className="pr-panel--light">
+                <Panel title="Predicted Podium">
                     <PredictedPodium predictions={predictions} />
                 </Panel>
 

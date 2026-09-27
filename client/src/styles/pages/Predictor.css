@@ -58,21 +58,7 @@
 }
 
 .pr-header-gp { font-size: var(--text-h2); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
-.pr-header-loc { font-size: var(--text-body); color: var(--pr-text-secondary); margin: 0 0 var(--space-4); }
-
-.pr-header-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); font-size: var(--text-small); }
-
-.pr-meta-item {
-    color: var(--text-primary);
-    background: var(--surface-2);
-    border: 1px solid var(--pr-border);
-    border-radius: var(--radius-full);
-    padding: 6px 14px;
-}
-
-.pr-countdown { color: var(--accent-text); font-weight: 700; border-color: var(--accent-border); background: var(--accent-dim); }
-.pr-sprint-tag { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
-.pr-meta-item--faint { background: none; border-color: transparent; color: var(--text-faint); padding-left: 0; }
+.pr-header-loc { font-size: var(--text-body); color: var(--pr-text-secondary); margin: 0; }
 
 /* ── Layout ────────────────────────────────────────────────────────── */
 
@@ -99,33 +85,6 @@
     .pr-grid--split { grid-template-columns: 1fr; }
 }
 
-/* ── Status banner ─────────────────────────────────────────────────── */
-
-.pr-status {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    background: var(--pr-surface-card);
-    border: 1px solid var(--pr-border);
-    border-left: 3px solid var(--text-faint);
-    border-radius: 8px;
-}
-
-.pr-status--post { border-left-color: var(--success); }
-
-.pr-status-label {
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-primary);
-}
-
-.pr-status-desc { font-size: var(--text-small); color: var(--pr-text-secondary); margin: 0; }
-
 /* ── Panel shell ───────────────────────────────────────────────────── */
 
 .pr-panel {
@@ -135,14 +94,6 @@
     padding: 20px;
 }
 
-.pr-panel--full { width: 100%; }
-
-.pr-panel--light {
-    background: var(--pr-light);
-    border-color: var(--pr-light-border);
-    color: var(--pr-light-text);
-}
-.pr-panel--light .pr-panel-title { color: var(--pr-light-text-3); }
 
 .pr-panel-title {
     font-family: var(--font-mono);
@@ -154,53 +105,61 @@
     margin: 0 0 var(--space-3);
 }
 
-/* ── Prediction summary ────────────────────────────────────────────── */
+/* ── Podium — an actual F1 podium, not three equal cards. P1 sits on a
+   taller riser (extra top padding under a shared flex-end baseline —
+   never a fabricated/measured height) on the site's light surface, the
+   same "major result gets a light card" treatment used elsewhere;
+   P2/P3 stay on the dark surface either side. No driver photos — the
+   racing number carries the visual weight instead. ──────────────────── */
 
-/* Winner card — a light Carrara surface (Part 14: major result cards
-   shouldn't just be another dark panel), Milano Red reserved for the
-   probability figure itself. */
-.pr-summary {
-    background: var(--pr-light);
-    border: 1px solid var(--pr-light-border);
-    border-radius: 10px;
-    padding: 20px 24px;
+.pr-podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
 }
 
-.pr-summary-body { display: flex; align-items: center; gap: var(--space-4); }
-
-.pr-team-bar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--pr-team-color, var(--pr-border)); }
-
-.pr-summary-id { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.pr-summary-name { font-size: var(--text-h3); font-weight: 700; color: var(--pr-light-text); }
-.pr-summary-team { font-size: var(--text-small); color: var(--pr-light-text-2); }
-
-.pr-summary-prob { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.pr-summary-prob-value { font-size: var(--text-h3); font-weight: 700; color: var(--accent); }
-.pr-summary-prob-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pr-light-text-3); }
-
-/* ── Podium (sits inside a .pr-panel--light) ──────────────────────────── */
-
-.pr-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
-
-.pr-podium-card {
+.pr-podium-step {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 220px;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
-    padding: 16px;
-    background: rgba(25, 25, 25, 0.03);
-    border: 1px solid var(--pr-light-border);
-    border-top: 3px solid var(--pr-team-color, var(--pr-light-border));
-    border-radius: 8px;
+    text-align: center;
+    padding: var(--space-4) var(--space-3);
+    background: var(--pr-surface-inner);
+    border: 1px solid var(--pr-border);
+    border-top: 3px solid var(--pr-team-color, var(--pr-border));
+    border-radius: 10px 10px 4px 4px;
 }
 
-.pr-podium-pos { font-size: var(--text-h3); font-weight: 700; color: var(--pr-light-text); }
-.pr-podium-name { font-size: var(--text-small); font-weight: 700; color: var(--pr-light-text); }
-.pr-podium-team { font-size: var(--text-micro); color: var(--pr-light-text-2); margin-bottom: 6px; }
-.pr-podium-prob { font-size: var(--text-small); color: var(--accent); font-weight: 700; }
-.pr-podium-prob small { font-family: var(--font-sans); color: var(--pr-light-text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 4px; }
+.pr-podium-step--first {
+    padding-top: calc(var(--space-4) + 28px);
+    background: var(--pr-light);
+    border-color: var(--pr-light-border);
+    border-top-color: var(--pr-team-color, var(--accent));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.pr-podium-place { font-size: var(--text-micro); font-weight: 700; letter-spacing: 0.1em; color: var(--text-faint); }
+.pr-podium-step--first .pr-podium-place { color: var(--pr-light-text-3); }
+
+.pr-podium-number { font-size: 2.75rem; font-weight: 800; line-height: 1; color: var(--pr-team-color, var(--text-primary)); }
+.pr-podium-step--first .pr-podium-number { font-size: 3.75rem; color: var(--pr-team-color, var(--accent)); }
+
+.pr-podium-driver { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
+.pr-podium-step--first .pr-podium-driver { font-size: var(--text-body); color: var(--pr-light-text); }
+
+.pr-podium-constructor { font-size: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--pr-text-secondary); }
+.pr-podium-step--first .pr-podium-constructor { color: var(--pr-light-text-3); }
 
 @media (max-width: 640px) {
-    .pr-podium { grid-template-columns: 1fr; }
+    .pr-podium { flex-wrap: wrap; }
+    .pr-podium-step { flex-basis: 40%; max-width: none; }
+    .pr-podium-step--first { flex-basis: 100%; order: -1; padding-top: var(--space-4); margin-bottom: var(--space-3); }
 }
 
 /* ── Classification table ─────────────────────────────────────────── */
