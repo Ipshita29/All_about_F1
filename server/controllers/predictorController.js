@@ -1,5 +1,5 @@
 const { buildPrediction } = require("../services/predictorService");
-const { getPredictionHistory, getRaceEvaluation, getPerformanceSummary } = require("../services/evaluationService");
+const { getPredictionHistory, getPerformanceSummary, getRacePrediction } = require("../services/evaluationService");
 
 const ERROR_MESSAGES = {
     no_upcoming_race: "No upcoming race found — nothing to predict right now.",
@@ -31,13 +31,17 @@ const getHistory = async (req, res) => {
     }
 };
 
-const getEvaluation = async (req, res) => {
+// A specific race the user picked from the Predictor's race selector —
+// its full stored prediction (podium/table-ready) plus whether it's
+// complete and, if so, whether the predicted winner was correct.
+const getRaceDetail = async (req, res) => {
     try {
         const { season, round } = req.params;
-        const result = await getRaceEvaluation(season, round);
-        res.json(result);
+        const result = await getRacePrediction(season, round);
+        if (!result) return res.json({ available: false, message: "No stored prediction found for this race." });
+        res.json({ available: true, ...result });
     } catch (error) {
-        res.status(502).json({ eligible: false, reason: "upstream_failure" });
+        res.status(502).json({ available: false, message: "Could not load this race's prediction right now." });
     }
 };
 
@@ -50,4 +54,4 @@ const getPerformance = async (req, res) => {
     }
 };
 
-module.exports = { getUpcomingPrediction, getHistory, getEvaluation, getPerformance };
+module.exports = { getUpcomingPrediction, getHistory, getRaceDetail, getPerformance };

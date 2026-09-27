@@ -22,6 +22,7 @@ const driverPredictionSchema = new mongoose.Schema(
         driverId: String,
         driverName: String,
         driverCode: String,
+        driverNumber: String,
         constructorId: String,
         constructor: String,
         predictedPosition: Number,
@@ -31,10 +32,6 @@ const driverPredictionSchema = new mongoose.Schema(
         top5Probability: Number,
         top10Probability: Number,
         confidence: String,
-        // Per-factor breakdown behind "Why This Prediction?" — without this
-        // a prediction served back from storage (rather than freshly
-        // generated) would have nothing to show there.
-        factors: mongoose.Schema.Types.Mixed,
     },
     { _id: false }
 );

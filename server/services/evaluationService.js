@@ -41,7 +41,7 @@
 const { getJson, getJsonRetry } = require("./jolpicaClient");
 const { cached, TTL } = require("./jolpicaCache");
 const RacePrediction = require("../models/RacePrediction");
-const { buildBacktestPrediction } = require("./predictorService");
+const { buildBacktestPrediction, shapeStoredDoc } = require("./predictorService");
 
 const BACKTEST_LOOKBACK = 3; // how many recent completed rounds to auto-seed if missing
 
@@ -255,7 +255,7 @@ async function getPredictionHistory() {
     // winner was correct, and getPerformanceSummary's aggregates below only
     // read from `metrics` — the full per-driver comparison (driverEvaluations,
     // predictedWinner/actualWinner, etc.) stays available via the dedicated
-    // per-race evaluateRace()/getRaceEvaluation() instead of round-tripping
+    // per-race evaluateRace()/getRacePrediction() instead of round-tripping
     // through every /history response.
     return {
         races: evaluations.map((r) => (r.eligible
@@ -265,8 +265,24 @@ async function getPredictionHistory() {
     };
 }
 
-async function getRaceEvaluation(season, round) {
-    return evaluateRace(season, Number(round));
+// Full prediction detail for ANY specific race the user selects on the
+// Predictor page (not just the upcoming one) — the podium/table shape from
+// shapeStoredDoc, plus whether that race is complete and, if so, whether
+// the predicted winner was correct. Reuses evaluateRace rather than
+// re-deriving correctness, so there is exactly one place that decides
+// "was this prediction right."
+async function getRacePrediction(season, round) {
+    const storedPrediction = await getStoredPrediction(season, round);
+    if (!storedPrediction) return null;
+
+    const shaped = shapeStoredDoc(storedPrediction);
+    const evaluation = await evaluateRace(season, Number(round));
+
+    return {
+        ...shaped,
+        completed: evaluation.eligible,
+        winnerCorrect: evaluation.eligible ? evaluation.metrics.winnerCorrect : null,
+    };
 }
 
 async function getPerformanceSummary() {
@@ -294,4 +310,4 @@ async function getPerformanceSummary() {
     };
 }
 
-module.exports = { getPredictionHistory, getRaceEvaluation, getPerformanceSummary };
+module.exports = { getPredictionHistory, getPerformanceSummary, getRacePrediction };

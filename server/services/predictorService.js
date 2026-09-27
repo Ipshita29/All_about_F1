@@ -34,6 +34,10 @@
  *   - {season}/constructorstandings.json
  *   - {season}/{round}/results.json  → recent-form inputs (last N races)
  *   - {season}/{round}/qualifying.json → grid, once qualifying has run
+ *   - {season}/{round}/sprint.json    → sprint result, on a sprint weekend
+ *                                        only, once the sprint has run —
+ *                                        surfaced on the Data Used card,
+ *                                        not a scored feature of its own
  *   - circuits/{circuitId}/results.json → all-time results at this track
  *
  * FEATURES (per driver, each normalized to roughly 0–1, higher = better)
@@ -193,6 +197,18 @@ async function fetchQualifying(season, round) {
     try {
         const data = await cached(`predictor:qualifying:${season}:${round}`, TTL.QUALIFYING, () => getJson(`/${season}/${round}/qualifying.json`));
         return data.MRData.RaceTable.Races[0]?.QualifyingResults || [];
+    } catch {
+        return [];
+    }
+}
+
+// Sprint weekends have their own results.json-shaped endpoint. Only ever
+// called when the race genuinely has a sprint (race.Sprint present) — an
+// empty return on a sprint weekend means "hasn't run yet", not "no sprint".
+async function fetchSprintResults(season, round) {
+    try {
+        const data = await cached(`predictor:sprint:${season}:${round}`, TTL.QUALIFYING, () => getJson(`/${season}/${round}/sprint.json`));
+        return data.MRData.RaceTable.Races[0]?.SprintResults || [];
     } catch {
         return [];
     }
@@ -503,53 +519,63 @@ async function persistPrediction(result, source) {
  * "if a prediction already exists, load it") so a page refresh doesn't
  * fire a fresh ~10-request Jolpica burst for data that hasn't changed.
  */
+// Reshapes a stored Mongo doc into the API-facing prediction shape. Shared
+// by loadStoredPrediction (the upcoming race) and evaluationService.js's
+// getRacePrediction (any specific past race the user selects) so there is
+// exactly one place that knows how a stored doc maps onto the page's data
+// shape — never two copies drifting apart.
+function shapeStoredDoc(doc) {
+    return {
+        race: {
+            season: doc.season,
+            round: doc.round,
+            name: doc.raceName,
+            circuit: doc.circuit,
+            circuitId: doc.circuitId,
+            country: doc.country ?? null,
+            date: doc.raceDate,
+            qualifyingDate: doc.qualifyingDate ?? null,
+            sprintDate: doc.sprintDate ?? null,
+            hasSprint: Boolean(doc.hasSprint),
+        },
+        // Only the keys the Data Used card reads — older documents may
+        // still carry the retired weatherForecast/pitStopStrategy/
+        // tyreCompounds keys, which are simply not copied forward. No
+        // model/version/stage/generatedAt/limitations here either —
+        // none of that is read by anything on the page anymore.
+        dataAvailability: {
+            historicalStandings: doc.dataAvailability?.historicalStandings,
+            currentSeasonData: doc.dataAvailability?.currentSeasonData,
+            circuitHistory: doc.dataAvailability?.circuitHistory,
+            qualifying: doc.dataAvailability?.qualifying,
+            ...(doc.dataAvailability?.sprintPerformance ? { sprintPerformance: doc.dataAvailability.sprintPerformance } : {}),
+        },
+        // Explicit field list rather than a passthrough — an older
+        // document can still carry a legacy `factors` blob (retired
+        // along with "Why This Prediction?"); never round-trip that.
+        predictions: doc.predictions.map((p) => ({
+            driverId: p.driverId,
+            driverName: p.driverName,
+            driverCode: p.driverCode,
+            driverNumber: p.driverNumber ?? null,
+            constructor: p.constructor,
+            constructorId: p.constructorId,
+            predictedPosition: p.predictedPosition,
+            expectedFinish: p.expectedFinish,
+            winProbability: p.winProbability,
+            podiumProbability: p.podiumProbability,
+            top5Probability: p.top5Probability,
+            top10Probability: p.top10Probability,
+            confidence: p.confidence,
+        })),
+    };
+}
+
 async function loadStoredPrediction(season, round, stage) {
     try {
         const doc = await RacePrediction.findOne({ season: String(season), round: Number(round), stage }).lean();
         if (!doc) return null;
-        return {
-            race: {
-                season: doc.season,
-                round: doc.round,
-                name: doc.raceName,
-                circuit: doc.circuit,
-                circuitId: doc.circuitId,
-                country: doc.country ?? null,
-                date: doc.raceDate,
-                qualifyingDate: doc.qualifyingDate ?? null,
-                sprintDate: doc.sprintDate ?? null,
-                hasSprint: Boolean(doc.hasSprint),
-            },
-            // Only the keys the Data Used card reads — older documents may
-            // still carry the retired weatherForecast/pitStopStrategy/
-            // tyreCompounds keys, which are simply not copied forward. No
-            // model/version/stage/generatedAt/limitations here either —
-            // none of that is read by anything on the page anymore.
-            dataAvailability: {
-                historicalStandings: doc.dataAvailability?.historicalStandings,
-                currentSeasonData: doc.dataAvailability?.currentSeasonData,
-                circuitHistory: doc.dataAvailability?.circuitHistory,
-                qualifying: doc.dataAvailability?.qualifying,
-            },
-            // Explicit field list rather than a passthrough — an older
-            // document can still carry a legacy `factors` blob (retired
-            // along with "Why This Prediction?"); never round-trip that.
-            predictions: doc.predictions.map((p) => ({
-                driverId: p.driverId,
-                driverName: p.driverName,
-                driverCode: p.driverCode,
-                driverNumber: p.driverNumber ?? null,
-                constructor: p.constructor,
-                constructorId: p.constructorId,
-                predictedPosition: p.predictedPosition,
-                expectedFinish: p.expectedFinish,
-                winProbability: p.winProbability,
-                podiumProbability: p.podiumProbability,
-                top5Probability: p.top5Probability,
-                top10Probability: p.top10Probability,
-                confidence: p.confidence,
-            })),
-        };
+        return shapeStoredDoc(doc);
     } catch {
         return null;
     }
@@ -564,7 +590,7 @@ async function loadStoredPrediction(season, round, stage) {
 // feeding it differ.
 // ---------------------------------------------------------------------------
 
-function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults }) {
+function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, sprintCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, sprintResults }) {
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -654,6 +680,12 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
             qualifying: {
                 status: !qualifyingCompleted ? "pending" : qualifyingResults.length > 0 ? "available" : "unavailable",
             },
+            // Only present at all on a sprint weekend — a normal weekend has
+            // no sprint to report on, so the Data Used card should not show
+            // this row rather than claim it's "not available".
+            ...(race.Sprint
+                ? { sprintPerformance: { status: !sprintCompleted ? "pending" : sprintResults.length > 0 ? "available" : "unavailable" } }
+                : {}),
         },
         predictions,
         limitations: LIMITATIONS,
@@ -696,6 +728,8 @@ async function buildPredictionInternal() {
     const qualifyingDateTime = race.Qualifying ? new Date(`${race.Qualifying.date}T${race.Qualifying.time || "00:00:00Z"}`) : null;
     const qualifyingCompleted = Boolean(qualifyingDateTime && now >= qualifyingDateTime);
     const stage = qualifyingCompleted ? "post_qualifying" : "pre_qualifying";
+    const sprintDateTime = race.Sprint ? new Date(`${race.Sprint.date}T${race.Sprint.time || "00:00:00Z"}`) : null;
+    const sprintCompleted = Boolean(sprintDateTime && now >= sprintDateTime);
 
     const cacheKey = `${season}-${round}-${stage}`;
     if (cache.key === cacheKey && cache.expiresAt > Date.now()) {
@@ -716,15 +750,16 @@ async function buildPredictionInternal() {
         return { error: "insufficient_historical_data" };
     }
 
-    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
+    const [recentRaces, circuitRaces, qualifyingResults, sprintResults] = await Promise.all([
         fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
         fetchCircuitHistory(circuitId),
         qualifyingCompleted ? fetchQualifying(season, round) : Promise.resolve([]),
+        race.Sprint && sprintCompleted ? fetchSprintResults(season, round) : Promise.resolve([]),
     ]);
 
     const result = assemblePrediction({
-        season, round, race, circuitId, stage, qualifyingCompleted,
-        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
+        season, round, race, circuitId, stage, qualifyingCompleted, sprintCompleted,
+        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, sprintResults,
     });
 
     // persistPrediction still needs the full internal shape (model,
@@ -772,17 +807,19 @@ async function buildBacktestPrediction(season, round) {
     if (driverStandings.length === 0) return { error: "insufficient_historical_data" };
 
     const circuitId = race.Circuit?.circuitId ?? null;
-    const [recentRaces, circuitRaces, qualifyingResults] = await Promise.all([
+    const [recentRaces, circuitRaces, qualifyingResults, sprintResults] = await Promise.all([
         fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
         fetchCircuitHistory(circuitId),
         fetchQualifying(season, round),
+        race.Sprint ? fetchSprintResults(season, round) : Promise.resolve([]),
     ]);
 
     const result = assemblePrediction({
         season, round, race, circuitId,
         stage: "post_qualifying",
         qualifyingCompleted: true,
-        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults,
+        sprintCompleted: true,
+        driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, sprintResults,
     });
 
     await persistPrediction(result, "backtest");
@@ -793,4 +830,4 @@ function round2(n) {
     return Math.round(n * 1000) / 1000;
 }
 
-module.exports = { buildPrediction, buildBacktestPrediction };
+module.exports = { buildPrediction, buildBacktestPrediction, shapeStoredDoc };
