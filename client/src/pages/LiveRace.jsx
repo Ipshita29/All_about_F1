@@ -198,17 +198,51 @@ function DriverPortrait({ driverId, fullName, frameClassName, fallbackClassName,
 
 /* ── Compact header ────────────────────────────────────────────────── */
 
+/* Non-live gets its own editorial heading — an eyebrow, a large title,
+   secondary location, then readable session/date text — rather than the
+   compact single-line "badge + title" bar the live dashboard needs to
+   stay small. Kept as a separate branch (not a shared markup shape with
+   CSS overrides) so the live header stays pixel-identical to before. */
+function UpcomingHeader({ race, updatedAt }) {
+    return (
+        <header className="lr-header lr-header--upcoming">
+            <div className="lr-header-row">
+                <span className="lr-header-eyebrow lr-mono">NEXT SESSION</span>
+                <h1 className="lr-header-title">{race?.grandPrix ?? "No Session Scheduled"}</h1>
+                {race?.circuit && (
+                    <span className="lr-header-loc">
+                        <MapPin size={12} aria-hidden="true" />
+                        {race.circuit}{race.country ? `, ${race.country}` : ""}
+                    </span>
+                )}
+                {(race?.session || race?.startTime) && (
+                    <span className="lr-header-session lr-mono">
+                        {race?.session && sessionShortLabel(race.session)}
+                        {race?.session && race?.startTime && " · "}
+                        {race?.startTime && new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                )}
+                {updatedAt && <span className="lr-header-updated lr-mono">UPDATED {timeAgo(updatedAt).toUpperCase()}</span>}
+            </div>
+        </header>
+    );
+}
+
 function CompactHeader({ data }) {
     const race = data.race;
     const isLive = data.isLive;
     const weather = data.weather;
 
+    if (!isLive) {
+        return <UpcomingHeader race={race} updatedAt={data.updatedAt} />;
+    }
+
     return (
         <header className="lr-header">
             <div className="lr-header-row">
-                <span className={`lr-badge${isLive ? " lr-badge--live" : ""}`}>
+                <span className="lr-badge lr-badge--live">
                     <span className="lr-badge-dot" aria-hidden="true" />
-                    {isLive ? "LIVE" : "NEXT SESSION"}
+                    LIVE
                 </span>
                 <div className="lr-header-id">
                     <span className="lr-header-title">{race?.grandPrix ?? "No Session Scheduled"}</span>
@@ -222,19 +256,14 @@ function CompactHeader({ data }) {
             </div>
             <div className="lr-header-meta">
                 {race?.session && <span className="lr-meta-item lr-mono">{sessionShortLabel(race.session)}</span>}
-                {isLive && data.track?.status && (
+                {data.track?.status && (
                     <span className="lr-meta-item">
                         <span className={`lr-flag-dot lr-flag-dot--${data.track.status.toLowerCase()}`} aria-hidden="true" />
                         {formatFlag(data.track.status)}
                     </span>
                 )}
-                {isLive && weather?.airTemperature != null && (
+                {weather?.airTemperature != null && (
                     <span className="lr-meta-item lr-mono">{weather.airTemperature}°C</span>
-                )}
-                {!isLive && race?.startTime && (
-                    <span className="lr-meta-item lr-mono">
-                        {new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    </span>
                 )}
                 {data.updatedAt && <span className="lr-meta-item lr-meta-item--faint lr-mono">UPDATED {timeAgo(data.updatedAt).toUpperCase()}</span>}
             </div>

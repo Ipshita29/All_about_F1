@@ -148,6 +148,51 @@
 .lr-flag-dot--scdeployed,
 .lr-flag-dot--vscdeployed { background: var(--warning); }
 
+/* ── Non-live header — editorial heading hierarchy, not a compact
+   dashboard bar: eyebrow, then the real page heading, secondary
+   location, then plain readable session/date text. No pill/badge
+   chrome and no background block behind the title — Milano Red stays
+   a subtle text accent on the eyebrow only. ─────────────────────────── */
+
+.lr-header--upcoming .lr-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.lr-header-eyebrow {
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent-text);
+}
+
+.lr-header--upcoming .lr-header-title {
+    font-size: clamp(2.5rem, 1.5vw + 2.1rem, 3.25rem);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+    color: var(--text-primary);
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    margin: 2px 0 0;
+}
+
+.lr-header--upcoming .lr-header-loc { font-size: var(--text-body); }
+
+.lr-header-session {
+    font-size: var(--text-body);
+    color: var(--text-primary);
+    margin-top: 4px;
+}
+
+.lr-header-updated { font-size: var(--text-micro); color: var(--text-faint); }
+
+@media (max-width: 640px) {
+    .lr-header--upcoming .lr-header-title { font-size: 1.9rem; }
+}
+
 /* ── Layout ────────────────────────────────────────────────────────── */
 
 .lr-main {
