@@ -172,15 +172,6 @@ function ClassificationTable({ predictions }) {
    not a padded-looking percentage.
    ═══════════════════════════════════════════════════════════════════ */
 
-const STATUS_LABELS = {
-    classified: null,
-    classified_retired: "Retired",
-    dsq: "DSQ",
-    dns: "DNS",
-    unclassified: "Not Classified",
-    no_result: "No Result",
-};
-
 function ModelPerformanceSection({ performance, loading }) {
     if (loading) return <div className="pr-hub-loading">Loading model performance…</div>;
 
@@ -206,72 +197,22 @@ function ModelPerformanceSection({ performance, loading }) {
     ];
 
     return (
-        <div className="pr-perf">
-            <div className="pr-perf-grid">
-                {stats.map(([value, label]) => (
-                    <div className="pr-perf-stat" key={label}>
-                        <span className="pr-mono pr-perf-value">{value}</span>
-                        <span className="pr-perf-label">{label}</span>
-                    </div>
-                ))}
-            </div>
-            {performance.driverPerformance?.length > 0 && (
-                <div className="pr-perf-drivers">
-                    <span className="pr-panel-title">Driver-Level Evaluation</span>
-                    {performance.driverPerformance.map((d) => (
-                        <div className="pr-perf-driver-row" key={d.driverId}>
-                            <span className="pr-driver-code pr-mono">{d.driverCode ?? d.driverId}</span>
-                            <span className="pr-driver-name">{d.driverName}</span>
-                            <span className="pr-mono">{d.predictionsEvaluated} races</span>
-                            <span className="pr-mono">avg err {d.avgPositionError}</span>
-                            <span className="pr-mono">best {d.bestPredictionError}</span>
-                            <span className="pr-mono">worst {d.worstPredictionError}</span>
-                        </div>
-                    ))}
+        <div className="pr-perf-grid">
+            {stats.map(([value, label]) => (
+                <div className="pr-perf-stat" key={label}>
+                    <span className="pr-mono pr-perf-value">{value}</span>
+                    <span className="pr-perf-label">{label}</span>
                 </div>
-            )}
+            ))}
         </div>
     );
 }
 
-function PredictionVsRealityDetail({ evaluation }) {
-    const sorted = [...evaluation.driverEvaluations].sort((a, b) => a.predictedPosition - b.predictedPosition);
-    return (
-        <div className="pr-vs-reality">
-            <div className="pr-timing-scroll">
-                <table className="pr-table">
-                    <thead>
-                        <tr>
-                            <th>Driver</th>
-                            <th>Predicted</th>
-                            <th>Actual</th>
-                            <th>Error</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sorted.map((d) => (
-                            <tr key={d.driverId}>
-                                <td>
-                                    <span className="pr-driver-chip">
-                                        <span className="pr-driver-code pr-mono">{d.driverCode ?? d.driverId}</span>
-                                        <span className="pr-driver-name">{d.driverName}</span>
-                                    </span>
-                                </td>
-                                <td className="pr-mono">P{d.predictedPosition}</td>
-                                <td className="pr-mono">{d.actualPosition ? `P${d.actualPosition}` : (STATUS_LABELS[d.status] ?? "—")}</td>
-                                <td className="pr-mono">{d.positionError ?? "—"}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-}
-
+/* Compact ✓/✕ only — no predicted/actual driver text, no per-race
+   metrics detail. That level of comparison isn't part of this page
+   anymore; the grand prix name and whether the predicted winner was
+   correct is the whole point of this card. */
 function PredictionHistorySection({ races, loading }) {
-    const [expandedKey, setExpandedKey] = useState(null);
-
     if (loading) return <div className="pr-hub-loading">Loading prediction history…</div>;
 
     const eligible = races.filter((r) => r.eligible);
@@ -289,50 +230,43 @@ function PredictionHistorySection({ races, loading }) {
     }
 
     return (
-        <div className="pr-history">
-            {eligible.map((r) => {
-                const key = `${r.season}-${r.round}`;
-                const isOpen = expandedKey === key;
-                return (
-                    <div className="pr-history-item" key={key}>
-                        <button
-                            type="button"
-                            className="pr-history-row"
-                            aria-expanded={isOpen}
-                            onClick={() => setExpandedKey(isOpen ? null : key)}
-                        >
-                            <span className="pr-history-race">{r.raceName}</span>
-                            <div className="pr-history-compare">
-                                <div className="pr-history-compare-row">
-                                    <span className="pr-history-label">Predicted</span>
-                                    <span className="pr-history-driver">{r.predictedWinner ?? "—"}</span>
-                                </div>
-                                <div className="pr-history-compare-row">
-                                    <span className="pr-history-label">Actual</span>
-                                    <span className="pr-history-driver">{r.actualWinner ?? "—"}</span>
-                                </div>
-                            </div>
-                            <span className={`pr-history-badge${r.metrics.winnerCorrect ? " pr-history-badge--correct" : ""}`}>
-                                {r.metrics.winnerCorrect ? "Correct" : "Incorrect"}
-                            </span>
-                        </button>
-                        {isOpen && (
-                            <div className="pr-history-detail">
-                                <div className="pr-detail-grid">
-                                    <div className="pr-detail-stat"><span>{pct(r.metrics.podiumHitRate)}</span><small>Podium</small></div>
-                                    <div className="pr-detail-stat"><span>{pct(r.metrics.top5HitRate)}</span><small>Top 5</small></div>
-                                    <div className="pr-detail-stat"><span>{pct(r.metrics.top10HitRate)}</span><small>Top 10</small></div>
-                                    <div className="pr-detail-stat"><span>{r.metrics.meanPositionError ?? "—"}</span><small>Mean Error</small></div>
-                                    <div className="pr-detail-stat"><span>{r.predictionSource === "backtest" ? "Backtested" : "Live"}</span><small>Source</small></div>
-                                </div>
-                                <span className="pr-panel-title">Prediction vs Reality</span>
-                                <PredictionVsRealityDetail evaluation={r} />
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
+        <ul className="pr-history">
+            {eligible.map((r) => (
+                <li className="pr-history-row" key={`${r.season}-${r.round}`}>
+                    <span className="pr-history-race">{r.raceName}</span>
+                    <span className={`pr-history-mark${r.metrics.winnerCorrect ? " pr-history-mark--correct" : " pr-history-mark--incorrect"}`}>
+                        {r.metrics.winnerCorrect ? "✓" : "✕"}
+                    </span>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+/* ── Data Used — only the sources genuinely used by this prediction,
+   filtered from the real dataAvailability the engine already computed
+   (never a fixed list shown regardless of status — e.g. qualifying is
+   left out here while it's still "pending"). Constructor performance
+   is derived from live standings on every request, so it's never
+   anything but used. ──────────────────────────────────────────────── */
+
+const DATA_USED_ROWS = [
+    ["historicalStandings", "Current championship standings"],
+    ["currentSeasonData", "Recent race form"],
+    ["qualifying", "Qualifying performance"],
+    ["circuitHistory", "Circuit history"],
+];
+
+function DataUsedCard({ dataAvailability }) {
+    const used = DATA_USED_ROWS
+        .filter(([key]) => dataAvailability?.[key]?.status === "available")
+        .map(([, label]) => label);
+    used.push("Constructor performance");
+
+    return (
+        <ul className="pr-used-list">
+            {used.map((label) => <li key={label}>{label}</li>)}
+        </ul>
     );
 }
 
@@ -391,7 +325,7 @@ function Predictor() {
         );
     }
 
-    const { race, predictions } = data;
+    const { race, dataAvailability, predictions } = data;
 
     return (
         <div className="pr">
@@ -405,9 +339,13 @@ function Predictor() {
                     <ClassificationTable predictions={predictions} />
                 </Panel>
 
-                {/* 4. Prediction History + Model Performance — side by side,
-                   not two giant stacked full-width cards */}
-                <div className="pr-grid pr-grid--split">
+                {/* Data Used / Prediction History / Model Performance — three
+                   equal cards side by side, the page's only supporting
+                   evidence beyond the podium and the table. */}
+                <div className="pr-grid pr-grid--three">
+                    <Panel title="Data Used">
+                        <DataUsedCard dataAvailability={dataAvailability} />
+                    </Panel>
                     <Panel title="Prediction History">
                         <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
                     </Panel>

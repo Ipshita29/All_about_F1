@@ -72,10 +72,14 @@
 }
 
 .pr-grid { display: grid; gap: var(--space-4); }
-.pr-grid--split { grid-template-columns: 1fr 1fr; align-items: start; }
+.pr-grid--three { grid-template-columns: repeat(3, 1fr); align-items: start; }
 
-@media (max-width: 800px) {
-    .pr-grid--split { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+    .pr-grid--three { gap: var(--space-3); }
+}
+
+@media (max-width: 700px) {
+    .pr-grid--three { grid-template-columns: 1fr; }
 }
 
 /* ── Panel shell ───────────────────────────────────────────────────── */
@@ -200,19 +204,8 @@
 .pr-confidence--medium { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
 .pr-confidence--low { color: var(--text-faint); }
 
-.pr-detail { background: var(--pr-surface-inner); padding: var(--space-4); border-top: 1px solid var(--pr-border); border-bottom: 1px solid var(--pr-border); }
-
-.pr-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
-.pr-detail-stat { display: flex; flex-direction: column; gap: 2px; }
-.pr-detail-stat span { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
-.pr-detail-stat small { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
-
-@media (max-width: 700px) {
-    .pr-detail-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
 /* ══════════════════════════════════════════════════════════════════
-   PHASE 14 — MODEL PERFORMANCE / PREDICTION HISTORY
+   MODEL PERFORMANCE / PREDICTION HISTORY / DATA USED
    ══════════════════════════════════════════════════════════════════ */
 
 .pr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
@@ -242,100 +235,41 @@
 
 .pr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
 
-/* ── Model performance ─────────────────────────────────────────────── */
+/* ── Model performance — a compact 2-column stat grid, sized for a
+   third-of-the-width card rather than a full-width section. ─────────── */
 
-.pr-perf-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
+.pr-perf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
 
 .pr-perf-stat {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 14px;
+    padding: 12px;
     background: var(--pr-surface-inner);
     border: 1px solid var(--pr-border);
     border-radius: 8px;
 }
 
 .pr-perf-value { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.pr-perf-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.pr-perf-label { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
 
-@media (max-width: 900px) {
-    .pr-perf-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 500px) {
-    .pr-perf-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-.pr-perf-drivers { margin-top: var(--space-5); display: flex; flex-direction: column; }
-
-.pr-perf-driver-row {
-    display: grid;
-    grid-template-columns: 3.5ch 1fr repeat(4, auto);
-    align-items: center;
-    gap: var(--space-3);
-    padding: 8px 0;
-    border-top: 1px solid var(--pr-border);
-    font-size: var(--text-small);
-}
-.pr-perf-driver-row:first-child { border-top: none; }
-.pr-perf-driver-row .pr-mono { color: var(--pr-text-secondary); }
-
-@media (max-width: 700px) {
-    .pr-perf-driver-row { grid-template-columns: 3.5ch 1fr; row-gap: 4px; }
-}
-
-/* ── Prediction history ────────────────────────────────────────────── */
+/* ── Prediction history — a compact list, one line per race: name, then
+   only a ✓/✕ for whether the predicted winner was correct. No expand,
+   no predicted/actual driver text, no per-race metrics. ─────────────── */
 
 .pr-history { display: flex; flex-direction: column; }
 
-.pr-history-item { border-top: 1px solid var(--pr-border); }
-.pr-history-item:first-child { border-top: none; }
-
-/* Fixed 3-column grid — race name | predicted/actual | status badge —
-   rather than a flex row, so the middle column always gets a real,
-   consistent width instead of squeezing around whatever the race name
-   happened to need. */
 .pr-history-row {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 180px minmax(0, 1fr) 100px;
+    display: flex;
     align-items: center;
-    gap: var(--space-4);
-    padding: 14px 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-    color: inherit;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-top: 1px solid var(--pr-border);
 }
-
-.pr-history-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pr-history-row:first-child { border-top: none; }
 
 .pr-history-race {
-    font-weight: 700;
-    font-size: var(--text-small);
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pr-history-compare { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-
-.pr-history-compare-row { display: flex; align-items: baseline; gap: var(--space-3); }
-
-.pr-history-label {
-    flex-shrink: 0;
-    width: 62px;
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-}
-
-.pr-history-driver {
     font-size: var(--text-small);
     color: var(--text-primary);
     overflow: hidden;
@@ -344,35 +278,33 @@
     min-width: 0;
 }
 
-.pr-history-badge {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
+.pr-history-mark {
+    flex-shrink: 0;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--pr-border);
+    font-size: var(--text-body);
     color: var(--text-faint);
-    justify-self: end;
-    align-self: center;
 }
 
-.pr-history-badge--correct { color: var(--success); border-color: rgba(47, 191, 106, 0.35); background: var(--success-dim); }
+.pr-history-mark--correct { color: var(--success); }
+.pr-history-mark--incorrect { color: var(--accent-text); }
 
-.pr-history-detail { padding: 0 0 var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+/* ── Data used — a plain, concise list; only what the engine actually
+   used, no availability statuses. ────────────────────────────────── */
 
-@media (max-width: 700px) {
-    .pr-history-row {
-        grid-template-columns: 1fr;
-        grid-template-areas: "race" "compare" "badge";
-        row-gap: var(--space-2);
-        align-items: start;
-    }
-    .pr-history-race { grid-area: race; white-space: normal; }
-    .pr-history-compare { grid-area: compare; }
-    .pr-history-badge { grid-area: badge; justify-self: start; }
+.pr-used-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: var(--text-small);
+    color: var(--text-primary);
 }
+
+.pr-used-list li {
+    padding: 9px 0;
+    border-top: 1px solid var(--pr-border);
+}
+.pr-used-list li:first-child { border-top: none; padding-top: 0; }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 
@@ -380,6 +312,4 @@
     .pr-header { padding: var(--space-5) var(--space-4); }
     .pr-main { padding: var(--space-4) var(--space-4) var(--space-8); }
     .pr-panel { padding: 16px; }
-    .pr-summary-body { flex-wrap: wrap; }
-    .pr-summary-prob { align-items: flex-start; }
 }
