@@ -1,8 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar"
 import ScrollToTop from "./components/ScrollToTop"
-import CircuitMaps from "./pages/CircuitMaps"
-import CircuitDetails from "./pages/CircuitDetails"
 import Drivers from "./pages/Drivers"
 import DriverDetails from "./pages/DriverDetails"
 import GrandPrix from "./pages/RaceWeekend"
@@ -44,8 +42,6 @@ function AppShell() {
         <Route path="/drivers/:year/:id" element={<DriverDetails/>}/>
         <Route path="/teams" element={<Teams />} />
         <Route path="/teams/:year/:id" element={<TeamDetails/>}/>
-        <Route path="/circuitmaps" element={<CircuitMaps />} />
-        <Route path="/circuitmaps/:id" element={<CircuitDetails/>}/>
         <Route path="/grandprixdashboard" element={<GrandPrix/>}/>
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>

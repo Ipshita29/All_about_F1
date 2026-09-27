@@ -448,23 +448,6 @@ tr:hover td { background: var(--surface-2); }
 .cv-stats b { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-primary); }
 .cv-stats small { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--text-faint); }
 
-/* ── Circuit badge — reused on the Circuits roster ── */
-
-.circuit-badge {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-}
-
-.circuit-since {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--text-faint);
-}
-
 /* ── Modal ── */
 
 .modal-overlay {

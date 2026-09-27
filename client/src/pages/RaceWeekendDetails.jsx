@@ -344,6 +344,15 @@ function GrandPrixDetails() {
                                             <dd>{circuitData.trackType}</dd>
                                         </div>
                                     )}
+                                    {circuitData.difficulty && (
+                                        <div className="rw-record-row">
+                                            <dt className="rw-mono">DIFFICULTY</dt>
+                                            <dd>
+                                                {circuitData.difficulty}
+                                                {circuitData.difficultyRating ? ` — ${circuitData.difficultyRating}/5` : ""}
+                                            </dd>
+                                        </div>
+                                    )}
                                 </dl>
 
                                 {circuitData.weatherImpact && (
@@ -355,12 +364,30 @@ function GrandPrixDetails() {
                             </div>
                         </div>
 
-                        {(circuitData.famousFor || circuitData.keyCorners?.length > 0 || circuitData.funFacts?.length > 0) && (
+                        {(circuitData.famousFor || circuitData.overtakingDifficulty || circuitData.history || circuitData.keyCorners?.length > 0 || circuitData.funFacts?.length > 0) && (
                             <div className="rw-hq-circuit-extra">
                                 {circuitData.famousFor && (
                                     <div className="rw-hq-circuit-extra-block">
                                         <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">REPUTATION</span>
                                         <p className="rw-hq-prose rw-hq-prose--on-light">{circuitData.famousFor}</p>
+                                    </div>
+                                )}
+                                {circuitData.overtakingDifficulty && (
+                                    <div className="rw-hq-circuit-extra-block">
+                                        <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">RACE CRAFT</span>
+                                        <p className="rw-hq-prose rw-hq-prose--on-light">{circuitData.overtakingDifficulty}</p>
+                                        <p className="rw-hq-prose rw-hq-prose--on-light" style={{ marginTop: 10 }}>
+                                            <KnowMoreTerm term="dirty_air" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Dirty air</KnowMoreTerm>
+                                            {" and "}
+                                            <KnowMoreTerm term="downforce" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>downforce</KnowMoreTerm>
+                                            {" setup are the two biggest factors here."}
+                                        </p>
+                                    </div>
+                                )}
+                                {circuitData.history && (
+                                    <div className="rw-hq-circuit-extra-block">
+                                        <span className="rw-hq-eyebrow rw-hq-eyebrow--on-light rw-mono">HERITAGE</span>
+                                        <p className="rw-hq-prose rw-hq-prose--on-light">{circuitData.history}</p>
                                     </div>
                                 )}
                                 {circuitData.keyCorners?.length > 0 && (

@@ -639,7 +639,7 @@ a.ex-spec-value:hover { color: var(--accent-text); }
    DOSSIER EDITORIAL GRID (.exd-*) — exclusive to DriverDetails.jsx and
    TeamDetails.jsx. Every rule here is keyed off a brand-new class name
    that no other page uses, so none of it can affect the Drivers/Teams
-   grids, Comparison pages, or CircuitDetails, all of which reuse the
+   grids or Comparison pages, all of which reuse the
    same ExSection/TelemetryStat components and .ex-spec/.ex-stat/
    .ex-timeline/.ex-list/.ex-quote/.ex-cols classes untouched above.
    A plain 2-column editorial layout — NOT a card dashboard: sections
@@ -706,11 +706,11 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 .ex-tg-name { font-size: var(--text-display); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: var(--space-3) 0 var(--space-5); }
 
 /* ── Team Details' own hero (.exd-tg-*) — a fresh namespace rather than
-   restyling .ex-tg-hero/.ex-tg-kicker/.ex-tg-name above, since
-   CircuitDetails.jsx reuses those exact classes for its own hero and
-   must not change. Same compact, dark, integrated-image treatment as
-   the Driver Dossier hero above — no boxed card, team colour used
-   sparingly, Milano Red reserved for labels and key stat values. ── */
+   restyling .ex-tg-hero/.ex-tg-kicker/.ex-tg-name above, since other
+   pages reuse those exact classes for their own hero and must not
+   change. Same compact, dark, integrated-image treatment as the Driver
+   Dossier hero above — no boxed card, team colour used sparingly,
+   Milano Red reserved for labels and key stat values. ── */
 
 .exd-tg-hero {
     max-width: var(--content-width-wide);
@@ -761,43 +761,6 @@ a.ex-spec-value:hover { color: var(--accent-text); }
 
 .exd-tg-car { position: relative; z-index: 1; max-width: 100%; max-height: 100%; object-fit: contain; }
 .exd-tg-carline .ex-entity-fallback { position: relative; z-index: 1; background: transparent; color: var(--text-faint); }
-
-/* ══════════════════════════════════════════════════════════════════
-   CIRCUIT ROSTER — .cr-*
-   ══════════════════════════════════════════════════════════════════ */
-
-.cr-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--space-7) var(--space-5);
-}
-
-.cr-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    color: var(--text-primary);
-}
-
-.cr-item:hover { color: var(--text-primary); }
-.cr-item:hover .cv-drawing { border-color: var(--accent-border); }
-
-.cr-body { display: flex; flex-direction: column; gap: 4px; }
-
-.cr-top { display: flex; align-items: center; gap: var(--space-3); }
-
-.cr-name {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    color: var(--text-primary);
-    margin: 0;
-    transition: color var(--dur-fast) var(--ease);
-}
-
-.cr-item:hover .cr-name { color: var(--accent-text); }
-
-.cr-loc { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE

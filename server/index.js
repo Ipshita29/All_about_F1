@@ -5,7 +5,6 @@ const app = express();
 const driverRoutes =require("./routes/driverRoutes")
 const teamRoutes = require("./routes/teamRoutes")
 const grandprixRoutes = require("./routes/grandprixRoutes")
-const circuitRoutes = require("./routes/circuitRoutes")
 const connectDB = require("./config/db")
 const authRoutes = require("./routes/authRoutes")
 const authMiddleware = require("./middleware/authMiddleware");
@@ -36,7 +35,6 @@ app.get("/profile",authMiddleware,(req,res)=>{
 app.use("/teams",teamRoutes)
 app.use("/drivers",driverRoutes)
 app.use("/grandprixdashboard",grandprixRoutes)
-app.use("/circuitmaps",circuitRoutes)
 app.use("/auth", authRoutes)
 app.use("/user", userRoutes);
 app.use("/news", newsRoutes);

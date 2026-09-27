@@ -11,7 +11,6 @@ const PRIMARY_LINKS = [
 ];
 
 const MORE_LINKS = [
-    { to: "/circuitmaps", label: "Circuits" },
     { to: "/dictionary", label: "F1 Dictionary" },
     { to: "/compare-drivers", label: "Driver Comparison" },
     { to: "/compare-teams", label: "Team Comparison" },
