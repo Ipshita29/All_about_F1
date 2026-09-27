@@ -1,9 +1,10 @@
 /*
  * RACE WEEKEND — season journey (.rw-*) and Grand Prix HQ (.rw-hq-*).
- * Premium F1 race-control feel: strong hierarchy, a real light/dark
- * rhythm (dark hero → light circuit intelligence → dark progress/results
- * on the HQ page; dark hero → light season timeline on the journey page),
- * typography and whitespace over boxed cards.
+ * Premium F1 race-control feel: strong hierarchy, a dark canvas
+ * throughout the HQ page (dark hero → light season timeline on the
+ * journey page), typography and whitespace over boxed cards — the
+ * Circuit Essentials tiles are the one exception, using bordered boxes
+ * to read as dashboard metrics rather than prose.
  */
 
 .rw { background: var(--bg); }
@@ -204,12 +205,8 @@
 .rw-focus-progress-label { display: block; font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: var(--space-3); }
 
 .rw-progress-track { position: relative; height: 2px; background: var(--border); border-radius: 2px; }
-.rw-progress-track--wide { max-width: 640px; }
 .rw-progress-fill { position: absolute; inset: 0; width: 0; background: var(--accent); border-radius: 2px; transition: width 0.6s var(--ease); }
 .rw-progress-marker { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); transform: translate(-50%, -50%); }
-
-.rw-progress-stats { display: flex; gap: var(--space-7); margin-top: var(--space-5); }
-.rw-progress-stats div { display: flex; flex-direction: column; gap: 4px; }
 
 .rw-focus-cta { margin-top: var(--space-2); }
 
@@ -377,11 +374,14 @@
 
 .rw-hq-next-session { margin-bottom: var(--space-6); }
 
-.rw-hq-wiki { font-size: 0.76rem; }
+.rw-hq-wiki { font-size: 0.76rem; margin-bottom: 0; }
 .rw-hq-wiki a { color: var(--accent-text); }
 .rw-hq-wiki a:hover { text-decoration: underline; }
 
 .rw-hq-main { max-width: var(--content-width-wide); margin: 0 auto; padding: 0 var(--space-6) var(--space-8); }
+
+/* ── Small label above the podium / weekend-schedule columns ── */
+.rw-hq-subeyebrow { display: block; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-4); }
 
 /* ── Weekend session rail — a real timeline, connected by a line ── */
 
@@ -455,51 +455,6 @@
 
 .rw-hq-standby p { font-size: 0.9rem; color: var(--text-secondary); max-width: 60ch; margin-bottom: var(--space-2); }
 
-.rw-hq-prose { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7; max-width: 68ch; }
-
-/* ── Circuit intelligence (light) ── */
-
-.rw-hq-circuit { background: var(--surface-light-2); color: var(--text-on-light-primary); }
-
-.rw-hq-circuit-inner {
-    max-width: var(--content-width-wide);
-    margin: 0 auto;
-    padding: var(--space-9) var(--space-6) var(--space-7);
-    display: grid;
-    grid-template-columns: 420px minmax(0, 1fr);
-    gap: var(--space-9);
-    align-items: start;
-}
-
-.rw-hq-circuit-body { min-width: 0; }
-
-.rw-hq-eyebrow--on-light { color: var(--accent); }
-.rw-hq-section-title--on-light { color: var(--text-on-light-primary); margin-bottom: var(--space-4); }
-.rw-hq-prose--on-light { color: var(--text-on-light-secondary); margin-bottom: var(--space-6); }
-
-.rw-focus-weather--on-light { color: var(--text-on-light-secondary); margin-top: var(--space-6); }
-.rw-focus-weather--on-light .rw-focus-session-label { color: var(--text-on-light-muted); }
-
-.rw-records--on-light dt { color: var(--text-on-light-muted); }
-.rw-records--on-light dd { color: var(--text-on-light-primary); }
-.rw-records--on-light .rw-record-row { border-top-color: var(--border-on-light); }
-
-.rw-hq-circuit-extra {
-    max-width: var(--content-width-wide);
-    margin: 0 auto;
-    padding: var(--space-7) var(--space-6) var(--space-9);
-    border-top: 1px solid var(--border-on-light);
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-8);
-}
-
-.rw-hq-circuit-extra-block { min-width: 0; }
-
-.rw-corners--on-light .rw-corner p,
-.rw-fact--on-light { color: var(--text-on-light-secondary); }
-.rw-corners--on-light .rw-corner-apex { color: var(--text-on-light-muted); }
-
 /* ── Podium — plain columns, no boxes ── */
 
 .rw-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-7); }
@@ -517,7 +472,6 @@
 .rw-plinth--p1 .rw-plinth-name { font-size: 1.15rem; }
 .rw-plinth-team { font-size: 0.76rem; color: var(--text-muted); }
 .rw-plinth-pts { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-faint); margin-top: 2px; }
-.rw-plinth-base { display: none; }
 
 /* ── Highlights — plain columns ── */
 
@@ -530,27 +484,38 @@
 .rw-highlight-value { font-size: 1.05rem; font-weight: 600; color: var(--text-primary); }
 .rw-highlight-sub { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint); }
 
-/* ── Timing lists (qualifying / race classification) — plain rows ── */
+/* ── Complete Driver Results table ── */
 
-.rw-timing { list-style: none; padding: 0; margin: 0; }
+.rw-results-scroll { overflow-x: auto; margin: 0 calc(-1 * var(--space-6)); padding: 0 var(--space-6); }
 
-.rw-timing-row {
-    display: grid;
-    grid-template-columns: 36px 1fr 1fr auto;
-    align-items: center;
-    gap: var(--space-3);
-    padding: 10px 0;
-    border-top: 1px solid var(--border-faint);
+.rw-results-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+
+.rw-results-table thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px var(--space-3);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-faint);
 }
 
-.rw-timing-row:first-child { border-top: none; }
+.rw-results-table tbody td {
+    padding: 10px var(--space-3);
+    border-top: 1px solid var(--border-faint);
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
 
-.rw-timing-pos { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); }
-.rw-timing-name { font-size: 0.86rem; color: var(--text-primary); }
-.rw-timing-name b { font-weight: 700; }
-.rw-timing-team { font-size: 0.76rem; color: var(--text-muted); }
-.rw-timing-grid { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-faint); }
-.rw-timing-time { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; text-align: right; }
+.rw-results-pos { color: var(--text-primary); font-weight: 700; }
+.rw-results-name { color: var(--text-primary); }
+.rw-results-name b { font-weight: 700; }
+.rw-results-team { color: var(--text-muted); font-size: 0.78rem; }
+
+.rw-results-quali { display: flex; flex-direction: column; gap: 2px; }
+.rw-results-quali-sub { font-size: 0.64rem; color: var(--text-faint); letter-spacing: 0.04em; }
 
 /* ── Team performance — plain columns ── */
 
@@ -564,35 +529,24 @@
 .rw-team-driver { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px; }
 .rw-team-pts { display: block; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-faint); margin-top: var(--space-2); }
 
-/* ── Circuit stat tiles (used inside the light circuit section) ── */
+/* ── Circuit Essentials — 8 compact dashboard-style metric boxes ── */
 
-.rw-circuit-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-5) 0 var(--space-6); }
+.rw-essentials { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
 
-.rw-cstat { padding-left: var(--space-5); border-left: 1px solid var(--border-on-light); }
-.rw-circuit-stats .rw-cstat:first-child { padding-left: 0; border-left: none; }
-.rw-cstat-value { display: block; font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; color: var(--text-on-light-primary); margin-bottom: 4px; }
-.rw-cstat-label { font-size: 0.6rem; letter-spacing: 0.1em; color: var(--text-on-light-muted); }
+.rw-essential {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius-md);
+}
 
-/* rw-cstat also used on the dark Championship Progress section */
-.rw-hq-section .rw-cstat { border-left: none; padding-left: 0; }
-.rw-hq-section .rw-cstat-value { color: var(--text-primary); }
-.rw-hq-section .rw-cstat-label { color: var(--text-muted); }
-
-.rw-records { display: flex; flex-direction: column; }
-
-.rw-record-row { display: flex; justify-content: space-between; gap: var(--space-4); padding: 10px 0; border-top: 1px solid var(--border-faint); }
-.rw-record-row:first-child { border-top: none; }
-.rw-record-row dt { font-size: 0.66rem; letter-spacing: 0.06em; color: var(--text-muted); }
-.rw-record-row dd { font-size: 0.84rem; color: var(--text-primary); text-align: right; }
-
-.rw-corners { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
-
-.rw-corner { display: flex; gap: var(--space-4); align-items: baseline; }
-.rw-corner-apex { font-size: 1rem; font-weight: 700; color: var(--text-faint); flex-shrink: 0; }
-.rw-corner p { font-size: 0.84rem; color: var(--text-secondary); margin: 0; }
-
-.rw-facts { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.rw-fact { font-size: 0.84rem; color: var(--text-secondary); }
+.rw-essential-icon { color: var(--accent-text); }
+.rw-essential-value { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); line-height: 1.15; }
+.rw-essential-label { font-size: 0.6rem; letter-spacing: 0.08em; color: var(--text-muted); }
+.rw-essential-sub { font-size: 0.66rem; color: var(--text-faint); }
 
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
@@ -600,14 +554,13 @@
 
 @media (max-width: 980px) {
     .rw-focus-body,
-    .rw-hq-hero-cols,
-    .rw-hq-circuit-inner { grid-template-columns: 1fr; }
-    .rw-hq-circuit-extra { grid-template-columns: 1fr 1fr; }
+    .rw-hq-hero-cols { grid-template-columns: 1fr; }
+    .rw-essentials { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 700px) {
     .rw-hero, .rw-main, .rw-focus, .rw-hq-hero, .rw-hq-main, .rw-hq-section,
-    .rw-journey-inner, .rw-hq-circuit-inner, .rw-hq-circuit-extra {
+    .rw-journey-inner {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
     }
@@ -618,11 +571,10 @@
     .rw-plinth { border-left: none; padding-left: 0; border-top: 1px solid var(--border-faint); padding-top: var(--space-4); }
     .rw-podium .rw-plinth:first-child { border-top: none; padding-top: 0; }
     .rw-plinth--p1, .rw-plinth--p2, .rw-plinth--p3 { order: 0; }
-    .rw-highlights, .rw-teams, .rw-circuit-stats { grid-template-columns: 1fr; gap: var(--space-5); }
-    .rw-highlight, .rw-team-card, .rw-cstat { border-left: none; padding-left: 0; border-top: 1px solid var(--border-faint); padding-top: var(--space-4); }
-    .rw-highlights > :first-child, .rw-teams > :first-child, .rw-circuit-stats > :first-child { border-top: none; padding-top: 0; }
-    .rw-hq-circuit-extra { grid-template-columns: 1fr; gap: var(--space-6); }
-    .rw-timing-row { grid-template-columns: 28px 1fr auto; }
-    .rw-timing-team, .rw-timing-grid { display: none; }
-    .rw-progress-stats { gap: var(--space-5); }
+    .rw-highlights, .rw-teams { grid-template-columns: 1fr; gap: var(--space-5); }
+    .rw-highlight, .rw-team-card { border-left: none; padding-left: 0; border-top: 1px solid var(--border-faint); padding-top: var(--space-4); }
+    .rw-highlights > :first-child, .rw-teams > :first-child { border-top: none; padding-top: 0; }
+    .rw-essentials { grid-template-columns: 1fr 1fr; }
+    .rw-results-table thead th:nth-child(3),
+    .rw-results-table tbody td:nth-child(3) { display: none; }
 }
