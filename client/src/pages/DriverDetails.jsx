@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { Trophy, Milestone, Flag, Sparkles, Radio as RadioIcon } from "lucide-react";
 import driverInfo from "../data/driverInfo";
 import { LoadingSpinner } from "../components/UI";
-import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
-import { knowMoreInfo } from "../data/knowMoreInfo";
 import { LayeredImage, ExSection, TelemetryStat, AnimatedNumber } from "../components/EntityDetail";
 import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
@@ -20,7 +18,6 @@ function DriverDetails() {
     const { year, id } = useParams();
     const [driver, setDriver] = useState(null);
     const [standing, setStanding] = useState(null);
-    const [selectedTerm, setSelectedTerm] = useState(null);
 
     useEffect(() => {
         fetch(`${API}/drivers/${year}`)
@@ -98,9 +95,7 @@ function DriverDetails() {
                             <span className="ex-dossier-live-val">
                                 <AnimatedNumber value={standing.points} />
                             </span>
-                            <span className="ex-dossier-live-label">
-                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
-                            </span>
+                            <span className="ex-dossier-live-label">Points</span>
                         </div>
                         <div className="ex-dossier-live-item">
                             <span className="ex-dossier-live-val">
@@ -180,12 +175,7 @@ function DriverDetails() {
                 <ExSection eyebrow="Telemetry" title={`${year} Season`} className="exd-card">
                     <div className="ex-stat-row">
                         <TelemetryStat value={standing.position} label="Position" accent />
-                        <TelemetryStat
-                            value={standing.points}
-                            label={
-                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
-                            }
-                        />
+                        <TelemetryStat value={standing.points} label="Points" />
                         <TelemetryStat value={standing.wins} label="Wins" />
                     </div>
                 </ExSection>
@@ -194,9 +184,7 @@ function DriverDetails() {
                     <div className="ex-stat-row">
                         <TelemetryStat
                             value={extraInfo?.championships ?? "—"}
-                            label={
-                                <KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>
-                            }
+                            label="Championships"
                             meter={(extraInfo?.championships ?? 0) / 8}
                             accent
                         />
@@ -207,16 +195,12 @@ function DriverDetails() {
                         />
                         <TelemetryStat
                             value={extraInfo?.podiums ?? "—"}
-                            label={
-                                <KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>
-                            }
+                            label="Podiums"
                             meter={(extraInfo?.podiums ?? 0) / 200}
                         />
                         <TelemetryStat
                             value={extraInfo?.polePositions ?? "—"}
-                            label={
-                                <KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>
-                            }
+                            label="Pole Positions"
                             meter={(extraInfo?.polePositions ?? 0) / 104}
                         />
                     </div>
@@ -288,8 +272,6 @@ function DriverDetails() {
                     </ExSection>
                 )}
             </main>
-
-            <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>
     );
 }

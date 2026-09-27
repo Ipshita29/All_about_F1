@@ -448,49 +448,6 @@ tr:hover td { background: var(--surface-2); }
 .cv-stats b { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-primary); }
 .cv-stats small { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--text-faint); }
 
-/* ── Modal ── */
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(5, 5, 6, 0.7);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    padding: var(--space-4);
-    animation: modalFade var(--dur-base) var(--ease);
-}
-
-@keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
-
-.modal-content {
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    padding: var(--space-6);
-    width: 480px;
-    max-width: 100%;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    animation: modalRise var(--dur-base) var(--ease);
-}
-
-@keyframes modalRise {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.know-more {
-    color: var(--accent-text);
-    cursor: pointer;
-    font-weight: 500;
-    border-bottom: 1px dotted var(--accent-border);
-}
-
-.know-more:hover { color: var(--accent-hover); }
-
 /* ── Loading indicator ── */
 
 .aaf-spinner {

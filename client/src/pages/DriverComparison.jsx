@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import driverInfo from "../data/driverInfo";
-import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
-import { knowMoreInfo } from "../data/knowMoreInfo";
 import { LayeredImage, ExSection } from "../components/EntityDetail";
 import { EntitySelect, CompareEmptyState, PendingSlot, CompareStat, CompareBar, RaceTimeline } from "../components/Compare";
 import { Select } from "../components/UI";
@@ -86,7 +84,6 @@ function DriverComparison() {
     const [driver2, setDriver2] = useState("");
     const [year, setYear] = useState("2026");
     const [standings, setStandings] = useState([]);
-    const [selectedTerm, setSelectedTerm] = useState(null);
 
     const d1 = drivers.find((d) => d.driverId === driver1);
     const d2 = drivers.find((d) => d.driverId === driver2);
@@ -244,14 +241,14 @@ function DriverComparison() {
                         <ExSection eyebrow="Telemetry" title={`${year} Championship`}>
                             <div className="cmp-grid">
                                 <CompareStat
-                                    label={<KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship Position</KnowMoreTerm>}
+                                    label="Championship Position"
                                     prefix="P"
                                     valueA={s1?.position}
                                     valueB={s2?.position}
                                     lowerIsBetter
                                 />
                                 <CompareBar
-                                    label={<KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>}
+                                    label="Points"
                                     a={{ name: d1.familyName, value: s1?.points }}
                                     b={{ name: d2.familyName, value: s2?.points }}
                                 />
@@ -285,7 +282,7 @@ function DriverComparison() {
                         <ExSection eyebrow="The Long Game" title="Career Record">
                             <div className="cmp-grid">
                                 <CompareBar
-                                    label={<KnowMoreTerm term="drivers_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championships</KnowMoreTerm>}
+                                    label="Championships"
                                     a={{ name: d1.familyName, value: info1?.championships }}
                                     b={{ name: d2.familyName, value: info2?.championships }}
                                 />
@@ -295,12 +292,12 @@ function DriverComparison() {
                                     b={{ name: d2.familyName, value: info2?.raceWins }}
                                 />
                                 <CompareBar
-                                    label={<KnowMoreTerm term="podium" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Podiums</KnowMoreTerm>}
+                                    label="Podiums"
                                     a={{ name: d1.familyName, value: info1?.podiums }}
                                     b={{ name: d2.familyName, value: info2?.podiums }}
                                 />
                                 <CompareBar
-                                    label={<KnowMoreTerm term="pole_position" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Pole Positions</KnowMoreTerm>}
+                                    label="Pole Positions"
                                     a={{ name: d1.familyName, value: info1?.polePositions }}
                                     b={{ name: d2.familyName, value: info2?.polePositions }}
                                 />
@@ -391,8 +388,6 @@ function DriverComparison() {
                     </main>
                 </>
             )}
-
-            <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>
     );
 }

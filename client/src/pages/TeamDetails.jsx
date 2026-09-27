@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { Trophy, UserRound, Sparkles } from "lucide-react";
 import teamInfo from "../data/teamInfo";
 import { LoadingSpinner } from "../components/UI";
-import { KnowMoreModal, KnowMoreTerm } from "../components/KnowMore";
-import { knowMoreInfo } from "../data/knowMoreInfo";
 import { LayeredImage, ExSection, TelemetryStat, AnimatedNumber } from "../components/EntityDetail";
 import { getTeamAssets } from "../config/teamAssets";
 import "../styles/pages/EntityPages.css";
@@ -21,7 +19,6 @@ function TeamDetails() {
     const [team, setTeam] = useState(null);
     const [standing, setStanding] = useState(null);
     const [driverStandings, setDriverStandings] = useState([]);
-    const [selectedTerm, setSelectedTerm] = useState(null);
 
     useEffect(() => {
         fetch(`${API}/teams/${year}`)
@@ -90,17 +87,13 @@ function TeamDetails() {
                     <div className="ex-dossier-live">
                         <div className="ex-dossier-live-item">
                             <span className="ex-dossier-live-val">P{standing.position}</span>
-                            <span className="ex-dossier-live-label">
-                                <KnowMoreTerm term="championship_leader" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Championship</KnowMoreTerm>
-                            </span>
+                            <span className="ex-dossier-live-label">Championship</span>
                         </div>
                         <div className="ex-dossier-live-item">
                             <span className="ex-dossier-live-val">
                                 <AnimatedNumber value={standing.points} />
                             </span>
-                            <span className="ex-dossier-live-label">
-                                <KnowMoreTerm term="points_system" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Points</KnowMoreTerm>
-                            </span>
+                            <span className="ex-dossier-live-label">Points</span>
                         </div>
                         <div className="ex-dossier-live-item">
                             <span className="ex-dossier-live-val">
@@ -112,9 +105,7 @@ function TeamDetails() {
                             <span className="ex-dossier-live-val">
                                 <AnimatedNumber value={extraInfo?.championships ?? "—"} />
                             </span>
-                            <span className="ex-dossier-live-label">
-                                <KnowMoreTerm term="constructors_championship" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>Titles</KnowMoreTerm>
-                            </span>
+                            <span className="ex-dossier-live-label">Titles</span>
                         </div>
                     </div>
                 </div>
@@ -252,13 +243,7 @@ function TeamDetails() {
                     <ExSection eyebrow="Pit Wall" title="Strategy Style" className="exd-card">
                         <p className="ex-prose">{extraInfo.strategyStyle}</p>
                         <p className="ex-prose" style={{ marginTop: 14 }}>
-                            {"Key tools: "}
-                            <KnowMoreTerm term="undercut" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>undercut</KnowMoreTerm>
-                            {", "}
-                            <KnowMoreTerm term="pit_stop" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>pit stop</KnowMoreTerm>
-                            {", and "}
-                            <KnowMoreTerm term="tyre_management" setSelectedTerm={setSelectedTerm} knowMoreInfo={knowMoreInfo}>tyre management</KnowMoreTerm>
-                            {"."}
+                            Key tools: undercut, pit stop, and tyre management.
                         </p>
                     </ExSection>
                 )}
@@ -348,8 +333,6 @@ function TeamDetails() {
                     </ExSection>
                 )}
             </main>
-
-            <KnowMoreModal info={selectedTerm} onClose={() => setSelectedTerm(null)} />
         </div>
     );
 }
