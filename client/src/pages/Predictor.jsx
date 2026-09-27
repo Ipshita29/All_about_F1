@@ -25,13 +25,6 @@ const FACTOR_LABELS = {
     championshipPosition: "Championship",
 };
 
-const DATA_USED_ROWS = [
-    ["historicalStandings", "Current championship standings"],
-    ["currentSeasonData", "Recent race form"],
-    ["qualifying", "Qualifying performance"],
-    ["circuitHistory", "Circuit history"],
-];
-
 /* Every status the backend can send for a dataAvailability entry, and how
    to show it — "pending"/"limited" are genuine states, not a lesser
    version of "unavailable": pending means the data hasn't happened yet,
@@ -71,13 +64,6 @@ function formatDate(dateStr, withWeekday = true) {
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return null;
     return d.toLocaleDateString(undefined, { weekday: withWeekday ? "short" : undefined, day: "numeric", month: "short", year: "numeric" });
-}
-
-function formatTimestamp(iso) {
-    if (!iso) return null;
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function formatCountdown(dateStr) {
@@ -140,7 +126,7 @@ function useEvaluation() {
 
 /* ── Header ────────────────────────────────────────────────────────── */
 
-function PredictorHeader({ race, generatedAt }) {
+function PredictorHeader({ race }) {
     const countdown = formatCountdown(race.date);
     return (
         <header className="pr-header">
@@ -152,9 +138,6 @@ function PredictorHeader({ race, generatedAt }) {
                     <span className="pr-meta-item pr-mono">{formatDate(race.date)}</span>
                     {countdown && <span className="pr-meta-item pr-countdown pr-mono">{countdown}</span>}
                     {race.hasSprint && <span className="pr-meta-item pr-sprint-tag">Sprint Weekend</span>}
-                    {generatedAt && (
-                        <span className="pr-meta-item pr-meta-item--faint pr-mono">Prediction generated {formatTimestamp(generatedAt)}</span>
-                    )}
                 </div>
             </div>
         </header>
@@ -352,47 +335,6 @@ function WhyThisPrediction({ winner }) {
                     </div>
                 );
             })}
-        </div>
-    );
-}
-
-/* ── Model + data sections ─────────────────────────────────────────── */
-
-function ModelInfo({ model, stage, generatedAt, driverCount }) {
-    const rows = [
-        ["Model", model?.name ?? "—"],
-        ["Version", model?.version ?? "—"],
-        ["Prediction Stage", stage === "post_qualifying" ? "Post-Qualifying" : "Pre-Qualifying"],
-        ["Drivers Considered", driverCount],
-        ["Generated", formatTimestamp(generatedAt) ?? "—"],
-    ];
-    return (
-        <dl className="pr-kv">
-            {rows.map(([label, value]) => (
-                <div className="pr-kv-row" key={label}>
-                    <dt>{label}</dt>
-                    <dd className="pr-mono">{value}</dd>
-                </div>
-            ))}
-        </dl>
-    );
-}
-
-function DataUsed({ dataAvailability }) {
-    const isAvailable = (key) => dataAvailability?.[key]?.status === "available";
-
-    return (
-        <div className="pr-datalist">
-            {DATA_USED_ROWS.map(([key, label]) => (
-                <div className={`pr-data-row${isAvailable(key) ? "" : " pr-data-row--off"}`} key={key}>
-                    <span className="pr-data-mark" aria-hidden="true">{isAvailable(key) ? "✓" : "○"}</span>
-                    {label}
-                </div>
-            ))}
-            <div className="pr-data-row">
-                <span className="pr-data-mark" aria-hidden="true">✓</span>
-                Constructor performance
-            </div>
         </div>
     );
 }
@@ -684,12 +626,12 @@ function Predictor() {
         );
     }
 
-    const { race, stage, generatedAt, model, dataAvailability, weather, predictions, limitations } = data;
+    const { race, stage, dataAvailability, weather, predictions, limitations } = data;
     const winner = predictions?.[0] ?? null;
 
     return (
         <div className="pr">
-            <PredictorHeader race={race} generatedAt={generatedAt} />
+            <PredictorHeader race={race} />
             <main className="pr-main">
                 <PredictionStatus stage={stage} race={race} />
 
@@ -712,14 +654,6 @@ function Predictor() {
                     </Panel>
                 </div>
 
-                <div className="pr-grid pr-grid--split">
-                    <Panel title="Model">
-                        <ModelInfo model={model} stage={stage} generatedAt={generatedAt} driverCount={predictions.length} />
-                    </Panel>
-                    <Panel title="Data Used">
-                        <DataUsed dataAvailability={dataAvailability} />
-                    </Panel>
-                </div>
                 <Panel title="Data Availability">
                     <DataAvailabilityTable dataAvailability={dataAvailability} weather={weather} />
                 </Panel>
