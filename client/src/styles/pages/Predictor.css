@@ -73,13 +73,6 @@
 
 .pr-grid { display: grid; gap: var(--space-4); }
 .pr-grid--split { grid-template-columns: 1fr 1fr; align-items: start; }
-/* Full classification (~70%) beside Why This Prediction (~30%) — the
-   explanation sits next to the grid, not as another section below it. */
-.pr-grid--main { grid-template-columns: 7fr 3fr; align-items: start; }
-
-@media (max-width: 900px) {
-    .pr-grid--main { grid-template-columns: 1fr; }
-}
 
 @media (max-width: 800px) {
     .pr-grid--split { grid-template-columns: 1fr; }
@@ -182,11 +175,7 @@
     white-space: nowrap;
 }
 
-.pr-row { cursor: pointer; }
-.pr-row td { padding: 9px var(--space-2); border-top: 1px solid var(--pr-border); white-space: nowrap; }
-.pr-row:hover { background: var(--pr-surface-inner); }
-.pr-row--open { background: var(--pr-surface-inner); }
-.pr-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.pr-table tbody td { padding: 9px var(--space-2); border-top: 1px solid var(--pr-border); white-space: nowrap; }
 
 .pr-pos { font-weight: 700; font-size: var(--text-body); color: var(--text-primary); }
 
@@ -211,8 +200,6 @@
 .pr-confidence--medium { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
 .pr-confidence--low { color: var(--text-faint); }
 
-.pr-detail-row td { padding: 0; border-top: none; }
-
 .pr-detail { background: var(--pr-surface-inner); padding: var(--space-4); border-top: 1px solid var(--pr-border); border-bottom: 1px solid var(--pr-border); }
 
 .pr-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
@@ -222,100 +209,6 @@
 
 @media (max-width: 700px) {
     .pr-detail-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-/* ── Why This Prediction — intro sentence, factor rows, then Data
-   Coverage nested underneath rather than as its own top-level section. ── */
-
-.pr-why-wrap { display: flex; flex-direction: column; gap: var(--space-4); }
-.pr-why-intro { font-size: var(--text-small); color: var(--pr-text-secondary); line-height: 1.55; margin: 0; }
-
-.pr-why-coverage { padding-top: var(--space-3); border-top: 1px solid var(--pr-border); }
-.pr-why-coverage .pr-panel-title { margin-bottom: var(--space-2); }
-
-/* ── Factor rows (shared by Why-This-Prediction + per-driver detail) ──── */
-
-.pr-detail-factors, .pr-why { display: flex; flex-direction: column; gap: var(--space-2); }
-
-.pr-factor-row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: var(--space-3); font-size: var(--text-small); }
-
-.pr-factor-label { color: var(--pr-text-secondary); }
-.pr-factor-value { color: var(--text-primary); min-width: 8ch; text-align: right; }
-.pr-factor-unavailable { color: var(--text-faint); font-size: var(--text-micro); grid-column: 2 / span 2; }
-
-.pr-bar { display: block; height: 6px; border-radius: 3px; background: var(--pr-surface-header); overflow: hidden; }
-.pr-bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
-
-@media (max-width: 500px) {
-    .pr-factor-row { grid-template-columns: 100px 1fr auto; }
-}
-
-/* ── Data Coverage (nested inside Why This Prediction) ─────────────── */
-
-.pr-kv { display: flex; flex-direction: column; gap: 2px; }
-
-.pr-kv-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 0;
-    border-top: 1px solid var(--pr-border);
-    font-size: var(--text-small);
-}
-.pr-kv-row:first-child { border-top: none; }
-.pr-kv-row dt { color: var(--pr-text-secondary); }
-.pr-kv-row dd { font-weight: 600; color: var(--text-primary); }
-
-/* Data Availability — genuine statuses (available/pending/limited/
-   unavailable), not a plain yes/no; see predictorService.js. */
-.pr-kv--availability .pr-kv-row { align-items: flex-start; flex-wrap: wrap; gap: var(--space-2); }
-.pr-kv--availability .pr-kv-row dd { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-
-.pr-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: var(--text-micro);
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    border-radius: var(--radius-full);
-    padding: 3px 10px;
-    white-space: nowrap;
-}
-
-.pr-status--available { color: var(--success); background: var(--success-dim); }
-.pr-status--pending { color: var(--warning); background: var(--warning-dim); }
-.pr-status--limited { color: var(--color-slate); background: rgba(201, 197, 190, 0.12); }
-.pr-status--unavailable { color: var(--text-faint); background: rgba(240, 237, 232, 0.05); }
-
-.pr-forecast { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-
-.pr-forecast-label {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--accent-text);
-}
-
-.pr-forecast-stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-
-.pr-forecast-stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: var(--text-micro);
-    color: var(--pr-text-secondary);
-}
-.pr-forecast-stat svg { flex-shrink: 0; opacity: 0.8; }
-
-/* ── Disclaimer ────────────────────────────────────────────────────── */
-
-.pr-disclaimer {
-    font-size: var(--text-micro);
-    color: var(--text-faint);
-    line-height: 1.6;
-    max-width: 90ch;
 }
 
 /* ══════════════════════════════════════════════════════════════════
