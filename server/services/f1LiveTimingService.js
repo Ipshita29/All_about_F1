@@ -2,13 +2,13 @@
  * Connects to F1's live timing SignalR feed and maintains
  * the latest session state in memory.
  *
- * No F1TV authentication or paid live-data service is used.
- * Some channels, such as telemetry and GPS, may be unavailable
- * without F1TV access and are therefore treated as optional.
+ * No F1TV authentication or paid live-data service is used. Telemetry
+ * (CarData.z) and GPS (Position.z) require an F1TV token this app
+ * doesn't have — confirmed permanently silent without one — so this
+ * service doesn't subscribe to or decode either channel at all.
  */
 
 const WebSocket = require("ws");
-const zlib = require("zlib");
 
 const NEGOTIATE_URL = "https://livetiming.formula1.com/signalrcore/negotiate?negotiateVersion=1";
 const WS_BASE = "wss://livetiming.formula1.com/signalrcore";
@@ -25,7 +25,7 @@ const HEADERS = {
 const TOPICS = [
     "Heartbeat", "DriverList", "SessionInfo", "SessionStatus", "TimingData",
     "TimingAppData", "TimingStats", "TrackStatus", "WeatherData",
-    "Position.z", "CarData.z", "RaceControlMessages", "TeamRadio",
+    "RaceControlMessages", "TeamRadio",
     "SessionData", "TopThree", "LapCount", "ExtrapolatedClock",
 ];
 
@@ -51,8 +51,6 @@ const state = {
     weather: null,
     raceControl: [], // bounded, most recent last
     teamRadio: [], // bounded, most recent last
-    carData: {}, // racingNumber -> decoded latest (expected to stay empty, unauthenticated)
-    location: {}, // racingNumber -> decoded latest (expected to stay empty, unauthenticated)
     lapCount: null,
     updatedAt: null,
 };
@@ -66,8 +64,6 @@ function resetLiveState() {
     state.weather = null;
     state.raceControl = [];
     state.teamRadio = [];
-    state.carData = {};
-    state.location = {};
     state.lapCount = null;
 }
 
@@ -131,14 +127,6 @@ function mergeLines(store, payload) {
     }
 }
 
-function decompressZ(base64) {
-    try {
-        return JSON.parse(zlib.inflateRawSync(Buffer.from(base64, "base64")).toString("utf-8"));
-    } catch {
-        return null;
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Channel dispatch
 // ---------------------------------------------------------------------------
@@ -199,28 +187,6 @@ function applyChannelUpdate(channel, payload) {
                 }
                 if (state.teamRadio.length > MAX_TEAM_RADIO) {
                     state.teamRadio = state.teamRadio.slice(-MAX_TEAM_RADIO);
-                }
-            }
-            break;
-        }
-        case "Position.z": {
-            const decoded = decompressZ(payload);
-            if (decoded?.Position) {
-                for (const frame of decoded.Position) {
-                    for (const [num, entry] of Object.entries(frame.Entries || {})) {
-                        state.location[num] = { ...entry, timestamp: frame.Timestamp };
-                    }
-                }
-            }
-            break;
-        }
-        case "CarData.z": {
-            const decoded = decompressZ(payload);
-            if (decoded?.Entries) {
-                for (const frame of decoded.Entries) {
-                    for (const [num, channels] of Object.entries(frame.Cars || {})) {
-                        state.carData[num] = { ...channels.Channels, timestamp: frame.Utc };
-                    }
                 }
             }
             break;

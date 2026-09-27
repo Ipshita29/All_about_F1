@@ -147,12 +147,6 @@ function strOrNull(v) {
     return v === null || v === undefined || v === "" ? null : v;
 }
 
-// Known CarData channel codes (0:RPM 2:Speed 3:nGear 4:Throttle 5:Brake
-// 45:DRS) — documented for completeness; CarData.z was confirmed silent
-// without an F1TV subscription token, so this only matters if F1 ever
-// opens that channel up, or a token is added later.
-const CAR_DATA_CHANNELS = { rpm: "0", speed: "2", gear: "3", throttle: "4", brake: "5", drs: "45" };
-
 /*
  * Gap-to-leader / interval-to-car-ahead live at two DIFFERENT places in
  * TimingData.Lines[num] depending on session type — confirmed by directly
@@ -202,8 +196,6 @@ function normalizeDrivers(state) {
         const timing = state.timingData[num];
         const appData = state.timingAppData[num];
         const stats = state.timingStats[num];
-        const car = state.carData[num];
-        const loc = state.location[num];
 
         // .filter(Boolean) guards against a sparse array — if an index-keyed
         // stint patch ever arrives for an index higher than what's been
@@ -232,16 +224,6 @@ function normalizeDrivers(state) {
             tyreAge: currentStint?.TotalLaps ?? null,
             stintNumber: stints.length || null,
             pitStops: Math.max(stints.length - 1, 0),
-            sector1: strOrNull(timing?.Sectors?.[0]?.Value),
-            sector2: strOrNull(timing?.Sectors?.[1]?.Value),
-            sector3: strOrNull(timing?.Sectors?.[2]?.Value),
-            speed: numOrNull(car?.[CAR_DATA_CHANNELS.speed]),
-            throttle: numOrNull(car?.[CAR_DATA_CHANNELS.throttle]),
-            brake: numOrNull(car?.[CAR_DATA_CHANNELS.brake]),
-            gear: numOrNull(car?.[CAR_DATA_CHANNELS.gear]),
-            rpm: numOrNull(car?.[CAR_DATA_CHANNELS.rpm]),
-            drs: numOrNull(car?.[CAR_DATA_CHANNELS.drs]),
-            location: loc ? { x: loc.X ?? null, y: loc.Y ?? null, z: loc.Z ?? null, timestamp: loc.timestamp ?? null } : null,
             status,
         };
     });
@@ -329,17 +311,13 @@ async function getLiveRaceStatus() {
     if (!jolpicaRace && !usingLiveFeedSchedule) {
         return {
             isLive: false,
-            sessionType: null,
-            sessionStatus: "none",
             dataStatus: "unavailable",
-            provider: null,
             race: null,
             track: null,
             drivers: [],
             events: [],
             weather: null,
             teamRadio: [],
-            message: "No race is currently live.",
             updatedAt: now.toISOString(),
         };
     }
@@ -371,10 +349,7 @@ async function getLiveRaceStatus() {
 
     return {
         isLive: state.isLive,
-        sessionType: state.sessionType,
-        sessionStatus: state.sessionStatus,
         dataStatus,
-        provider: hasLiveTelemetry ? "f1-live-timing" : null,
         race: jolpicaRace || usingLiveFeedSchedule
             ? {
                 grandPrix,
@@ -383,7 +358,6 @@ async function getLiveRaceStatus() {
                 round,
                 season,
                 session: state.sessionType,
-                sessionStatus: state.sessionStatus,
                 startTime: state.startTime,
                 currentLap: liveState.lapCount?.CurrentLap ?? null,
                 totalLaps: liveState.lapCount?.TotalLaps ?? null,
@@ -394,11 +368,6 @@ async function getLiveRaceStatus() {
         events,
         weather,
         teamRadio,
-        message: state.isLive
-            ? `${state.sessionType} session is live.`
-            : state.startTime
-                ? `No live session. Next session starts at ${state.startTime}.`
-                : "No race is currently live.",
         updatedAt: now.toISOString(),
     };
 }
