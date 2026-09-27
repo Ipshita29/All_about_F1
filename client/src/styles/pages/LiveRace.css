@@ -161,16 +161,10 @@
 
 .lr-grid { display: grid; gap: var(--space-4); align-items: start; }
 .lr-grid--primary { grid-template-columns: 8fr 4fr; }
-.lr-grid--events { grid-template-columns: 65fr 35fr; }
-.lr-grid--7-5 { grid-template-columns: 7fr 5fr; }
-.lr-grid--5-7 { grid-template-columns: 5fr 7fr; }
 .lr-grid--6-6 { grid-template-columns: 1fr 1fr; }
 
 @media (max-width: 900px) {
     .lr-grid--primary,
-    .lr-grid--events,
-    .lr-grid--7-5,
-    .lr-grid--5-7,
     .lr-grid--6-6 { grid-template-columns: 1fr; }
 }
 
@@ -195,33 +189,16 @@
    supporting modules, never a flat pill strip. */
 .lr-panel--battles { background: var(--lr-surface-card); }
 
-/* Light editorial surfaces — the counterweight to the dark instrument
+/* Light editorial surface — the counterweight to the dark instrument
    panels; this is where "premium magazine" rather than "generic app"
    has to come through. */
-.lr-panel--light {
-    background: var(--lr-light);
-    border-color: var(--lr-light-border);
-    color: var(--lr-light-text);
-}
-
 .lr-panel--chalk {
     background: var(--lr-light-2);
     border-color: var(--lr-light-border);
     color: var(--lr-light-text);
 }
 
-.lr-panel--light .lr-panel-title,
 .lr-panel--chalk .lr-panel-title { color: var(--lr-light-text-3); }
-
-.lr-panel-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
-}
-
-.lr-panel-head .lr-panel-title { margin-bottom: 0; }
 
 .lr-panel-title {
     display: flex;
@@ -280,8 +257,6 @@
 .lr-row-stopped { opacity: 0.38; }
 
 .lr-driver-chip { display: flex; align-items: center; gap: var(--space-2); }
-
-.lr-team-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
 /* Driver "avatar" for dense rows (timing table, battles, radio,
    championship) — a solid team-colour badge carrying the FIA code. The
@@ -446,7 +421,6 @@
 
 .lr-team-select { height: 36px; font-size: var(--text-small); background: var(--lr-surface-inner); border-color: var(--lr-border); }
 
-.lr-panel--light .lr-team-select,
 .lr-panel--chalk .lr-team-select {
     background: rgba(25, 25, 25, 0.04);
     border-color: var(--lr-light-border-strong);
@@ -457,6 +431,26 @@
     display: grid;
     grid-template-columns: repeat(var(--lr-team-cols, 2), 1fr);
     gap: var(--space-3);
+}
+
+.lr-driver-card-photo {
+    position: relative;
+    aspect-ratio: 5 / 7;
+    background: linear-gradient(180deg, rgba(25, 25, 25, 0.08), rgba(25, 25, 25, 0.02));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lr-driver-card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+.lr-driver-card-photo-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--lr-light-text-3);
 }
 
 /* aspect-ratio (not a fixed height) so the crop stays proportional to the
@@ -556,8 +550,6 @@
 
 .lr-battle-side-pos { margin-left: auto; color: var(--lr-text-secondary); flex-shrink: 0; }
 
-.lr-battle-icon { color: var(--text-faint); flex-shrink: 0; }
-
 /* The connecting line between the two drivers — a real visual "duel",
    not just two stacked rows. A short rule either side of the gap value,
    centred under the avatar column. */
@@ -589,10 +581,6 @@
 
 .lr-battle-tyres { display: flex; align-items: center; gap: 6px; font-size: var(--text-micro); color: var(--text-faint); }
 
-.lr-next-session-divider { height: 1px; background: var(--lr-border); margin: var(--space-4) 0; }
-.lr-panel--light .lr-next-session-divider,
-.lr-panel--chalk .lr-next-session-divider { background: var(--lr-light-border-strong); }
-
 /* ── Compact empty states — never a big card ──────────────────────────── */
 
 .lr-compact-empty {
@@ -616,11 +604,8 @@
 
 .lr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
 
-.lr-panel--light .lr-compact-empty svg,
 .lr-panel--chalk .lr-compact-empty svg { color: var(--lr-light-text-3); }
-.lr-panel--light .lr-compact-empty-title,
 .lr-panel--chalk .lr-compact-empty-title { color: var(--lr-light-text-2); }
-.lr-panel--light .lr-compact-empty-desc,
 .lr-panel--chalk .lr-compact-empty-desc { color: var(--lr-light-text-3); }
 
 /* ── Next Race Weather — compact forecast card, mixed light/dark so a
@@ -789,404 +774,110 @@
 .lr-radio-unavailable { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--text-faint); flex-shrink: 0; }
 
 /* ═══════════════════════════════════════════════════════════════════
-   RACE HUB (isLive === false)
+   NON-LIVE HUB (isLive === false)
    ═══════════════════════════════════════════════════════════════════ */
 
 .lr-hub { display: flex; flex-direction: column; gap: var(--space-5); }
 
 .lr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
-.lr-panel--light .lr-hub-loading,
 .lr-panel--chalk .lr-hub-loading { color: var(--lr-light-text-3); }
 
-.lr-hub-stack { display: flex; flex-direction: column; gap: var(--space-4); }
-.lr-hub-stack .lr-panel { flex: 1; }
+/* ── No session status line — a status line, not a hero ──────────────── */
 
-/* ── Hero — full-width dark editorial header with circuit map ────────── */
-
-.lr-hero {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: var(--space-6);
-    align-items: stretch;
-    background: linear-gradient(135deg, var(--color-carbon) 0%, #131313 100%);
-    border: 1px solid var(--lr-border);
-    border-radius: 16px;
-    padding: var(--space-6);
-    position: relative;
-    overflow: hidden;
-}
-
-.lr-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(600px 300px at 100% 0%, rgba(176, 8, 11, 0.16), transparent 70%);
-    pointer-events: none;
-}
-
-.lr-hero-main { display: flex; flex-direction: column; gap: var(--space-4); position: relative; }
-
-.lr-hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    width: fit-content;
+.lr-nosession {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-3);
     font-family: var(--font-mono);
     font-size: var(--text-micro);
     font-weight: 700;
-    letter-spacing: 0.14em;
-    color: var(--accent-text);
-    border: 1px solid var(--accent-border);
-    background: var(--accent-dim);
-    border-radius: var(--radius-full);
-    padding: 5px 14px;
-}
-
-.lr-hero-id { display: flex; flex-direction: column; gap: 6px; }
-.lr-hero-gp { font-size: clamp(1.6rem, 2vw + 1rem, 2.6rem); font-weight: 800; letter-spacing: -0.01em; color: var(--text-primary); line-height: 1.08; }
-.lr-hero-loc { display: flex; align-items: center; gap: 6px; font-size: var(--text-body); color: var(--lr-text-secondary); }
-.lr-hero-loc svg { flex-shrink: 0; opacity: 0.75; color: var(--accent-text); }
-
-.lr-hero-meta { display: flex; flex-wrap: wrap; gap: var(--space-5); margin-top: auto; padding-top: var(--space-4); border-top: 1px solid var(--lr-border); }
-
-.lr-hero-meta-item { display: flex; flex-direction: column; gap: 3px; }
-.lr-hero-meta-label { display: flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
-.lr-hero-meta-label svg { flex-shrink: 0; }
-.lr-hero-meta-value { font-family: var(--font-mono); font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.lr-hero-meta-value--accent { color: var(--accent-text); }
-
-.lr-hero-map {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(240, 237, 232, 0.04);
-    border: 1px solid var(--lr-border);
-    border-radius: 12px;
-    padding: var(--space-4);
-    min-height: 180px;
-}
-
-.lr-hero-map img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.5)); }
-
-.lr-hero-map-fallback { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); color: var(--text-faint); }
-.lr-hero-map-fallback svg { opacity: 0.5; }
-.lr-hero-map-fallback span { font-family: var(--font-mono); font-size: var(--text-micro); letter-spacing: 0.06em; text-transform: uppercase; }
-
-@media (max-width: 900px) {
-    .lr-hero { grid-template-columns: 1fr; }
-    .lr-hero-map { min-height: 140px; }
-}
-
-/* ── Team Focus (hub) — visual, image-driven ──────────────────────────── */
-
-.lr-hub-all-teams { display: flex; flex-direction: column; gap: 2px; }
-.lr-hub-all-teams-label { font-size: var(--text-micro); color: var(--lr-light-text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: var(--space-2); }
-
-.lr-standings-row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 8px 0;
-    border-top: 1px solid var(--lr-light-border);
-    font-size: var(--text-small);
-}
-.lr-standings-row:first-of-type { border-top: none; }
-
-.lr-standings-logo { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
-.lr-standings-pos { color: var(--lr-light-text-3); min-width: 2.5ch; font-weight: 600; }
-.lr-standings-name { color: var(--lr-light-text); font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lr-standings-team { color: var(--lr-light-text-3); font-size: var(--text-micro); }
-.lr-standings-points { color: var(--lr-light-text-2); margin-left: auto; font-weight: 700; }
-
-.lr-hub-drivers { display: flex; flex-direction: column; gap: var(--space-3); }
-
-/* Portrait driver card — the one place the real local cutout PNGs get to
-   breathe at full size, exactly the context driverAssets.js designs them
-   for. Team colour becomes a coloured edge rather than a plain dot. */
-.lr-driver-card {
-    display: grid;
-    grid-template-columns: 96px 1fr;
-    gap: var(--space-3);
-    background: rgba(25, 25, 25, 0.03);
-    border: 1px solid var(--lr-light-border);
-    border-left: 3px solid var(--lr-driver-accent, var(--accent));
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-/* aspect-ratio, not a fixed height — keeps the crop proportional to the
-   real portrait source images (~1042x1460, ≈ 5:7) so it shows a full
-   recognizable face rather than just hair/forehead. */
-.lr-driver-card-photo {
-    position: relative;
-    aspect-ratio: 5 / 7;
-    background: linear-gradient(180deg, rgba(25, 25, 25, 0.08), rgba(25, 25, 25, 0.02));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.lr-driver-card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-
-.lr-driver-card-photo-fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    color: var(--lr-light-text-3);
-}
-
-.lr-driver-card-body { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 12px 0; min-width: 0; }
-
-.lr-driver-card-name { font-size: var(--text-small); font-weight: 700; color: var(--lr-light-text); }
-
-.lr-driver-card-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-2);
-}
-.lr-driver-card-stats span { display: flex; flex-direction: column; gap: 2px; }
-.lr-driver-card-stats b { font-family: var(--font-mono); font-size: var(--text-small); color: var(--lr-light-text); }
-.lr-driver-card-stats small { font-size: 0.6rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--lr-light-text-3); }
-
-@media (max-width: 640px) {
-    .lr-driver-card { grid-template-columns: 64px 1fr; }
-    .lr-driver-card-stats { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* ── Recent Driver Form ────────────────────────────────────────────── */
-
-.lr-form-list { display: flex; flex-direction: column; gap: var(--space-3); }
-
-.lr-form-driver {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    background: var(--lr-surface-inner);
-    border: 1px solid var(--lr-border);
-    border-radius: 10px;
-    padding: 10px 14px;
-}
-
-.lr-form-driver-id { display: flex; align-items: center; gap: 8px; min-width: 128px; flex-shrink: 0; }
-.lr-form-name { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
-.lr-form-avg { display: block; color: var(--lr-text-secondary); font-size: 0.65rem; }
-
-.lr-form-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-.lr-form-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-
-.lr-form-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 30px;
-    height: 24px;
-    padding: 0 6px;
-    border-radius: 5px;
-    background: var(--lr-surface-header);
-    border: 1px solid var(--lr-border);
-    font-size: var(--text-micro);
+    letter-spacing: 0.1em;
     color: var(--text-primary);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--lr-border);
 }
 
-.lr-form-chip--podium { border-color: var(--accent-border); color: var(--accent-text); background: var(--accent-dim); font-weight: 700; }
+.lr-nosession .lr-badge-dot { color: var(--text-faint); }
 
-/* ── Last Grand Prix ───────────────────────────────────────────────── */
-
-.lr-lastgp-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-4); }
-.lr-lastgp-name { font-size: var(--text-h2); font-weight: 800; color: var(--lr-light-text); letter-spacing: -0.01em; }
-.lr-lastgp-round { color: var(--lr-light-text-3); font-size: var(--text-micro); font-family: var(--font-mono); }
-
-.lr-lastgp-podium { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
-
-/* Compact, data-focused result cards — no photo area. Position + trophy/
-   timer mark, driver name as the headline, team as the supporting line. */
-.lr-lastgp-pos {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    background: rgba(25, 25, 25, 0.03);
-    border: 1px solid var(--lr-light-border);
-    border-radius: 10px;
-    padding: 14px 16px;
+.lr-nosession-desc {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: var(--text-small);
+    color: var(--lr-text-secondary);
 }
 
-.lr-lastgp-pos--p1 { border-color: var(--accent-border); background: var(--accent-dim); }
+/* ── Previous Grand Prix — Netflix-style driver results carousel ─────
+   Fixed-width cards in a natively horizontally-scrolling flex track
+   (wheel/trackpad scroll just works, no library). The active card
+   (hover or keyboard focus) scales up in place via transform + a
+   raised z-index — no width/layout change, so neighbours never
+   reflow or jump. ─────────────────────────────────────────────────── */
 
-/* Fastest Lap gets its own subtle treatment — a chalk surface, distinct
-   from both the neutral P2/P3 cards and P1's red accent. */
-.lr-lastgp-pos--fl { background: var(--lr-light-2); border-color: var(--lr-light-border-strong); }
+.lr-gp { display: flex; flex-direction: column; gap: var(--space-3); }
 
-.lr-lastgp-p { display: inline-flex; align-items: center; gap: 4px; color: var(--lr-light-text-2); font-weight: 800; font-size: var(--text-small); }
-.lr-lastgp-pos--p1 .lr-lastgp-p { color: var(--accent); }
+.lr-gp-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
+.lr-gp-name { font-size: var(--text-h2); font-weight: 800; color: var(--lr-light-text); letter-spacing: -0.01em; }
 
-.lr-lastgp-driver { font-size: var(--text-body); font-weight: 700; color: var(--lr-light-text); line-height: 1.25; }
+.lr-gp-meta { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-small); color: var(--lr-light-text-2); }
+.lr-gp-meta svg { flex-shrink: 0; opacity: 0.7; }
+.lr-gp-meta .lr-mono { margin-left: 4px; color: var(--lr-light-text-3); }
 
-.lr-lastgp-team { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--lr-light-text-3); }
-.lr-lastgp-team svg { flex-shrink: 0; opacity: 0.7; }
-
-.lr-lastgp-highlights { display: flex; flex-direction: column; gap: var(--space-3); align-items: flex-start; width: 100%; }
-
-.lr-highlight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); width: 100%; }
-
-.lr-highlight-item {
-    display: flex;
-    gap: 10px;
-    padding: 12px 14px;
-    background: rgba(25, 25, 25, 0.03);
-    border: 1px solid var(--lr-light-border);
-    border-radius: 10px;
-}
-
-.lr-highlight-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: var(--accent-dim);
-    color: var(--accent);
-    flex-shrink: 0;
-}
-
-.lr-highlight-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.lr-highlight-label { font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lr-light-text-3); }
-.lr-highlight-driver { font-size: var(--text-small); font-weight: 600; color: var(--lr-light-text); }
-.lr-highlight-value { font-size: var(--text-body); font-weight: 800; color: var(--accent); }
-.lr-highlight-sub { font-size: var(--text-micro); color: var(--lr-light-text-2); }
-
-.lr-highlight-dnf { font-size: var(--text-small); color: var(--lr-light-text-2); line-height: 1.5; }
-.lr-highlight-dnf .lr-highlight-label { display: inline; margin-right: 6px; }
-
-/* ── Strategy ──────────────────────────────────────────────────────── */
-
-.lr-strategy-subtitle { margin-top: var(--space-4); }
-
-/* Pit Stop Distribution — compact stat tiles, real stop counts only. */
-.lr-pitdist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: var(--space-2); }
-
-.lr-pitdist-card {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--lr-surface-inner);
-    border: 1px solid var(--lr-border);
-    border-radius: 8px;
-    padding: 10px 12px;
-}
-
-.lr-pitdist-value { font-size: var(--text-h3); font-weight: 800; color: var(--accent-text); }
-.lr-pitdist-label { font-size: var(--text-micro); color: var(--lr-text-secondary); }
-
-/* Pit Stop Timing — Podium: a lap-proportional timeline per driver
-   instead of a plain "Lap 14 · Lap 15" text row. Marker position is
-   real (pit lap / race distance); no compound or stint data implied. */
-.lr-pit-timeline-list { display: flex; flex-direction: column; gap: var(--space-3); }
-
-.lr-pit-timeline-row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: var(--lr-surface-inner);
-    border: 1px solid var(--lr-border);
-    border-radius: 8px;
-    padding: 10px 14px 14px;
-}
-
-.lr-pit-timeline-head { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-small); }
-.lr-pit-timeline-pos { color: var(--lr-text-secondary); }
-.lr-pit-timeline-driver { font-weight: 700; color: var(--text-primary); }
-.lr-pit-timeline-stops { margin-left: auto; color: var(--accent-text); }
-
-.lr-pit-timeline-track {
-    position: relative;
-    height: 4px;
-    border-radius: var(--radius-full);
-    background: var(--lr-border);
-    margin: 0 4px;
-}
-
-.lr-pit-timeline-marker {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: 2px solid var(--lr-surface-inner);
-}
-
-.lr-pit-timeline-marker-label {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: var(--text-faint);
-    white-space: nowrap;
-}
-
-.lr-pit-timeline-laps { font-size: var(--text-micro); color: var(--lr-text-secondary); margin-top: var(--space-2); }
-
-/* Replaces the old large "Tyre Data — Not available" block with one
-   subtle footnote line. */
-.lr-strategy-footnote {
+.lr-gp-track {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    margin-top: var(--space-3);
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--lr-border);
-    font-size: var(--text-micro);
-    color: var(--text-faint);
-    line-height: 1.5;
-}
-.lr-strategy-footnote svg { flex-shrink: 0; margin-top: 2px; }
-
-/* ── Championship snapshot ─────────────────────────────────────────── */
-
-.lr-championship { display: flex; flex-direction: column; }
-.lr-championship-avatar { margin-right: 2px; }
-
-/* ── Latest F1 updates ─────────────────────────────────────────────── */
-
-.lr-news-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
-
-.lr-news-item {
-    display: grid;
-    grid-template-columns: 84px 1fr;
-    gap: var(--space-3);
-    align-items: center;
+    gap: var(--space-4);
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x proximity;
+    padding: var(--space-6) var(--space-2) var(--space-3);
+    margin: 0 calc(-1 * var(--space-2));
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-.lr-news-thumb {
-    width: 84px;
-    height: 56px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: linear-gradient(135deg, var(--color-carbon), #2a2a2a);
+.lr-gp-track::-webkit-scrollbar { display: none; }
+
+.lr-gp-card {
+    flex: 0 0 168px;
+    scroll-snap-align: center;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    flex-direction: column;
+    gap: 8px;
+    transform: scale(1);
+    transform-origin: center top;
+    transition: transform var(--dur-normal) var(--ease);
+    outline: none;
 }
-.lr-news-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.lr-news-thumb-mark { font-family: var(--font-mono); font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; color: var(--color-chalk); opacity: 0.7; }
 
-.lr-news-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.lr-news-title { display: block; font-size: var(--text-small); font-weight: 700; color: var(--lr-light-text); line-height: 1.35; }
-.lr-news-title:hover { color: var(--accent); }
-.lr-news-meta { font-size: var(--text-micro); color: var(--lr-light-text-3); }
+.lr-gp-card--active { transform: scale(1.16); z-index: 2; }
 
-@media (max-width: 640px) {
-    .lr-lastgp-podium { grid-template-columns: 1fr 1fr; }
-    .lr-news-item { grid-template-columns: 64px 1fr; }
-    .lr-news-thumb { width: 64px; height: 44px; }
+.lr-gp-card-photo {
+    position: relative;
+    aspect-ratio: 5 / 7;
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(25, 25, 25, 0.08), rgba(25, 25, 25, 0.02));
+    border: 2px solid transparent;
+    transition: border-color var(--dur-fast) var(--ease);
 }
+
+.lr-gp-card--active .lr-gp-card-photo { border-color: var(--lr-gp-accent, var(--accent)); }
+
+.lr-gp-card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+
+.lr-gp-card-body { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+
+.lr-gp-card-pos { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--lr-light-text-3); }
+.lr-gp-card--active .lr-gp-card-pos { color: var(--accent); }
+
+.lr-gp-card-name { font-size: var(--text-small); font-weight: 700; color: var(--lr-light-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lr-gp-card-team { font-size: var(--text-micro); color: var(--lr-light-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lr-gp-card-line { font-size: var(--text-micro); color: var(--lr-light-text-2); display: flex; flex-direction: column; gap: 1px; }
+.lr-gp-card-line small { font-family: var(--font-sans); font-size: 0.58rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--lr-light-text-3); }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 
@@ -1194,9 +885,9 @@
     .lr-header { padding: var(--space-4); }
     .lr-main { padding: var(--space-4) var(--space-4) var(--space-8); gap: var(--space-4); }
     .lr-grid { gap: var(--space-4); }
-    .lr-hero { padding: var(--space-5); }
 }
 
 @media (max-width: 640px) {
     .lr-panel { padding: 16px; }
+    .lr-gp-card { flex-basis: 126px; }
 }

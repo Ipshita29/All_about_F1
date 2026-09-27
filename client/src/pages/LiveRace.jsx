@@ -13,15 +13,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } from "recharts";
 import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
-    MapPin, Calendar, Trophy, TrendingUp, TrendingDown, Wrench, CheckCircle2, UserRound, Cloud,
-    Newspaper, Car, CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
+    MapPin, Calendar, Trophy, Wrench, UserRound, Cloud,
+    CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
     CloudLightning, ShieldAlert, BarChart2, Gauge, Shuffle,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
 import { getTeamAccent, getDriverAssets, DRIVER_CODE_TO_ID } from "../config/driverAssets";
-import { getTeamAssets } from "../config/teamAssets";
-import { positionsGained, circuitMapCandidates } from "../utils/landingHelpers";
 import "../styles/pages/LiveRace.css";
 import { API_BASE_URL as API } from "../config/api";
 
@@ -79,42 +77,6 @@ function parseGapSeconds(gap) {
     if (!gap || typeof gap !== "string" || !gap.startsWith("+")) return null;
     const n = Number(gap.slice(1));
     return Number.isNaN(n) ? null : n;
-}
-
-function formatCountdown(targetIso) {
-    if (!targetIso) return null;
-    const diffMs = new Date(targetIso).getTime() - Date.now();
-    if (Number.isNaN(diffMs) || diffMs <= 0) return null;
-    const totalMinutes = Math.floor(diffMs / 60000);
-    const days = Math.floor(totalMinutes / 1440);
-    const hours = Math.floor((totalMinutes % 1440) / 60);
-    const minutes = totalMinutes % 60;
-    const parts = [];
-    if (days > 0) parts.push(`${String(days).padStart(2, "0")}d`);
-    if (days > 0 || hours > 0) parts.push(`${String(hours).padStart(2, "0")}h`);
-    parts.push(`${String(minutes).padStart(2, "0")}m`);
-    return parts.join(" ");
-}
-
-/* Recomputed every 30s rather than every second — a countdown that's a
-   little stale for a few seconds is fine; a page that re-renders every
-   second for an idle empty state is not. */
-function useCountdown(targetIso) {
-    const [state, setState] = useState({ seenIso: targetIso, label: formatCountdown(targetIso) });
-
-    if (state.seenIso !== targetIso) {
-        setState({ seenIso: targetIso, label: formatCountdown(targetIso) });
-    }
-
-    useEffect(() => {
-        if (!targetIso) return undefined;
-        const id = setInterval(() => {
-            setState((s) => ({ ...s, label: formatCountdown(targetIso) }));
-        }, 30000);
-        return () => clearInterval(id);
-    }, [targetIso]);
-
-    return state.label;
 }
 
 /* ── Data hook ─────────────────────────────────────────────────────── */
@@ -234,13 +196,6 @@ function DriverPortrait({ driverId, fullName, frameClassName, fallbackClassName,
     );
 }
 
-function TeamLogo({ constructorId, className }) {
-    const { logo } = getTeamAssets(constructorId);
-    const [failed, setFailed] = useState(false);
-    if (!logo || failed) return null;
-    return <img src={logo} alt="" className={className} onError={() => setFailed(true)} />;
-}
-
 /* ── Compact header ────────────────────────────────────────────────── */
 
 function CompactHeader({ data }) {
@@ -288,14 +243,13 @@ function CompactHeader({ data }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   RACE HUB — the isLive === false experience. Not an empty state: a
-   full between-race dashboard built entirely from data the backend
-   already exposes (Jolpica schedule/results/standings/pitstops, the
-   existing News integration). One-time fetch on entry, not polled —
-   this content doesn't change second to second the way live timing
-   does. Every section that depends on data the current APIs don't
-   provide (tyre compounds in pit-stop history, weather forecasts, AI
-   previews) says so explicitly rather than inventing it.
+   NON-LIVE HUB — the isLive === false experience. Deliberately small:
+   a status line, the previous completed Grand Prix as a driver
+   carousel, and the next session/qualifying/race schedule with a
+   forecast. One-time fetch on entry, not polled — this content doesn't
+   change second to second the way live timing does. No team focus,
+   standings, strategy or news here by design; that's a larger "Race
+   Hub" this page intentionally isn't building yet.
    ═══════════════════════════════════════════════════════════════════ */
 
 function formatDate(dateStr, timeStr) {
@@ -305,12 +259,14 @@ function formatDate(dateStr, timeStr) {
     return d.toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", ...(timeStr ? { hour: "2-digit", minute: "2-digit" } : {}) });
 }
 
+/* Only what the non-live page actually renders: the season schedule
+   (next session/qualifying/race times + circuit coordinates for the
+   forecast) and the most recently completed race's full results. No
+   standings/qualifying-history/pit-stop/news fetches — those fed
+   sections (Team Focus, Recent Form, Last Strategy, Latest Updates)
+   that this page deliberately doesn't have. */
 function useRaceHubData(season) {
-    const [state, setState] = useState({
-        loading: true, error: false, season: null,
-        schedule: [], latest: null, driverStandings: [], constructorStandings: [],
-        qualifying: [], pitStops: [], recentRaces: [], news: [],
-    });
+    const [state, setState] = useState({ loading: true, error: false, season: null, schedule: [], latest: null });
 
     // Reset to loading synchronously during render when season changes,
     // rather than as the first act of the effect below.
@@ -325,41 +281,17 @@ function useRaceHubData(season) {
         const getJson = (path, fallback) =>
             fetch(`${API}${path}`).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
 
-        (async () => {
-            try {
-                const [schedule, latest, driverStandings, constructorStandings, news] = await Promise.all([
-                    getJson(`/grandprixdashboard/${season}`, []),
-                    getJson("/grandprixdashboard/latest", null),
-                    getJson(`/drivers/standings/${season}`, []),
-                    getJson(`/teams/standings/${season}`, []),
-                    getJson("/news", []),
-                ]);
-
-                let qualifying = [];
-                let pitStops = [];
-                let recentRaces = [];
-
-                if (latest?.round && latest?.season) {
-                    const lastRound = Number(latest.round);
-                    const rounds = [];
-                    for (let r = Math.max(1, lastRound - 4); r <= lastRound; r++) rounds.push(r);
-
-                    const [qualRes, pitRes, recentRes] = await Promise.all([
-                        getJson(`/grandprixdashboard/qualifying/${latest.season}/${lastRound}`, []),
-                        getJson(`/grandprixdashboard/pitstops/${latest.season}/${lastRound}`, []),
-                        Promise.all(rounds.map((r) => getJson(`/grandprixdashboard/results/${latest.season}/${r}`, []).then((results) => ({ round: r, results })))),
-                    ]);
-                    qualifying = qualRes;
-                    pitStops = pitRes;
-                    recentRaces = recentRes;
-                }
-
+        Promise.all([
+            getJson(`/grandprixdashboard/${season}`, []),
+            getJson("/grandprixdashboard/latest", null),
+        ])
+            .then(([schedule, latest]) => {
                 if (cancelled) return;
-                setState({ loading: false, error: false, season, schedule, latest, driverStandings, constructorStandings, qualifying, pitStops, recentRaces, news });
-            } catch {
+                setState({ loading: false, error: false, season, schedule, latest });
+            })
+            .catch(() => {
                 if (!cancelled) setState((s) => ({ ...s, loading: false, error: true }));
-            }
-        })();
+            });
 
         return () => {
             cancelled = true;
@@ -369,207 +301,6 @@ function useRaceHubData(season) {
     return state;
 }
 
-/* ── 1. Hero — editorial header module: race identity, countdown, and
-   the real circuit-map graphic (existing landingHelpers.circuitMapSrc
-   asset, resolved from the schedule already fetched below — no new
-   backend field, no invented image) ── */
-
-function RaceHubHero({ race, hub }) {
-    const countdown = useCountdown(race?.startTime);
-
-    if (!race?.grandPrix) {
-        return <EmptyState title="No live session right now" description="No F1 session is currently live." />;
-    }
-
-    const weekend = hub.schedule.find((r) => String(r.round) === String(race.round));
-    const circuitId = weekend?.Circuit?.circuitId ?? null;
-    const mapCandidates = circuitMapCandidates(circuitId);
-
-    return (
-        <div className="lr-hero">
-            <div className="lr-hero-main">
-                <span className="lr-hero-eyebrow">
-                    <Flag size={12} aria-hidden="true" />
-                    NEXT SESSION
-                </span>
-                <div className="lr-hero-id">
-                    <span className="lr-hero-gp">{race.grandPrix}</span>
-                    {race.circuit && (
-                        <span className="lr-hero-loc">
-                            <MapPin size={15} aria-hidden="true" />
-                            {race.circuit}{race.country ? `, ${race.country}` : ""}
-                        </span>
-                    )}
-                </div>
-                <div className="lr-hero-meta">
-                    {race.session && (
-                        <div className="lr-hero-meta-item">
-                            <span className="lr-hero-meta-label"><Flag size={11} aria-hidden="true" />Session</span>
-                            <span className="lr-hero-meta-value">{sessionShortLabel(race.session)}</span>
-                        </div>
-                    )}
-                    {race.startTime && (
-                        <div className="lr-hero-meta-item">
-                            <span className="lr-hero-meta-label"><Calendar size={11} aria-hidden="true" />Green Light</span>
-                            <span className="lr-hero-meta-value">
-                                {new Date(race.startTime).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                        </div>
-                    )}
-                    {countdown && (
-                        <div className="lr-hero-meta-item">
-                            <span className="lr-hero-meta-label"><Timer size={11} aria-hidden="true" />Countdown</span>
-                            <span className="lr-hero-meta-value lr-hero-meta-value--accent">{countdown}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-            <div className="lr-hero-map">
-                <LayeredImage
-                    candidates={mapCandidates}
-                    alt={race.circuit ? `${race.circuit} circuit map` : "Circuit map"}
-                    fallback={
-                        <span className="lr-hero-map-fallback">
-                            <MapPin size={28} aria-hidden="true" />
-                            <span>Map unavailable</span>
-                        </span>
-                    }
-                />
-            </div>
-        </div>
-    );
-}
-
-/* ── 2/3. Team Focus (season-long) + Recent Driver Form share a team
-   selection so "form" is scoped to whoever's focused ── */
-
-function useTeamOptions(constructorStandings) {
-    return useMemo(
-        () => constructorStandings.map((s) => ({
-            id: s.Constructor.constructorId,
-            name: s.Constructor.name,
-            color: getTeamAccent(s.Constructor.constructorId),
-            position: s.position,
-            points: s.points,
-        })),
-        [constructorStandings]
-    );
-}
-
-function TeamFocusHub({ hub, selectedTeamId, onSelectTeam, teams }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (teams.length === 0) return <EmptyState title="Standings unavailable" description="Team standings couldn't be loaded." onLight />;
-
-    const lastResults = hub.latest?.Results ?? [];
-    const qualByDriver = new Map(hub.qualifying.map((q) => [q.Driver.driverId, q.position]));
-
-    const teamDrivers = hub.driverStandings.filter((s) => s.Constructors?.[0]?.constructorId === selectedTeamId);
-
-    return (
-        <div className="lr-team-focus">
-            <Select value={selectedTeamId ?? "all"} onChange={(e) => onSelectTeam(e.target.value)} className="lr-team-select">
-                <option value="all">All Teams</option>
-                {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </Select>
-
-            {selectedTeamId === "all" || !selectedTeamId ? (
-                <div className="lr-hub-all-teams">
-                    <span className="lr-hub-all-teams-label">Constructors' Championship</span>
-                    {teams.slice(0, 5).map((t) => (
-                        <div className="lr-standings-row" key={t.id}>
-                            <span className="lr-mono lr-standings-pos">P{t.position}</span>
-                            <TeamLogo constructorId={t.id} className="lr-standings-logo" />
-                            <span className="lr-team-dot" style={{ background: t.color }} aria-hidden="true" />
-                            <span className="lr-standings-name">{t.name}</span>
-                            <span className="lr-mono lr-standings-points">{t.points} PTS</span>
-                        </div>
-                    ))}
-                </div>
-            ) : teamDrivers.length === 0 ? (
-                <EmptyState title="No drivers found" description="This team has no standings entry this season." onLight />
-            ) : (
-                <div className="lr-hub-drivers">
-                    {teamDrivers.map((s) => {
-                        const lastResult = lastResults.find((r) => r.Driver.driverId === s.Driver.driverId);
-                        const qualPos = qualByDriver.get(s.Driver.driverId);
-                        const fullName = `${s.Driver.givenName} ${s.Driver.familyName}`;
-                        const accent = getTeamAccent(selectedTeamId);
-                        return (
-                            <div className="lr-driver-card" key={s.Driver.driverId} style={{ "--lr-driver-accent": accent }}>
-                                <DriverPortrait
-                                    driverId={s.Driver.driverId}
-                                    fullName={fullName}
-                                    frameClassName="lr-driver-card-photo"
-                                    fallbackClassName="lr-driver-card-photo-fallback"
-                                    fallbackIcon={<UserRound size={28} aria-hidden="true" />}
-                                />
-                                <div className="lr-driver-card-body">
-                                    <span className="lr-driver-card-name">{fullName}</span>
-                                    <div className="lr-driver-card-stats">
-                                        <span><b>P{s.position}</b><small>Championship</small></span>
-                                        <span><b>{s.points}</b><small>Points</small></span>
-                                        <span><b>{lastResult ? `P${lastResult.position}` : "—"}</b><small>Last Race</small></span>
-                                        <span><b>{qualPos ? `P${qualPos}` : "—"}</b><small>Last Qualifying</small></span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function RecentDriverForm({ hub, selectedTeamId, teams, onSelectTeam }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-
-    const teamDrivers = hub.driverStandings.filter((s) => s.Constructors?.[0]?.constructorId === selectedTeamId);
-    const accent = getTeamAccent(selectedTeamId);
-
-    return (
-        <div className="lr-form-list">
-            {teams.length > 0 && (
-                <Select value={selectedTeamId ?? ""} onChange={(e) => onSelectTeam(e.target.value)} className="lr-team-select">
-                    {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </Select>
-            )}
-
-            {teamDrivers.length === 0 || hub.recentRaces.length === 0 ? (
-                <EmptyState title="No recent form data" description="Recent race history isn't available yet." />
-            ) : teamDrivers.map((s) => {
-                const rows = hub.recentRaces
-                    .map((race) => ({ round: race.round, result: race.results.find((r) => r.Driver.driverId === s.Driver.driverId) }))
-                    .filter((row) => row.result);
-                const positions = rows.map((row) => Number(row.result.position)).filter((n) => !Number.isNaN(n));
-                const avg = positions.length ? (positions.reduce((a, b) => a + b, 0) / positions.length).toFixed(1) : null;
-
-                return (
-                    <div className="lr-form-driver" key={s.Driver.driverId}>
-                        <div className="lr-form-driver-id">
-                            <DriverAvatar code={s.Driver.code ?? s.Driver.familyName?.slice(0, 3)?.toUpperCase()} color={accent} size="lg" />
-                            <div>
-                                <span className="lr-form-name">{s.Driver.familyName}</span>
-                                {avg && <span className="lr-mono lr-form-avg">AVG P{avg}</span>}
-                            </div>
-                        </div>
-                        <div className="lr-form-body">
-                            <div className="lr-form-chips">
-                                {rows.length === 0 ? (
-                                    <span className="lr-compact-empty-desc">No recent race results found.</span>
-                                ) : rows.map((row) => (
-                                    <span className={`lr-form-chip lr-mono${Number(row.result.position) <= 3 ? " lr-form-chip--podium" : ""}`} key={row.round} title={`Round ${row.round}`}>
-                                        P{row.result.position}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
 
 /* ── 4. Next Race Context ─────────────────────────────────────────── */
 
@@ -762,337 +493,123 @@ function NextRaceWeatherForecast({ hub, race }) {
     );
 }
 
-/* ── 6. Last Grand Prix summary ───────────────────────────────────── */
+/* ── Previous Grand Prix — Netflix-style driver results carousel ─────
+   Full classified order from the most recently completed race (real
+   Jolpica Results, never trimmed to a podium), one card per driver.
+   Hover/focus scales the centred card up and nudges it into view —
+   plain CSS transform + transition driven by which index is active,
+   no carousel dependency. ─────────────────────────────────────────── */
 
-const NON_FINISH_CODES = new Set(["R", "D", "W", "N", "E"]);
-const NON_FINISH_LABELS = { R: "Retired", D: "DSQ", W: "DNS", N: "Not Classified", E: "Excluded" };
+function driverResultLine(result, isWinner) {
+    if (isWinner) return { value: result.Time?.time ?? "—", label: "Race Winner" };
+    if (result.status === "Finished" && result.Time?.time) return { value: result.Time.time, label: "Gap" };
+    if (typeof result.status === "string" && result.status.startsWith("+")) return { value: result.status, label: "Gap" };
+    return { value: result.status || "—", label: "Status" };
+}
 
-function computeRaceHighlights(latest, pitStops) {
-    const results = latest.Results || [];
+function PreviousGpCard({ result, isWinner, isActive, onActivate, onDeactivate }) {
+    const fullName = `${result.Driver.givenName} ${result.Driver.familyName}`;
+    const accent = getTeamAccent(result.Constructor.constructorId);
+    const line = driverResultLine(result, isWinner);
 
-    let biggestGain = null;
-    let biggestLoss = null;
-    for (const r of results) {
-        const gain = positionsGained(r);
-        if (gain === null) continue;
-        if (gain > 0 && (!biggestGain || gain > positionsGained(biggestGain))) biggestGain = r;
-        if (gain < 0 && (!biggestLoss || gain < positionsGained(biggestLoss))) biggestLoss = r;
+    return (
+        <div
+            className={`lr-gp-card${isActive ? " lr-gp-card--active" : ""}`}
+            style={{ "--lr-gp-accent": accent }}
+            tabIndex={0}
+            onMouseEnter={onActivate}
+            onMouseLeave={onDeactivate}
+            onFocus={onActivate}
+            onBlur={onDeactivate}
+        >
+            <DriverPortrait
+                driverId={result.Driver.driverId}
+                fullName={fullName}
+                frameClassName="lr-gp-card-photo"
+                fallbackClassName="lr-driver-card-photo-fallback"
+                fallbackIcon={<UserRound size={28} aria-hidden="true" />}
+            />
+            <div className="lr-gp-card-body">
+                <span className="lr-mono lr-gp-card-pos">{isWinner && <Trophy size={12} aria-hidden="true" />}P{result.position}</span>
+                <span className="lr-gp-card-name">{fullName}</span>
+                <span className="lr-gp-card-team">{result.Constructor.name}</span>
+                <span className="lr-mono lr-gp-card-line">{line.value}<small>{line.label}</small></span>
+            </div>
+        </div>
+    );
+}
+
+function PreviousGrandPrix({ hub }) {
+    const [activeId, setActiveId] = useState(null);
+
+    if (hub.loading) return <div className="lr-hub-loading">Loading previous results…</div>;
+    const latest = hub.latest;
+    if (!latest?.Results?.length) {
+        return <EmptyState title="No completed races yet" description="Results will appear here once a Grand Prix has been completed." onLight />;
     }
 
-    const nonFinishers = results.filter((r) => NON_FINISH_CODES.has(r.positionText));
-
-    return {
-        biggestGain,
-        biggestLoss,
-        nonFinishers,
-        classifiedCount: results.length - nonFinishers.length,
-        totalEntrants: results.length,
-        totalPitStops: pitStops.length,
+    const activate = (id) => (e) => {
+        setActiveId(id);
+        e.currentTarget.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "smooth" });
     };
-}
-
-function LastGrandPrixSummary({ hub }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    const latest = hub.latest;
-    if (!latest?.Results?.length) return <EmptyState title="No completed races yet" description="Race results will appear here once a Grand Prix has been completed." onLight />;
-
-    const podium = latest.Results.slice(0, 3);
-    const fastestLap = latest.Results.find((r) => r.FastestLap?.rank === "1");
-    const highlights = computeRaceHighlights(latest, hub.pitStops);
-
-    const items = [
-        highlights.biggestGain && {
-            label: "Biggest Gain", icon: <TrendingUp size={15} aria-hidden="true" />, driver: highlights.biggestGain.Driver,
-            value: `+${positionsGained(highlights.biggestGain)} positions`, sub: `P${highlights.biggestGain.grid} → P${highlights.biggestGain.position}`,
-        },
-        highlights.biggestLoss && {
-            label: "Biggest Loss", icon: <TrendingDown size={15} aria-hidden="true" />, driver: highlights.biggestLoss.Driver,
-            value: `${positionsGained(highlights.biggestLoss)} positions`, sub: `P${highlights.biggestLoss.grid} → P${highlights.biggestLoss.position}`,
-        },
-        highlights.totalPitStops > 0 && {
-            label: "Pit Stops", icon: <Wrench size={15} aria-hidden="true" />, driver: null,
-            value: highlights.totalPitStops, sub: "across the field",
-        },
-        {
-            label: "Classified", icon: <CheckCircle2 size={15} aria-hidden="true" />, driver: null,
-            value: `${highlights.classifiedCount} / ${highlights.totalEntrants}`, sub: "finishers",
-        },
-    ].filter(Boolean);
 
     return (
-        <div className="lr-lastgp">
-            <div className="lr-lastgp-head">
-                <span className="lr-lastgp-name">{latest.raceName}</span>
-                <span className="lr-lastgp-round lr-mono">ROUND {latest.round}</span>
+        <div className="lr-gp">
+            <div className="lr-gp-head">
+                <span className="lr-gp-name">{latest.raceName}</span>
+                <span className="lr-gp-meta">
+                    <MapPin size={12} aria-hidden="true" />
+                    {latest.Circuit?.circuitName}{latest.Circuit?.Location?.country ? `, ${latest.Circuit.Location.country}` : ""}
+                    <span className="lr-mono">{formatDate(latest.date)}</span>
+                </span>
             </div>
-            <div className="lr-lastgp-podium">
-                {podium.map((r, i) => {
-                    const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
-                    return (
-                        <div className={`lr-lastgp-pos${i === 0 ? " lr-lastgp-pos--p1" : ""}`} key={r.Driver.driverId}>
-                            <span className="lr-lastgp-p">{i === 0 && <Trophy size={13} aria-hidden="true" />}P{i + 1}</span>
-                            <span className="lr-lastgp-driver">{fullName}</span>
-                            <span className="lr-lastgp-team"><Car size={11} aria-hidden="true" />{r.Constructor.name}</span>
-                        </div>
-                    );
-                })}
-                {fastestLap && (
-                    <div className="lr-lastgp-pos lr-lastgp-pos--fl">
-                        <span className="lr-lastgp-p"><Timer size={13} aria-hidden="true" />FL</span>
-                        <span className="lr-lastgp-driver">{fastestLap.Driver.givenName} {fastestLap.Driver.familyName}</span>
-                        <span className="lr-lastgp-team lr-mono">{fastestLap.FastestLap.Time.time}</span>
-                    </div>
-                )}
-            </div>
-            <div className="lr-next-session-divider" />
-            <div className="lr-lastgp-highlights">
-                <span className="lr-panel-title">Key Highlights</span>
-                <div className="lr-highlight-grid">
-                    {items.map((item) => (
-                        <div className="lr-highlight-item" key={item.label}>
-                            <span className="lr-highlight-icon">{item.icon}</span>
-                            <div className="lr-highlight-text">
-                                <span className="lr-highlight-label">{item.label}</span>
-                                {item.driver && <span className="lr-highlight-driver">{item.driver.givenName} {item.driver.familyName}</span>}
-                                <span className="lr-mono lr-highlight-value">{item.value}</span>
-                                <span className="lr-highlight-sub">{item.sub}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                {highlights.nonFinishers.length > 0 && (
-                    <p className="lr-highlight-dnf">
-                        <span className="lr-highlight-label">Did Not Finish</span>{" "}
-                        {highlights.nonFinishers.map((r) => `${r.Driver.familyName} (${NON_FINISH_LABELS[r.positionText] ?? r.positionText})`).join(", ")}
-                    </p>
-                )}
-                <Button variant="secondary" size="sm" to={`/grandprixdashboard/${latest.season}/${latest.round}`} arrow>
-                    View Full Race Results
-                </Button>
-            </div>
-        </div>
-    );
-}
-
-/* ── 7. Last race strategy — pit-lap/stop-count only; Jolpica has no
-   tyre-compound history, so compounds are never shown or implied ──── */
-
-function LastRaceStrategy({ hub }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    const latest = hub.latest;
-    if (!latest?.Results?.length) return <EmptyState title="No completed races yet" description="Strategy data will appear here once a Grand Prix has been completed." />;
-    if (hub.pitStops.length === 0) {
-        return (
-            <div className="lr-compact-empty">
-                <Wrench size={18} aria-hidden="true" />
-                <div className="lr-compact-empty-body">
-                    <span className="lr-compact-empty-title">NO PIT-STOP RECORDS</span>
-                    <span className="lr-compact-empty-desc">No pit-stop records are available for {latest.raceName}.</span>
-                </div>
-            </div>
-        );
-    }
-
-    const stopsByDriver = new Map();
-    for (const stop of hub.pitStops) {
-        if (!stopsByDriver.has(stop.driverId)) stopsByDriver.set(stop.driverId, []);
-        stopsByDriver.get(stop.driverId).push(stop);
-    }
-
-    const distribution = new Map();
-    for (const r of latest.Results) {
-        const count = (stopsByDriver.get(r.Driver.driverId) || []).length;
-        distribution.set(count, (distribution.get(count) || 0) + 1);
-    }
-
-    // The winner's completed-laps count is the real race distance — used
-    // only to place pit markers proportionally along the timeline, never
-    // to infer anything about compounds or stint length.
-    const totalLaps = Math.max(1, ...latest.Results.map((r) => Number(r.laps) || 0));
-
-    const podiumStrategies = latest.Results.slice(0, 3).map((r) => ({
-        driver: r.Driver,
-        stops: (stopsByDriver.get(r.Driver.driverId) || []).sort((a, b) => Number(a.lap) - Number(b.lap)),
-    }));
-
-    return (
-        <div className="lr-strategy">
-            <span className="lr-panel-title"><Wrench size={13} aria-hidden="true" />Pit Stop Distribution</span>
-            <div className="lr-pitdist-grid">
-                {Array.from(distribution.entries()).sort((a, b) => a[0] - b[0]).map(([stops, count]) => (
-                    <div className="lr-pitdist-card" key={stops}>
-                        <span className="lr-mono lr-pitdist-value">{count}</span>
-                        <span className="lr-pitdist-label">{stops === 0 ? "No Stops" : `${stops}-Stop${stops > 1 ? "s" : ""}`}</span>
-                    </div>
+            <div className="lr-gp-track">
+                {latest.Results.map((r) => (
+                    <PreviousGpCard
+                        key={r.Driver.driverId}
+                        result={r}
+                        isWinner={r.position === "1"}
+                        isActive={activeId === r.Driver.driverId}
+                        onActivate={activate(r.Driver.driverId)}
+                        onDeactivate={() => setActiveId(null)}
+                    />
                 ))}
             </div>
-
-            <span className="lr-panel-title lr-strategy-subtitle"><Timer size={13} aria-hidden="true" />Pit Stop Timing — Podium</span>
-            <div className="lr-pit-timeline-list">
-                {podiumStrategies.map(({ driver, stops }, i) => (
-                    <div className="lr-pit-timeline-row" key={driver.driverId}>
-                        <div className="lr-pit-timeline-head">
-                            <span className="lr-pit-timeline-pos lr-mono">P{i + 1}</span>
-                            <span className="lr-pit-timeline-driver">{driver.familyName}</span>
-                            <span className="lr-mono lr-pit-timeline-stops">{stops.length} {stops.length === 1 ? "STOP" : "STOPS"}</span>
-                        </div>
-                        <div className="lr-pit-timeline-track" aria-hidden="true">
-                            {stops.map((s, idx) => (
-                                <span
-                                    key={idx}
-                                    className="lr-pit-timeline-marker"
-                                    style={{ left: `${Math.min(100, (Number(s.lap) / totalLaps) * 100)}%` }}
-                                >
-                                    <span className="lr-pit-timeline-marker-label lr-mono">L{s.lap}</span>
-                                </span>
-                            ))}
-                        </div>
-                        <span className="lr-pit-timeline-laps">
-                            {stops.length === 0 ? "No pit stops" : stops.map((s) => `Lap ${s.lap}`).join(" · ")}
-                        </span>
-                    </div>
-                ))}
-            </div>
-
-            <p className="lr-strategy-footnote">
-                <CircleDashed size={12} aria-hidden="true" />
-                Historical pit-stop data is available; tyre compounds are not provided by the current data source.
-            </p>
         </div>
     );
 }
 
-/* ── 10. Championship snapshot ─────────────────────────────────────── */
+/* ── No session status line ───────────────────────────────────────── */
 
-function ChampionshipSnapshot({ hub }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (hub.driverStandings.length === 0 && hub.constructorStandings.length === 0) {
-        return <EmptyState title="Standings unavailable" description="Championship standings couldn't be loaded." onLight />;
-    }
-
+function NoSessionBanner() {
     return (
-        <div className="lr-championship">
-            <span className="lr-panel-title"><Trophy size={13} aria-hidden="true" />Drivers</span>
-            {hub.driverStandings.slice(0, 6).map((s) => {
-                const constructorId = s.Constructors?.[0]?.constructorId;
-                return (
-                    <div className="lr-standings-row" key={s.Driver.driverId}>
-                        <span className="lr-mono lr-standings-pos">P{s.position}</span>
-                        <span className="lr-driver-avatar lr-driver-avatar--sm lr-championship-avatar" style={{ background: getTeamAccent(constructorId) }} aria-hidden="true">
-                            {s.Driver.code ?? s.Driver.familyName?.slice(0, 3)?.toUpperCase()}
-                        </span>
-                        <span className="lr-standings-name">{s.Driver.givenName} {s.Driver.familyName}</span>
-                        <span className="lr-standings-team">{s.Constructors?.[0]?.name ?? ""}</span>
-                        <span className="lr-mono lr-standings-points">{s.points}</span>
-                    </div>
-                );
-            })}
-            <span className="lr-panel-title lr-strategy-subtitle"><Car size={13} aria-hidden="true" />Constructors</span>
-            {hub.constructorStandings.slice(0, 6).map((s) => (
-                <div className="lr-standings-row" key={s.Constructor.constructorId}>
-                    <span className="lr-mono lr-standings-pos">P{s.position}</span>
-                    <TeamLogo constructorId={s.Constructor.constructorId} className="lr-standings-logo" />
-                    <span className="lr-team-dot" style={{ background: getTeamAccent(s.Constructor.constructorId) }} aria-hidden="true" />
-                    <span className="lr-standings-name">{s.Constructor.name}</span>
-                    <span className="lr-mono lr-standings-points">{s.points}</span>
-                </div>
-            ))}
+        <div className="lr-nosession">
+            <span className="lr-badge-dot" aria-hidden="true" />
+            NO SESSION LIVE
+            <span className="lr-nosession-desc">No Formula 1 session is currently running.</span>
         </div>
     );
 }
 
-/* ── 11. Latest F1 updates — reuses the existing News integration ────── */
+/* ── Non-live orchestrator ─────────────────────────────────────────── */
 
-/* Same real article.image field the homepage's NewsThumb uses — a neutral
-   mark fills in only when the article genuinely has none or it fails to
-   load, never a placeholder network request. */
-function NewsItemThumb({ article }) {
-    const [failed, setFailed] = useState(false);
-    const hasImage = Boolean(article.image) && !failed;
-    return (
-        <span className="lr-news-thumb" aria-hidden="true">
-            {hasImage ? (
-                <img src={article.image} alt="" loading="lazy" onError={() => setFailed(true)} />
-            ) : (
-                <span className="lr-news-thumb-mark">F1</span>
-            )}
-        </span>
-    );
-}
-
-function LatestF1Updates({ hub }) {
-    if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
-    if (hub.news.length === 0) return <EmptyState title="No updates available" description="Couldn't load the latest F1 news right now." onLight />;
-
-    return (
-        <ul className="lr-news-list">
-            {hub.news.slice(0, 6).map((item) => (
-                <li className="lr-news-item" key={item.id}>
-                    <NewsItemThumb article={item} />
-                    <div className="lr-news-body">
-                        <a href={item.url} target="_blank" rel="noreferrer" className="lr-news-title">{item.title}</a>
-                        <span className="lr-news-meta">{item.source}{item.publishedAt ? ` · ${timeAgo(item.publishedAt)}` : ""}</span>
-                    </div>
-                </li>
-            ))}
-        </ul>
-    );
-}
-
-/* ── Race Hub orchestrator ─────────────────────────────────────────── */
-
-function RaceHub({ race }) {
+function NonLiveHub({ race }) {
     const hub = useRaceHubData(race?.season);
-    const teams = useTeamOptions(hub.constructorStandings);
-    const [selectedTeamId, setSelectedTeamId] = useState(null);
-
-    // Default to the championship leader rather than a bare "select a
-    // team" state — set synchronously during render once teams load.
-    if (!selectedTeamId && teams.length > 0) {
-        setSelectedTeamId(teams[0].id);
-    }
-
-    if (!race?.grandPrix) {
-        return <RaceHubHero race={race} hub={hub} />;
-    }
 
     return (
         <div className="lr-hub">
-            <RaceHubHero race={race} hub={hub} />
+            <NoSessionBanner />
 
-            <div className="lr-grid lr-grid--7-5">
-                <Panel title={<><Users size={13} aria-hidden="true" />Team Focus</>} className="lr-panel--light">
-                    <TeamFocusHub hub={hub} selectedTeamId={selectedTeamId} onSelectTeam={setSelectedTeamId} teams={teams} />
-                </Panel>
-                <div className="lr-hub-stack">
-                    <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race Context</>}>
-                        <NextRaceContext hub={hub} race={race} />
-                    </Panel>
-                    <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>} className="lr-panel--chalk">
-                        <NextRaceWeatherForecast hub={hub} race={race} />
-                    </Panel>
-                </div>
-            </div>
-
-            <Panel title={<><Trophy size={13} aria-hidden="true" />Last Grand Prix</>} className="lr-panel--full lr-panel--chalk">
-                <LastGrandPrixSummary hub={hub} />
+            <Panel title={<><Flag size={13} aria-hidden="true" />Previous Grand Prix</>} className="lr-panel--full lr-panel--chalk">
+                <PreviousGrandPrix hub={hub} />
             </Panel>
 
-            <div className="lr-grid lr-grid--5-7">
-                <Panel title={<><Wrench size={13} aria-hidden="true" />Last Race Strategy</>}>
-                    <LastRaceStrategy hub={hub} />
+            <div className="lr-grid lr-grid--6-6">
+                <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race</>}>
+                    <NextRaceContext hub={hub} race={race} />
                 </Panel>
-                <Panel title={<><TrendingUp size={13} aria-hidden="true" />Recent Driver Form</>}>
-                    <RecentDriverForm hub={hub} selectedTeamId={selectedTeamId} teams={teams} onSelectTeam={setSelectedTeamId} />
-                </Panel>
-            </div>
-
-            <div className="lr-grid lr-grid--5-7">
-                <Panel title={<><Trophy size={13} aria-hidden="true" />Championship Snapshot</>} className="lr-panel--light">
-                    <ChampionshipSnapshot hub={hub} />
-                </Panel>
-                <Panel title={<><Newspaper size={13} aria-hidden="true" />Latest F1 Updates</>} className="lr-panel--light">
-                    <LatestF1Updates hub={hub} />
+                <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>} className="lr-panel--chalk">
+                    <NextRaceWeatherForecast hub={hub} race={race} />
                 </Panel>
             </div>
         </div>
@@ -1923,7 +1440,7 @@ function LiveRace() {
             <div className="lr">
                 <CompactHeader data={data} />
                 <main className="lr-main">
-                    <RaceHub race={data.race} />
+                    <NonLiveHub race={data.race} />
                 </main>
             </div>
         );
