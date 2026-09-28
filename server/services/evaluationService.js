@@ -104,6 +104,11 @@ async function getStoredPrediction(season, round) {
 function matchAndEvaluate(storedPrediction, actualResults) {
     const actualByDriver = new Map(actualResults.map((r) => [r.Driver.driverId, r]));
 
+    // Explicit field list — driverCode/winProbability/podiumProbability
+    // used to round-trip here too, but nothing (inside this function or
+    // any caller) ever read them off a driverEvaluation; the frontend's
+    // own predictions[] already carries driverCode/probabilities where
+    // it's actually displayed.
     const driverEvaluations = storedPrediction.predictions.map((p) => {
         const { position: actualPosition, status } = resolveActualPosition(actualByDriver.get(p.driverId));
         const scorable = isScorable(status);
@@ -111,14 +116,11 @@ function matchAndEvaluate(storedPrediction, actualResults) {
         return {
             driverId: p.driverId,
             driverName: p.driverName,
-            driverCode: p.driverCode,
             constructorName: p.constructorName,
             predictedPosition: p.predictedPosition,
             actualPosition,
             status,
             positionError,
-            winProbability: p.winProbability,
-            podiumProbability: p.podiumProbability,
         };
     });
 
@@ -180,7 +182,11 @@ async function evaluateRace(season, round) {
         return { eligible: false, reason: "race_not_completed", season, round };
     }
 
-    const actualWinnerResult = actualResults.find((r) => r.positionText === "1");
+    // Explicit field list, not a passthrough of storedPrediction/
+    // actualResults — circuit/raceDate/predictionSource/predictionStage/
+    // predictionGeneratedAt/predictedWinner/actualWinner used to be set
+    // here too, but neither caller (getPredictionHistory, getRacePrediction)
+    // ever read them; race identity comes from shapeStoredDoc instead.
     const { driverEvaluations, metrics } = matchAndEvaluate(storedPrediction, actualResults);
 
     const result = {
@@ -188,13 +194,6 @@ async function evaluateRace(season, round) {
         season,
         round,
         raceName: storedPrediction.raceName,
-        circuit: storedPrediction.circuit,
-        raceDate: storedPrediction.raceDate,
-        predictionSource: storedPrediction.source,
-        predictionStage: storedPrediction.stage,
-        predictionGeneratedAt: storedPrediction.generatedAt,
-        predictedWinner: driverEvaluations.find((d) => d.predictedPosition === 1)?.driverName ?? null,
-        actualWinner: actualWinnerResult ? `${actualWinnerResult.Driver.givenName} ${actualWinnerResult.Driver.familyName}` : null,
         driverEvaluations,
         metrics,
     };
@@ -253,10 +252,10 @@ async function getPredictionHistory() {
 
     // The history card only needs the race name and whether the predicted
     // winner was correct, and getPerformanceSummary's aggregates below only
-    // read from `metrics` — the full per-driver comparison (driverEvaluations,
-    // predictedWinner/actualWinner, etc.) stays available via the dedicated
-    // per-race evaluateRace()/getRacePrediction() instead of round-tripping
-    // through every /history response.
+    // read from `metrics` — the full per-driver comparison
+    // (driverEvaluations) stays available via the dedicated per-race
+    // getRacePrediction() instead of round-tripping through every
+    // /history response.
     return {
         races: evaluations.map((r) => (r.eligible
             ? { eligible: true, season: r.season, round: r.round, raceName: r.raceName, metrics: r.metrics }
@@ -272,8 +271,17 @@ async function getPredictionHistory() {
 // re-deriving correctness, so there is exactly one place that decides
 // "was this prediction right."
 //
-// actualPodium is the real top 3 finishers, built entirely from data
-// evaluateRace already computed (driverEvaluations' actualPosition) —
+// For a completed race, every entry in `predictions` is enriched with the
+// real actualPosition (null when genuinely not classified — DSQ/DNS/
+// unclassified) and exactPositionCorrect (predictedPosition === actual
+// position for that driver specifically), joined from evaluateRace's own
+// driverEvaluations — the same per-driver comparison /performance already
+// computes, not a second evaluation. This is what lets the frontend show
+// a per-driver Predicted -> Actual column for the whole table and
+// individual correctness marks on the predicted podium, rather than one
+// verdict for the whole top 3.
+//
+// actualPodium is the real top 3 finishers, built the same way —
 // cross-referenced against this same stored prediction's own driver list
 // for driverNumber/constructorId, so the "Actual Podium" the frontend
 // renders uses the identical PodiumStep shape as the predicted one
@@ -285,9 +293,23 @@ async function getRacePrediction(season, round) {
     const shaped = shapeStoredDoc(storedPrediction);
     const evaluation = await evaluateRace(season, Number(round));
 
+    let predictions = shaped.predictions;
     let actualPodium = [];
+
     if (evaluation.eligible) {
+        const actualById = new Map(evaluation.driverEvaluations.map((d) => [d.driverId, d]));
         const predictedById = new Map(shaped.predictions.map((p) => [p.driverId, p]));
+
+        predictions = shaped.predictions.map((p) => {
+            const actual = actualById.get(p.driverId);
+            const actualPosition = actual?.actualPosition ?? null;
+            return {
+                ...p,
+                actualPosition,
+                exactPositionCorrect: actualPosition !== null ? actualPosition === p.predictedPosition : null,
+            };
+        });
+
         actualPodium = evaluation.driverEvaluations
             .filter((d) => d.actualPosition !== null && d.actualPosition <= 3)
             .sort((a, b) => a.actualPosition - b.actualPosition)
@@ -302,6 +324,7 @@ async function getRacePrediction(season, round) {
 
     return {
         ...shaped,
+        predictions,
         completed: evaluation.eligible,
         winnerCorrect: evaluation.eligible ? evaluation.metrics.winnerCorrect : null,
         actualPodium,

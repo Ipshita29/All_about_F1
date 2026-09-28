@@ -166,6 +166,11 @@ function PredictorHeader({ race, resultStatus, selectorProps }) {
 
 function PodiumStep({ p, place, label }) {
     if (!p) return null;
+    // exactPositionCorrect only exists once a race is completed and this
+    // entry has been enriched with its real finishing position — an
+    // upcoming-race prediction simply won't have the key, so this stays
+    // hidden there automatically.
+    const graded = "exactPositionCorrect" in p;
     return (
         <div className={`pr-podium-step pr-podium-step--${place}`} style={{ "--pr-team-color": getTeamAccent(p.constructorId) }}>
             <div className="pr-podium-card">
@@ -173,6 +178,11 @@ function PodiumStep({ p, place, label }) {
                 <span className="pr-podium-number pr-mono">{p.driverNumber ?? "—"}</span>
                 <span className="pr-podium-driver">{p.driverName}</span>
                 <span className="pr-podium-constructor">{p.constructorName}</span>
+                {graded && (
+                    <span className={`pr-podium-actual pr-mono ${p.exactPositionCorrect ? "pr-podium-actual--correct" : "pr-podium-actual--incorrect"}`}>
+                        {p.exactPositionCorrect ? "✓" : "✕"} Actual {p.actualPosition ? `P${p.actualPosition}` : "—"}
+                    </span>
+                )}
             </div>
             <div className="pr-podium-riser pr-mono" aria-hidden="true">{label}</div>
         </div>
@@ -194,9 +204,16 @@ function PodiumRow({ entries }) {
     );
 }
 
-/* ── Full classification table ────────────────────────────────────── */
+/* ── Full classification table — gains a compact "Predicted → Actual"
+   column whenever viewing a completed race (each row already carries
+   actualPosition/exactPositionCorrect from getRacePrediction; an
+   upcoming-race prediction simply won't have that key, so the column
+   is omitted there entirely rather than showing empty cells). The
+   original predicted position/probabilities are never overwritten —
+   this is purely an added column. ────────────────────────────────── */
 
 function ClassificationTable({ predictions }) {
+    const graded = predictions.some((p) => "exactPositionCorrect" in p);
     return (
         <div className="pr-timing-scroll">
             <table className="pr-table">
@@ -205,6 +222,7 @@ function ClassificationTable({ predictions }) {
                         <th>Pos</th>
                         <th>Driver</th>
                         <th>Team</th>
+                        {graded && <th>Predicted → Actual</th>}
                         <th>Exp. Finish</th>
                         <th>Win</th>
                         <th>Podium</th>
@@ -225,6 +243,11 @@ function ClassificationTable({ predictions }) {
                                 </span>
                             </td>
                             <td className="pr-team-cell">{p.constructorName}</td>
+                            {graded && (
+                                <td className={`pr-mono pr-predicted-actual${p.exactPositionCorrect ? " pr-predicted-actual--correct" : ""}`}>
+                                    P{p.predictedPosition} → {p.actualPosition ? `P${p.actualPosition}` : "—"}
+                                </td>
+                            )}
                             <td className="pr-mono">{p.expectedFinish}</td>
                             <td className="pr-mono">{pct(p.winProbability)}</td>
                             <td className="pr-mono">{pct(p.podiumProbability)}</td>
@@ -442,20 +465,24 @@ function Predictor() {
                 {active && (
                     <>
                         <Panel title="Predicted Podium">
+                            {/* Per-driver, not a single verdict for the whole
+                               top 3: each predicted step above already shows
+                               its own actual position + ✓/✕ once graded, this
+                               is just the roll-up count. */}
+                            {active.completed && active.actualPodium?.length > 0 && (
+                                <p className="pr-podium-summary pr-mono">
+                                    {active.predictions.slice(0, 3).filter((p) => p.exactPositionCorrect).length}/3 EXACT PODIUM POSITIONS
+                                </p>
+                            )}
                             <PodiumRow entries={active.predictions} />
                         </Panel>
 
                         {/* Only for a completed previous race — the predicted
                            podium above is never replaced, this is purely an
-                           addition once there's something real to compare it
-                           against. */}
+                           addition showing what actually happened alongside
+                           it, for comparison. */}
                         {active.completed && active.actualPodium?.length > 0 && (
                             <Panel title="Actual Podium">
-                                <div className="pr-actual-head">
-                                    <span className={`pr-result-chip pr-mono ${active.winnerCorrect ? "pr-result-chip--correct" : "pr-result-chip--incorrect"}`}>
-                                        {active.winnerCorrect ? "✓ Correct" : "✕ Incorrect"}
-                                    </span>
-                                </div>
                                 <PodiumRow entries={active.actualPodium} />
                             </Panel>
                         )}
