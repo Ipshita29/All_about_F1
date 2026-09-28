@@ -4,7 +4,7 @@ import { SearchControls, DriverRoster, DriverCard } from "../components/EntityLi
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import { CompareModal } from "../components/Compare";
 import driverInfo from "../data/driverInfo";
-import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
+import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
 import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
@@ -27,19 +27,14 @@ function driverCompareMetrics(standing) {
     };
 }
 
-/* The Compare Drivers identity card: team accent colour, the driver's
-   real racing number (large and translucent behind the artwork), and
-   the same cutout used elsewhere on this page — never a duplicate
-   image source. */
+/* The Compare Drivers identity card: the driver's team accent colour
+   and real racing number, shown large and translucent — no portrait,
+   so it never competes with the number/name hierarchy. */
 function driverCompareVisual(standing) {
     const { Driver, Constructors } = standing;
-    const constructorId = Constructors?.[0]?.constructorId;
-    const fullName = `${Driver.givenName} ${Driver.familyName}`;
     return {
-        accent: getTeamAccent(constructorId),
+        accent: getTeamAccent(Constructors?.[0]?.constructorId),
         number: Driver.permanentNumber,
-        imageCandidates: getDriverAssets(Driver.driverId, fullName).imageCandidates,
-        monogram: Driver.code || Driver.familyName?.slice(0, 3).toUpperCase(),
     };
 }
 

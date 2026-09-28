@@ -4,7 +4,7 @@ import { SearchControls, ConstructorRoster, ConstructorCard } from "../component
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import { CompareModal } from "../components/Compare";
 import teamInfo from "../data/teamInfo";
-import { getTeamAssets } from "../config/teamAssets";
+import { getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
 import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
@@ -49,18 +49,13 @@ function Teams() {
         };
     };
 
-    /* The Compare Teams identity card: team accent colour and logo —
-       teams have no racing number, so the card leans entirely on the
-       logo (or a three-letter monogram when none resolves). */
-    const teamCompareVisual = (team) => {
-        const assets = getTeamAssets(team.constructorId);
-        return {
-            accent: assets.accent,
-            number: null,
-            imageCandidates: assets.logo ? [assets.logo] : [],
-            monogram: team.name.slice(0, 3).toUpperCase(),
-        };
-    };
+    /* The Compare Teams identity card: just the team's own colour and
+       name — teams have no racing number and no reliable logo asset,
+       so the card leans entirely on the colour treatment. */
+    const teamCompareVisual = (team) => ({
+        accent: getTeamAccent(team.constructorId),
+        number: null,
+    });
 
     useEffect(() => {
         fetch(`${API}/teams/${year}`)
