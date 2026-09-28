@@ -34,7 +34,11 @@
 
 .fd-mark-tag { font-family: var(--font-mono); font-size: 6px; fill: currentColor; letter-spacing: 0.05em; }
 
-.fd-hero-content { position: relative; max-width: 720px; }
+/* Wide enough that the heading sits on one line at desktop widths and
+   the search row (which fills this same column) reads as long as the
+   rest of the page's content-width sections — not the narrow 720px
+   column this used to be capped at. */
+.fd-hero-content { position: relative; max-width: 960px; }
 
 .fd-hero-eyebrow {
     display: block;
@@ -45,12 +49,10 @@
 }
 
 .fd-hero-title {
-    display: flex;
-    flex-direction: column;
-    font-size: clamp(2.4rem, 4vw + 1rem, 4.2rem);
+    font-size: clamp(1.9rem, 2.4vw + 1.1rem, 3.2rem);
     font-weight: 800;
     letter-spacing: -0.03em;
-    line-height: 0.98;
+    line-height: 1.05;
     color: var(--text-primary);
     margin: 0 0 var(--space-4);
 }
@@ -70,7 +72,7 @@
     flex-wrap: wrap;
 }
 
-.fd-search-wrap { position: relative; flex: 1 1 340px; }
+.fd-search-wrap { position: relative; flex: 1 1 560px; }
 
 .fd-search-input { height: 56px; font-size: 1.02rem; }
 .fd-search-wrap .input-search-icon { top: 28px; }
@@ -196,85 +198,59 @@
 .fd-band--light .fd-band-heading { color: var(--text-on-light-primary); }
 .fd-band--dark .fd-band-heading { color: var(--text-primary); }
 
-/* ── Popular terms — editorial list, not a card grid ── */
+/* ── Popular terms — a slow, seamless horizontal ticker. The track
+   holds the term list twice back to back and scrolls exactly -50%, so
+   the loop point never shows; a mask fades both edges so terms don't
+   appear to clip abruptly. Pauses on hover, and prefers-reduced-motion
+   turns the animation off entirely rather than just slowing it. ───── */
 
-.fd-popular-list {
-    list-style: none;
-    margin: 0 0 var(--space-8);
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+.fd-ticker {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
 }
 
-.fd-popular-item {
+.fd-ticker-track {
     display: flex;
-    align-items: baseline;
-    gap: var(--space-4);
-    width: 100%;
+    align-items: center;
+    width: max-content;
+    animation: fdTickerScroll 34s linear infinite;
+}
+
+.fd-ticker:hover .fd-ticker-track,
+.fd-ticker:focus-within .fd-ticker-track { animation-play-state: paused; }
+
+@keyframes fdTickerScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.fd-ticker-item { display: inline-flex; align-items: center; white-space: nowrap; }
+
+.fd-ticker-term {
     background: none;
     border: none;
-    border-top: 1px solid var(--border-on-light);
-    padding: var(--space-3) 0;
-    text-align: left;
-    cursor: pointer;
+    padding: 0;
+    font-size: 0.94rem;
+    font-weight: 600;
+    letter-spacing: 0.005em;
     color: var(--text-on-light-primary);
-}
-
-.fd-popular-list li:last-child .fd-popular-item { border-bottom: 1px solid var(--border-on-light); }
-
-.fd-popular-index { font-size: 0.66rem; color: var(--text-on-light-muted); flex-shrink: 0; }
-.fd-popular-title { flex: 1; font-size: 1.02rem; font-weight: 600; transition: color var(--dur-fast) var(--ease); }
-.fd-popular-category { font-size: 0.64rem; letter-spacing: 0.06em; color: var(--text-on-light-muted); }
-
-.fd-popular-item:hover .fd-popular-title { color: var(--accent); }
-
-/* ── Category grid — alternating light/dark cards ── */
-
-.fd-category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-5); }
-
-.fd-category-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    text-align: left;
     cursor: pointer;
-    background: var(--surface-light-2);
-    border: 1px solid var(--border-on-light);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5);
-    color: var(--text-on-light-primary);
-    transition: border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    transition: color var(--dur-fast) var(--ease);
 }
 
-.fd-category-card:hover { border-color: var(--border-on-light-strong); transform: translateY(-2px); color: var(--text-on-light-primary); }
+.fd-ticker-term:hover { color: var(--accent); }
+.fd-ticker-term:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.fd-category-card--dark {
-    background: var(--bg);
-    border-color: var(--border-faint);
-    color: var(--text-primary);
+.fd-ticker-sep {
+    margin: 0 var(--space-4);
+    color: var(--text-on-light-muted);
+    font-size: 0.8rem;
 }
 
-.fd-category-card--dark:hover { border-color: var(--border-strong); color: var(--text-primary); }
-
-.fd-category-icon { color: var(--accent); margin-bottom: 2px; }
-.fd-category-card--dark .fd-category-icon { color: var(--accent-text); }
-
-.fd-category-title { font-size: 1.05rem; margin: 0; color: var(--text-on-light-primary); }
-.fd-category-card--dark .fd-category-title { color: var(--text-primary); }
-
-.fd-category-card p { font-size: 0.82rem; color: var(--text-on-light-secondary); flex: 1; margin: 0; line-height: 1.5; }
-.fd-category-card--dark p { color: var(--text-secondary); }
-
-.fd-category-footer { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-on-light); }
-.fd-category-card--dark .fd-category-footer { border-top-color: var(--border-faint); }
-
-.fd-category-count { font-size: 0.62rem; color: var(--text-on-light-muted); }
-.fd-category-card--dark .fd-category-count { color: var(--text-faint); }
-
-.fd-category-explore { font-size: 0.66rem; color: var(--text-on-light-muted); display: inline-flex; align-items: center; gap: 3px; }
-.fd-category-card--dark .fd-category-explore { color: var(--text-faint); }
-.fd-category-card:hover .fd-category-explore { color: var(--accent); }
-.fd-category-card--dark:hover .fd-category-explore { color: var(--accent-text); }
+@media (prefers-reduced-motion: reduce) {
+    .fd-ticker-track { animation: none; }
+}
 
 /* ── Category page (department term list) ── */
 
