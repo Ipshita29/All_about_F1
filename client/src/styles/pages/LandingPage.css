@@ -685,56 +685,203 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   EXPLORE (dark) — .lp-explore-*
+   THE PADDOCK (dark) — .lp-paddock-*
+   A directory, not a card grid: Live is one dominant full-width
+   feature, the other six destinations sit in an even two-column grid
+   below it. Cream surfaces against the dark section background, thin
+   red accents only on hover/interaction — no gradients, no glow, no
+   glass. Titles in Inter, numbers/metadata in JetBrains Mono.
    ══════════════════════════════════════════════════════════════════ */
 
-.lp-explore {
+.lp-paddock {
     background: var(--bg);
     max-width: var(--content-width-wide);
     margin: 0 auto;
     padding: var(--space-9) var(--space-6);
 }
 
-.lp-explore-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-6) var(--space-5);
-    margin-top: var(--space-7);
+.lp-paddock-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
 }
 
-.lp-explore-tile {
+.lp-paddock-meta::before {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background: var(--border-strong);
+}
+
+.lp-paddock-directory {
+    margin-top: var(--space-7);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* ── Live — the dominant feature ── */
+
+.lp-paddock-feature {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--surface-light-1);
+    border: 1px solid var(--border-on-light);
+    color: var(--text-on-light-primary);
+    overflow: hidden;
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.lp-paddock-feature::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform var(--dur-fast) var(--ease);
+}
+
+.lp-paddock-feature:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-border);
+    color: var(--text-on-light-primary);
+}
+
+.lp-paddock-feature:hover::before { transform: scaleY(1); }
+
+.lp-paddock-feature-left { display: flex; align-items: center; gap: var(--space-5); min-width: 0; }
+
+.lp-paddock-feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(176, 8, 11, 0.08);
+    color: var(--accent);
+}
+
+.lp-paddock-feature-num {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.lp-paddock-feature-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.lp-paddock-feature-copy { font-size: 0.9rem; color: var(--text-on-light-secondary); margin: 2px 0 0; }
+
+.lp-paddock-feature-right { display: flex; align-items: center; gap: var(--space-5); flex-shrink: 0; }
+
+.lp-paddock-live-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+}
+
+.lp-paddock-live-dot i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: paddockPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes paddockPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.lp-paddock-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border-on-light-strong);
+    color: var(--text-on-light-muted);
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.lp-paddock-feature:hover .lp-paddock-arrow { border-color: var(--accent); color: var(--accent); transform: translateX(3px); }
+
+/* ── The other six destinations ── */
+
+.lp-paddock-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+}
+
+.lp-paddock-tile {
+    position: relative;
     padding: var(--space-5);
     border-radius: var(--radius-lg);
     background: var(--surface-light-1);
     border: 1px solid var(--border-on-light);
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    gap: 2px;
     color: var(--text-on-light-primary);
+    overflow: hidden;
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
 }
 
-.lp-explore-tile:hover {
-    border-color: var(--accent-border);
-    box-shadow: var(--shadow-md);
+.lp-paddock-tile::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-fast) var(--ease);
+}
+
+.lp-paddock-tile:hover {
     transform: translateY(-2px);
+    border-color: var(--accent-border);
     color: var(--text-on-light-primary);
 }
 
-.lp-explore-num {
+.lp-paddock-tile:hover::before { transform: scaleX(1); }
+
+.lp-paddock-tile-head { display: flex; align-items: center; justify-content: space-between; }
+
+.lp-paddock-tile-num { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent); }
+.lp-paddock-tile-icon { color: var(--text-on-light-muted); }
+
+.lp-paddock-tile h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.005em; margin: var(--space-3) 0 0; }
+.lp-paddock-tile p { font-size: 0.82rem; color: var(--text-on-light-secondary); line-height: 1.45; flex: 1; margin: 2px 0 0; }
+
+.lp-paddock-tile-go {
+    margin-top: var(--space-3);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--accent);
-}
-
-.lp-explore-tile h3 { font-size: 0.98rem; font-weight: 600; color: var(--text-on-light-primary); margin: 0; }
-
-.lp-explore-tile p { font-size: 0.8rem; color: var(--text-on-light-secondary); line-height: 1.45; flex: 1; margin: 0; }
-
-.lp-explore-go {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     letter-spacing: 0.06em;
     color: var(--text-on-light-muted);
     display: inline-flex;
@@ -743,7 +890,7 @@
     transition: color var(--dur-fast) var(--ease), gap var(--dur-fast) var(--ease);
 }
 
-.lp-explore-tile:hover .lp-explore-go { color: var(--accent); gap: 8px; }
+.lp-paddock-tile:hover .lp-paddock-tile-go { color: var(--accent); gap: 8px; }
 
 /* ══════════════════════════════════════════════════════════════════
    FOOTER (dark) — .lp-footer-*
@@ -871,7 +1018,6 @@
     .platform-row { grid-template-columns: 40px 1fr 20px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
     .news-grid { grid-template-columns: 1fr; }
-    .lp-explore-grid { grid-template-columns: repeat(2, 1fr); }
 
     .ri-stats { flex-wrap: wrap; row-gap: var(--space-6); }
     .ri-stats .ri-stat { flex: 1 1 40%; }
@@ -885,7 +1031,7 @@
     .platform,
     .ri-inner,
     .champ,
-    .lp-explore { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .lp-paddock { padding-left: var(--space-4); padding-right: var(--space-4); }
     .news > .news-head, .news > .news-grid { padding-left: var(--space-4); padding-right: var(--space-4); }
     .news-item { flex-direction: column; }
     .news-item-img--large { width: 100%; max-width: none; aspect-ratio: 16 / 9; }
@@ -908,7 +1054,10 @@
     .platform-row { grid-template-columns: 32px 1fr 18px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
     .platform-visual { aspect-ratio: 4 / 3; }
-    .lp-explore-grid { grid-template-columns: 1fr; }
+
+    .lp-paddock-grid { grid-template-columns: 1fr; }
+    .lp-paddock-feature { flex-direction: column; align-items: flex-start; }
+    .lp-paddock-feature-right { width: 100%; justify-content: space-between; }
 
     .lp-invite, .lp-radio { left: var(--space-3); right: var(--space-3); width: auto; }
     .lp-footer-content { flex-direction: column; gap: var(--space-6); }
