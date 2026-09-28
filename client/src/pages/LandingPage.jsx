@@ -754,9 +754,11 @@ const FOOTER_GROUPS = [
     {
         title: "COMPETE",
         links: [
+            { to: "/live", label: "Live" },
+            { to: "/predictor", label: "Predictor" },
             { to: "/grandprixdashboard", label: "Race Weekend" },
             { to: "/drivers", label: "Drivers" },
-            { to: "/teams", label: "Constructors" },
+            { to: "/teams", label: "Teams" },
         ],
     },
     {
