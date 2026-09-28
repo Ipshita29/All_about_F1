@@ -53,11 +53,11 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    border: 1px solid var(--border-strong);
-    background: var(--surface-2);
+    border: 1px solid rgba(240, 237, 232, 0.34);
+    background: rgba(240, 237, 232, 0.14);
     color: var(--text-primary);
 }
 
@@ -78,72 +78,88 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    min-height: 220px;
+    min-height: 200px;
     padding: var(--space-5);
     border-radius: var(--radius-lg);
-    border: 1px solid color-mix(in srgb, var(--cmp-card-accent) 40%, var(--border-strong));
-    background: linear-gradient(165deg, color-mix(in srgb, var(--cmp-card-accent) 45%, #0b0b0c) 0%, #0b0b0c 75%);
+    background-color: var(--cmp-card-accent);
+    background-image: linear-gradient(155deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.24) 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.16);
+    color: var(--cmp-card-text);
 }
+
+/* Team cards carry no number/image — centre the name in the space
+   the driver cards spend on the oversized mark. */
+.cmp-card--plain { justify-content: center; align-items: center; text-align: center; }
 
 .cmp-card-number {
     position: absolute;
-    top: -0.3em;
-    right: -0.04em;
-    font-size: 6.5rem;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(5rem, 13vw, 8rem);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
-    color: color-mix(in srgb, var(--cmp-card-accent) 80%, #fff 20%);
-    opacity: 0.22;
+    color: var(--cmp-card-text);
+    opacity: 0.2;
     pointer-events: none;
     user-select: none;
-}
-
-.cmp-card-media {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.cmp-card-img {
-    max-height: 92%;
-    max-width: 88%;
-    object-fit: contain;
-    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.45));
-}
-
-.cmp-card-monogram {
-    font-size: 2.4rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: color-mix(in srgb, var(--cmp-card-accent) 70%, #fff 30%);
-    opacity: 0.55;
 }
 
 .cmp-card-foot { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 4px; }
 
 .cmp-card-name {
-    font-size: 1.3rem;
-    font-weight: 700;
+    font-size: 1.35rem;
+    font-weight: 800;
     letter-spacing: -0.01em;
-    color: #fff;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    color: var(--cmp-card-text);
 }
 
 .cmp-card-sub {
     font-size: 0.66rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--cmp-card-accent) 60%, #fff 40%);
-    opacity: 0.85;
+    color: var(--cmp-card-text);
+    opacity: 0.72;
 }
 
 /* ── Metric rows, centered beneath the cards ─────────────────────── */
 
-.cmp-metrics { width: 100%; max-width: 420px; margin: 0 auto; }
+.cmp-metrics { display: flex; flex-direction: column; width: 100%; max-width: 460px; margin: 0 auto; }
+
+.cmp-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-4);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-faint);
+}
+
+.cmp-row:last-child { border-bottom: none; }
+
+.cmp-row-val {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cmp-row-val--a { text-align: right; }
+.cmp-row-val--b { text-align: left; }
+.cmp-row-val.is-lead { font-weight: 700; color: var(--text-primary); }
+
+.cmp-row-label {
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--text-muted);
+}
 
 /* ── Entity pickers (EntitySelect, restyled for the modal) ────────── */
 
@@ -200,36 +216,6 @@
     border-radius: 2px;
 }
 
-/* ── Metric rows ──────────────────────────────────────────────────── */
-
-.cmp-grid { display: flex; flex-direction: column; gap: var(--space-5); }
-
-/* CompareStat — neutral side-by-side reading, no bar */
-.cmp-stat { display: flex; flex-direction: column; gap: var(--space-2); }
-.cmp-stat-label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; color: var(--text-muted); }
-
-.cmp-stat-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: var(--space-4);
-}
-
-.cmp-stat-val {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-}
-
-.cmp-stat-val--right { text-align: right; }
-.cmp-stat-val.is-lead { font-weight: 700; color: var(--text-primary); }
-
-.cmp-stat-rule { width: 1px; height: 24px; background: var(--border-strong); }
-
-.cmp-stat-na { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; color: var(--text-faint); }
-
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
@@ -239,9 +225,10 @@
     .cmp-controls { flex-direction: column; align-items: stretch; gap: var(--space-4); }
     .cmp-controls .ex-combo { min-width: 0; }
     .cmp-empty-rails { grid-template-columns: 1fr; }
-    .cmp-stat-row { gap: var(--space-3); }
-    .cmp-stat-val { font-size: 1.25rem; }
     .cmp-cards { grid-template-columns: 1fr; }
-    .cmp-card { min-height: 180px; }
-    .cmp-card-number { font-size: 5rem; }
+    .cmp-card { min-height: 160px; }
+    .cmp-card-number { font-size: clamp(4rem, 22vw, 5.5rem); }
+    .cmp-row { grid-template-columns: 1fr auto 1fr; gap: var(--space-2); padding: 10px 0; }
+    .cmp-row-val { font-size: 1.15rem; }
+    .cmp-row-label { font-size: 0.56rem; }
 }
