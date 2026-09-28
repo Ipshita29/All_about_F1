@@ -676,7 +676,7 @@ function PitWallRadio({ favs, footerRef }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
- * THE PADDOCK — the site's directory, not a generic nav-card grid.
+ * EVERY ROAD IN — the site's directory, not a generic nav-card grid.
  * Live leads as one dominant full-width feature (it's the only
  * destination with something genuinely time-sensitive to show); the
  * other six sit in an even two-column grid below. The live indicator
@@ -699,7 +699,7 @@ function PaddockDirectory({ isLive }) {
     const LiveIcon = LIVE_DESTINATION.icon;
     return (
         <section className="lp-paddock" aria-label="The Paddock — every destination">
-            <SectionHeader eyebrow="EXPLORE" title="THE PADDOCK" description="Your way into every part of Formula 1." />
+            <SectionHeader eyebrow="EXPLORE" title="EVERY ROAD IN" description="Your way into every part of Formula 1." />
             <span className="lp-paddock-meta">
                 {String(DESTINATIONS.length + 1).padStart(2, "0")} DESTINATIONS · {SEASON}
             </span>

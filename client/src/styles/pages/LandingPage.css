@@ -787,7 +787,12 @@
     margin-bottom: 4px;
 }
 
-.lp-paddock-feature-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+/* Explicit color, not inherited — the global h1/h2/h3 rule (styled for
+   the dark canvas) otherwise wins over the parent Link's inherited
+   color, since inheritance loses to any explicit rule regardless of
+   specificity. That was rendering these titles near-white on the cream
+   card. */
+.lp-paddock-feature-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; color: var(--text-on-light-primary); }
 .lp-paddock-feature-copy { font-size: 0.9rem; color: var(--text-on-light-secondary); margin: 2px 0 0; }
 
 .lp-paddock-feature-right { display: flex; align-items: center; gap: var(--space-5); flex-shrink: 0; }
@@ -875,7 +880,7 @@
 .lp-paddock-tile-num { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent); }
 .lp-paddock-tile-icon { color: var(--text-on-light-muted); }
 
-.lp-paddock-tile h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.005em; margin: var(--space-3) 0 0; }
+.lp-paddock-tile h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.005em; margin: var(--space-3) 0 0; color: var(--text-on-light-primary); }
 .lp-paddock-tile p { font-size: 0.82rem; color: var(--text-on-light-secondary); line-height: 1.45; flex: 1; margin: 2px 0 0; }
 
 .lp-paddock-tile-go {
@@ -883,7 +888,7 @@
     font-family: var(--font-mono);
     font-size: 0.66rem;
     letter-spacing: 0.06em;
-    color: var(--text-on-light-muted);
+    color: var(--text-on-light-secondary);
     display: inline-flex;
     align-items: center;
     gap: 4px;
