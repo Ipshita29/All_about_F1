@@ -36,24 +36,41 @@
  *   - {season}/{round}/qualifying.json → grid, once qualifying has run
  *   - {season}/{round}/sprint.json    → sprint result, on a sprint weekend
  *                                        only, once the sprint has run —
- *                                        surfaced on the Data Used card,
- *                                        not a scored feature of its own
+ *                                        folded into recentForm as this
+ *                                        weekend's own most-recent data
+ *                                        point (see assemblePrediction),
+ *                                        not a separate scored feature
  *   - circuits/{circuitId}/results.json → all-time results at this track
  *
  * FEATURES (per driver, each normalized to roughly 0–1, higher = better)
- *   championshipStanding — current standings position, inverted+scaled
- *   recentForm           — weighted avg of the last up to 5 races
+ *   championshipStanding — standings position AND points share of the
+ *                           leader, blended 40/60 (see
+ *                           rankAndPointsShareScore) — rank alone can't
+ *                           tell a 1-point gap from a 200-point gap
+ *   recentForm           — weighted avg of the last up to 5 races, plus
+ *                           this weekend's sprint result when one exists
  *                           (see computeRecentFormFeature)
- *   constructorStrength  — constructor's standings position, inverted
- *   circuitHistory        — driver's all-time record at this circuit
+ *   constructorStrength  — same rank+points-share blend, for the
+ *                           constructor
+ *   circuitHistory        — driver's record at this circuit, weighted
+ *                           toward the most recent editions rather than
+ *                           a flat all-time average (see
+ *                           computeCircuitHistoryFeature)
  *   qualifying            — this weekend's grid position, ONLY once
- *                           qualifying has actually happened
+ *                           qualifying has actually happened, nudged by
+ *                           a small car-independent bonus/penalty for
+ *                           out-qualifying a teammate (see
+ *                           computeQualifyingFeature)
  *
- * WEIGHTS (documented, not tuned against held-out data — see
- * LIMITATIONS)
- *   recentForm: 0.35, qualifying: 0.25, constructorStrength: 0.20,
- *   circuitHistory: 0.10, championshipStanding: 0.10
- *   Before qualifying, qualifying's weight is redistributed
+ * WEIGHTS (reasoned, not fitted — see LIMITATIONS for why)
+ *   recentForm: 0.32, qualifying: 0.30, constructorStrength: 0.20,
+ *   circuitHistory: 0.08, championshipStanding: 0.10
+ *   Qualifying carries the single largest weight among the real-time
+ *   features: grid position is well established in motorsport analysis
+ *   as the strongest single predictor of finishing position. circuitHistory
+ *   carries the least — even recency-weighted, it's the most indirect
+ *   signal (a different car, teammate, and regulation era at each past
+ *   edition). Before qualifying, its weight is redistributed
  *   proportionally across the other four rather than guessed at.
  *
  * LEAKAGE PREVENTION
@@ -108,19 +125,19 @@ const SIMULATION_TRIALS = 5000;
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 const WEIGHTS = {
-    recentForm: 0.35,
-    qualifying: 0.25,
+    recentForm: 0.32,
+    qualifying: 0.30,
     constructorStrength: 0.2,
-    circuitHistory: 0.1,
+    circuitHistory: 0.08,
     championshipStanding: 0.1,
 };
 
 const LIMITATIONS = [
     "This is a statistical estimate from publicly available historical/current-season data, not a guarantee — F1 outcomes depend on many factors (incidents, weather, strategy, reliability) this model does not model.",
-    "Weights and the simulation's ability transform (k=4) are documented, reasoned choices, not fitted against held-out historical results.",
+    "Weights and the simulation's ability transform (k=4) are reasoned choices, not fitted against held-out historical results — the site's own evaluation history only covers a handful of races so far, far too few to fit weights against without badly overfitting.",
     "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not yet used as a scoring input to the prediction itself.",
     "Historical pit-stop counts and timing are available from the data source; tyre compounds are not, so compound/stint strategy is never shown or implied.",
-    "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit).",
+    "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit), weighted toward the most recent editions.",
 ];
 
 // ---------------------------------------------------------------------------
@@ -237,18 +254,34 @@ async function fetchCircuitHistory(circuitId) {
 // Feature engineering — each returns { score (0-1 or null), available, ...raw }
 // ---------------------------------------------------------------------------
 
-function computeChampionshipFeature(standing, fieldSize) {
-    if (!standing || !fieldSize) return { score: null, available: false, position: null, points: null };
-    const position = Number(standing.position);
-    const score = (fieldSize - position + 1) / fieldSize;
-    return { score: clamp01(score), available: true, position, points: Number(standing.points) };
+/*
+ * Blends ordinal rank with points share (this entrant's points over the
+ * leader's), 40/60. Rank alone treats a 1-point gap and a 200-point gap
+ * between P1/P2 identically, throwing away real signal the standings
+ * already carry; points share alone collapses everyone still on zero
+ * points (common for the tail of the field, especially early season) to
+ * an indistinguishable 0, losing their relative classification order.
+ * Blending keeps both: genuine gap size where points exist, real rank
+ * separation where they don't.
+ */
+function rankAndPointsShareScore(position, points, fieldSize, leaderPoints) {
+    const rankScore = (fieldSize - position + 1) / fieldSize;
+    const shareScore = leaderPoints > 0 ? points / leaderPoints : rankScore;
+    return clamp01(rankScore * 0.4 + shareScore * 0.6);
 }
 
-function computeConstructorFeature(standing, fieldSize) {
+function computeChampionshipFeature(standing, fieldSize, leaderPoints) {
     if (!standing || !fieldSize) return { score: null, available: false, position: null, points: null };
     const position = Number(standing.position);
-    const score = (fieldSize - position + 1) / fieldSize;
-    return { score: clamp01(score), available: true, position, points: Number(standing.points) };
+    const points = Number(standing.points);
+    return { score: rankAndPointsShareScore(position, points, fieldSize, leaderPoints), available: true, position, points };
+}
+
+function computeConstructorFeature(standing, fieldSize, leaderPoints) {
+    if (!standing || !fieldSize) return { score: null, available: false, position: null, points: null };
+    const position = Number(standing.position);
+    const points = Number(standing.points);
+    return { score: rankAndPointsShareScore(position, points, fieldSize, leaderPoints), available: true, position, points };
 }
 
 /*
@@ -299,28 +332,51 @@ function computeRecentFormFeature(driverId, recentRaces) {
 
 /*
  * Circuit history uses ALL-TIME results at this track (see
- * fetchCircuitHistory). Grid position is used as a proxy for qualifying
- * performance here rather than a separate qualifying.json call per past
- * race at this circuit — cheaper, and grid position (post-penalties) is
- * close enough to "how they qualified" for a historical-trend feature.
- * A driver with zero prior starts gets a NEUTRAL 0.5, never a fabricated
- * score — new/rookie drivers are common and this must not penalize or
- * favor them without real data.
+ * fetchCircuitHistory, which returns editions oldest-first). Grid
+ * position is used as a proxy for qualifying performance here rather
+ * than a separate qualifying.json call per past race at this circuit —
+ * cheaper, and grid position (post-penalties) is close enough to "how
+ * they qualified" for a historical-trend feature. A driver with zero
+ * prior starts gets a NEUTRAL 0.5, never a fabricated score — new/
+ * rookie drivers are common and this must not penalize or favor them
+ * without real data.
+ *
+ * Recency-weighted, not a flat average: a driver's form at this circuit
+ * two seasons ago says far more about their current competitiveness
+ * there than a result from a decade earlier under a different car/
+ * regulation era, so later editions (higher index in the already-
+ * chronological circuitRaces list) count proportionally more — the same
+ * linear recency decay computeRecentFormFeature already uses for
+ * same-season form, applied here across editions instead of rounds.
  */
 function computeCircuitHistoryFeature(driverId, circuitRaces) {
     const entries = [];
-    for (const race of circuitRaces) {
+    circuitRaces.forEach((race, editionIndex) => {
         const result = race.Results?.find((r) => r.Driver.driverId === driverId);
-        if (result) entries.push(result);
-    }
+        if (result) entries.push({ result, editionIndex });
+    });
 
     if (entries.length === 0) {
         return { score: 0.5, available: false, starts: 0, avgFinish: null, avgStart: null, podiums: 0, wins: 0 };
     }
 
-    const finishes = entries.map((e) => Number(e.position)).filter((n) => !Number.isNaN(n));
-    const starts = entries.map((e) => Number(e.grid)).filter((n) => !Number.isNaN(n) && n > 0);
-    const avgFinish = finishes.length ? finishes.reduce((a, b) => a + b, 0) / finishes.length : null;
+    const finishes = [];
+    const starts = [];
+    let weightedFinishSum = 0;
+    let weightTotal = 0;
+    for (const { result, editionIndex } of entries) {
+        const finish = Number(result.position);
+        if (!Number.isNaN(finish)) {
+            finishes.push(finish);
+            const w = editionIndex + 1; // later edition = more recent = higher weight
+            weightedFinishSum += finish * w;
+            weightTotal += w;
+        }
+        const grid = Number(result.grid);
+        if (!Number.isNaN(grid) && grid > 0) starts.push(grid);
+    }
+
+    const avgFinish = weightTotal > 0 ? weightedFinishSum / weightTotal : null;
     const avgStart = starts.length ? starts.reduce((a, b) => a + b, 0) / starts.length : null;
     const podiums = finishes.filter((p) => p <= 3).length;
     const wins = finishes.filter((p) => p === 1).length;
@@ -340,15 +396,23 @@ function computeQualifyingFeature(driverId, qualifyingResults, teammateId) {
 
     const fieldSize = qualifyingResults.length;
     const position = Number(result.position);
-    const score = clamp01((fieldSize - position) / (fieldSize - 1));
+    const gridScore = clamp01((fieldSize - position) / (fieldSize - 1));
 
+    // Out-qualifying a teammate in (near-)identical machinery is a real,
+    // car-independent skill signal that grid position alone can't isolate
+    // — bounded to a small +/-0.08 nudge so it can't override the actual
+    // grid-position score, just adjust it.
     let teammateDelta = null;
+    let teammateBonus = 0;
     if (teammateId) {
         const teammateResult = qualifyingResults.find((q) => q.Driver.driverId === teammateId);
-        if (teammateResult) teammateDelta = Number(teammateResult.position) - position; // positive = ahead of teammate
+        if (teammateResult) {
+            teammateDelta = Number(teammateResult.position) - position; // positive = ahead of teammate
+            teammateBonus = Math.max(-0.08, Math.min(0.08, (teammateDelta / fieldSize) * 0.8));
+        }
     }
 
-    return { score, available: true, position, teammateDelta };
+    return { score: clamp01(gridScore + teammateBonus), available: true, position, teammateDelta };
 }
 
 function clamp01(n) {
@@ -594,6 +658,11 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
+    // Standings are already sorted by position ascending, so index 0 is
+    // the leader — used to score every other entrant's points as a real
+    // gap, not just an ordinal rank (see rankAndPointsShareScore).
+    const leaderPoints = Number(driverStandings[0]?.points) || 0;
+    const constructorLeaderPoints = Number(constructorStandings[0]?.points) || 0;
 
     // Teammate lookup for the qualifying-delta feature.
     const teamRoster = new Map();
@@ -604,14 +673,26 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         teamRoster.get(teamId).push(s.Driver.driverId);
     }
 
+    // A sprint result is this weekend's own recent-race data, even more
+    // current than any past round — prepended so computeRecentFormFeature's
+    // existing recency weighting (index 0 = highest weight) naturally
+    // gives it the top slot, rather than adding a whole separate scored
+    // feature for something that's really just "how did this driver do
+    // very recently". Its points use the same /25 normalization real
+    // races do, which already down-weights a sprint's lower point scale
+    // relative to a full race — exactly the right amount of influence.
+    const recentRacesWithSprint = sprintResults.length > 0
+        ? [{ round: `${round}-sprint`, results: sprintResults }, ...recentRaces]
+        : recentRaces;
+
     const withFeatures = driverStandings.map((s) => {
         const driverId = s.Driver.driverId;
         const teamId = s.Constructors?.[0]?.constructorId;
         const teammateId = (teamRoster.get(teamId) || []).find((id) => id !== driverId) || null;
 
-        const championshipStanding = computeChampionshipFeature(s, fieldSize);
-        const constructorStrength = computeConstructorFeature(constructorStandingByTeam.get(teamId), constructorFieldSize);
-        const recentForm = computeRecentFormFeature(driverId, recentRaces);
+        const championshipStanding = computeChampionshipFeature(s, fieldSize, leaderPoints);
+        const constructorStrength = computeConstructorFeature(constructorStandingByTeam.get(teamId), constructorFieldSize, constructorLeaderPoints);
+        const recentForm = computeRecentFormFeature(driverId, recentRacesWithSprint);
         const circuitHistory = computeCircuitHistoryFeature(driverId, circuitRaces);
         const qualifying = computeQualifyingFeature(driverId, qualifyingResults, teammateId);
 
