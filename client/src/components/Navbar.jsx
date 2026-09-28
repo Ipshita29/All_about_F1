@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { API_BASE_URL as API } from "../config/api";
 
 const PRIMARY_LINKS = [
     { to: "/live", label: "Live" },
@@ -27,10 +28,23 @@ function Navbar() {
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
     const [moreOpen, setMoreOpen] = useState(false);
+    const [accountOpen, setAccountOpen] = useState(false);
+    const [accountName, setAccountName] = useState("");
     const [scrolled, setScrolled] = useState(() => window.scrollY > 24);
     const moreRef = useRef(null);
+    const accountRef = useRef(null);
 
     const isLanding = location.pathname === "/";
+
+    /* just the initial for the avatar — reuses the same /user/profile
+       endpoint the Profile page reads, no separate user-data source */
+    useEffect(() => {
+        if (!token) return;
+        fetch(`${API}/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => setAccountName(data?.name || ""))
+            .catch(() => setAccountName(""));
+    }, [token]);
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 24);
@@ -45,6 +59,7 @@ function Navbar() {
         setLastPath(location.pathname);
         setMenuOpen(false);
         setMoreOpen(false);
+        setAccountOpen(false);
     }
 
     useEffect(() => {
@@ -62,6 +77,22 @@ function Navbar() {
             document.removeEventListener("pointerdown", onOutside);
         };
     }, [moreOpen]);
+
+    useEffect(() => {
+        if (!accountOpen) return undefined;
+        const onKey = (e) => e.key === "Escape" && setAccountOpen(false);
+        const onOutside = (e) => {
+            if (accountRef.current && !accountRef.current.contains(e.target)) {
+                setAccountOpen(false);
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        document.addEventListener("pointerdown", onOutside);
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.removeEventListener("pointerdown", onOutside);
+        };
+    }, [accountOpen]);
 
     const close = () => setMenuOpen(false);
 
@@ -136,17 +167,38 @@ function Navbar() {
 
                 <div className="navbar-right">
                     {token ? (
-                        <>
-                            <Link to="/preferences" className="navbar-profile-btn">
-                                Preferences
-                            </Link>
-                            <Link to="/profile" className="navbar-profile-btn">
-                                Profile
-                            </Link>
-                            <button className="navbar-signout-btn" onClick={handleLogout}>
-                                Sign Out
+                        <div className="navbar-explore" ref={accountRef}>
+                            <button
+                                type="button"
+                                className="navbar-avatar-btn"
+                                aria-haspopup="true"
+                                aria-expanded={accountOpen}
+                                aria-label="Account menu"
+                                onClick={() => setAccountOpen((o) => !o)}
+                            >
+                                {accountName.trim()[0]?.toUpperCase() || "?"}
                             </button>
-                        </>
+                            {accountOpen && (
+                                <div className="navbar-explore-menu navbar-account-menu" role="menu">
+                                    <Link
+                                        to="/profile"
+                                        role="menuitem"
+                                        className="navbar-explore-item"
+                                        onClick={() => setAccountOpen(false)}
+                                    >
+                                        Profile
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        role="menuitem"
+                                        className="navbar-explore-item navbar-explore-item--danger"
+                                        onClick={handleLogout}
+                                    >
+                                        Log out
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <Link to="/auth" className="navbar-signin-btn">Sign In</Link>
                     )}
@@ -186,9 +238,8 @@ function Navbar() {
                     <div className="navbar-mobile-separator" />
                     {token ? (
                         <>
-                            <Link to="/preferences" className="navbar-mobile-link" onClick={close}>Preferences</Link>
                             <Link to="/profile" className="navbar-mobile-link" onClick={close}>Profile</Link>
-                            <button className="navbar-mobile-signout" onClick={handleLogout}>Sign Out</button>
+                            <button className="navbar-mobile-signout" onClick={handleLogout}>Log out</button>
                         </>
                     ) : (
                         <Link to="/auth" className="navbar-mobile-link navbar-mobile-link-accent" onClick={close}>Sign In</Link>

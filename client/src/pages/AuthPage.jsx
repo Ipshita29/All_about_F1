@@ -5,9 +5,9 @@
  * light Cararra form panel — an editorial two-pane composition instead of
  * a card centred on a black screen. Returning drivers sign in and launch;
  * new drivers create their credentials, then the journey continues
- * straight into choosing a favourite driver and constructor (the same
- * /user/preferences API the Preferences page uses) before the final light
- * goes out and the site opens.
+ * straight into choosing a favourite driver and constructor (saved via
+ * the /user/preferences API) before the final light goes out and the
+ * site opens.
  *
  * Business logic is unchanged: same /auth/login and /auth/signup
  * endpoints, same token storage, same destinations, same fields, same
@@ -29,7 +29,7 @@ const DRIVERS = [
   "Carlos Sainz", "Alexander Albon", "Nico Hulkenberg", "Gabriel Bortoleto",
 ];
 
-/* value → display name, same values the Preferences page saves */
+/* value → display name, same values the Profile page saves */
 const TEAMS = [
   ["Ferrari", "Scuderia Ferrari HP", "#dc0000"],
   ["Mercedes", "Mercedes-AMG PETRONAS", "#00d2be"],

@@ -2,7 +2,7 @@ import teamInfo from "../data/teamInfo";
 import driverInfo from "../data/driverInfo";
 import { circuitInfo } from "../data/circuitInfo";
 
-/* ── Favourite team name (Preferences values) → Jolpica constructorId ── */
+/* ── Favourite team name (as saved on Profile/signup) → Jolpica constructorId ── */
 export const FAV_TEAM_TO_CONSTRUCTOR_ID = {
     "Ferrari": "ferrari",
     "Mercedes": "mercedes",

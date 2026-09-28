@@ -9,7 +9,6 @@ import LandingPage from "./pages/LandingPage"
 import Teams from "./pages/Teams"
 import TeamDetails from "./pages/TeamDetails"
 import AuthPage from "./pages/AuthPage";
-import Preferences from "./pages/Preferences";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import F1Dictionary from "./pages/F1Dictionary";
@@ -42,7 +41,6 @@ function AppShell() {
         <Route path="/teams/:year/:id" element={<TeamDetails/>}/>
         <Route path="/grandprixdashboard" element={<GrandPrix/>}/>
         <Route path="/grandprixdashboard/:year/:id" element={<GrandPrixDetails/>}/>
-        <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/dictionary" element={<F1Dictionary />} />
         <Route path="/dictionary/category/:categorySlug" element={<DictionaryCategory />} />

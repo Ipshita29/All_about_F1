@@ -1,0 +1,49 @@
+/*
+ * PROFILE — a single plain card: name, email, favourite driver, favourite
+ * team, save, log out. Built from the shared .input/.select/.btn system
+ * (global.css), not a bespoke design language.
+ */
+
+.pf { background: var(--bg); min-height: 100vh; }
+
+.pf-loading { display: flex; align-items: center; justify-content: center; min-height: 70vh; }
+
+.pf-header {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) var(--space-5);
+}
+
+.pf-eyebrow {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
+}
+
+.pf-title { font-size: var(--text-page-title); font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--text-primary); }
+
+.pf-main { max-width: 560px; margin: 0 auto; padding: 0 var(--space-6) var(--space-9); }
+
+.pf-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius-lg);
+}
+
+.pf-message { font-size: 0.86rem; margin: 0; }
+.pf-message--error { color: var(--accent-text); }
+.pf-message--success { color: var(--success); }
+
+.pf-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); }
+
+@media (max-width: 640px) {
+    .pf-header, .pf-main { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .pf-form { padding: var(--space-5); }
+}

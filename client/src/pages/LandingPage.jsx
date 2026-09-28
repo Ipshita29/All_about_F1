@@ -755,10 +755,7 @@ function GarageFooter({ isAuthenticated }) {
                         <h3 className="lp-footer-group-title">ACCOUNT</h3>
                         <ul>
                             {isAuthenticated ? (
-                                <>
-                                    <li><Link to="/profile">Profile</Link></li>
-                                    <li><Link to="/preferences">Preferences</Link></li>
-                                </>
+                                <li><Link to="/profile">Profile</Link></li>
                             ) : (
                                 <li><Link to="/auth">Sign In</Link></li>
                             )}
