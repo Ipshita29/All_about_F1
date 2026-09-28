@@ -2,20 +2,20 @@
  * THE F1 ENGINEER'S HANDBOOK — the dictionary as a dedicated knowledge
  * product rather than a page of the site. Search leads the page and
  * surfaces a real preview as you type; a proper segmented control (not a
- * floating pill) sets the explanation depth; popular terms and categories
- * sit on a light editorial band; the term archive and Word of the Day
- * close the page.
+ * floating pill) sets the explanation depth; a horizontal ticker of
+ * popular terms sits on a light editorial band; the featured term,
+ * archive and its category filter chips close the page.
  *
- * Category cards navigate to a dedicated /dictionary/category/:slug page
- * (see DictionaryCategory.jsx) instead of scrolling to a section further
- * down — the "Filter the Archive" band below is a separate, complementary
- * in-page filter for browsing everything without leaving the hub, so its
- * chips still just narrow the grid in place. Purely data-driven; no AI.
+ * getCategoriesWithCounts()/category data still feeds the "Filter the
+ * Archive" chips below (an in-page filter, not navigation) and the
+ * separate /dictionary/category/:slug page (DictionaryCategory.jsx) —
+ * this hub just no longer has its own category card grid linking there.
+ * Purely data-driven; no AI.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Dices, Sparkles, ArrowRight } from "lucide-react";
-import { TermCard, CategoryIcon, ModeSwitch } from "../components/Dictionary";
+import { TermCard, ModeSwitch } from "../components/Dictionary";
 import { SearchInput, EmptyState } from "../components/UI";
 import {
   getBriefingMode,
@@ -197,11 +197,7 @@ function F1Dictionary() {
         <HandbookMark className="fd-hero-mark" />
         <div className="fd-hero-content">
           <span className="fd-hero-eyebrow fd-mono">F1 · KNOWLEDGE</span>
-          <h1 className="fd-hero-title">
-            <span>The F1</span>
-            <span>Engineer&rsquo;s</span>
-            <span>Handbook</span>
-          </h1>
+          <h1 className="fd-hero-title">The F1 Engineer&rsquo;s Handbook</h1>
           <p className="fd-hero-sub">
             Understand the language, strategy and technology behind every Grand Prix.
           </p>
@@ -249,47 +245,32 @@ function F1Dictionary() {
         </div>
       </section>
 
-      {/* ── Popular terms + categories (light band) ────────────────── */}
+      {/* ── Popular terms — a slow, seamless horizontal ticker (light
+         band). The track renders popularTerms twice back to back and
+         animates exactly -50%, so the loop point is invisible; the
+         second copy is aria-hidden so assistive tech only hears the
+         list once. Same popularTerms data as before, just presented as
+         a ticker instead of a vertical list. ─────────────────────── */}
       <section className="fd-band fd-band--light">
         <div className="fd-band-inner">
           <p className="fd-section-title fd-mono">START HERE</p>
           <h2 className="fd-band-heading">Popular F1 Terms</h2>
-          <ul className="fd-popular-list">
-            {popularTerms.map((term, i) => (
-              <li key={term.slug}>
-                <button className="fd-popular-item" onClick={() => navigate(`/dictionary/${term.slug}`)}>
-                  <span className="fd-popular-index fd-mono">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="fd-popular-title">{term.title}</span>
-                  <span className="fd-popular-category fd-mono">{term.category}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="fd-band-inner">
-          <p className="fd-section-title fd-mono">BROWSE BY DEPARTMENT</p>
-          <div className="fd-category-grid">
-            {categories.map((cat, i) => (
-              <RevealOnScroll key={cat.name} index={i}>
-                <Link
-                  to={`/dictionary/category/${cat.slug}`}
-                  className={`fd-category-card${i % 2 === 1 ? " fd-category-card--dark" : ""}`}
-                >
-                  <span className="fd-category-icon">
-                    <CategoryIcon name={cat.icon} size={22} />
-                  </span>
-                  <h3 className="fd-category-title">{cat.chip}</h3>
-                  <p>{cat.description}</p>
-                  <div className="fd-category-footer">
-                    <span className="fd-category-count fd-mono">{cat.count} TERMS</span>
-                    <span className="fd-category-explore fd-mono">
-                      EXPLORE <ArrowRight size={13} />
-                    </span>
-                  </div>
-                </Link>
-              </RevealOnScroll>
-            ))}
+          <div className="fd-ticker">
+            <div className="fd-ticker-track">
+              {[...popularTerms, ...popularTerms].map((term, i) => (
+                <span className="fd-ticker-item" key={`${term.slug}-${i}`} aria-hidden={i >= popularTerms.length || undefined}>
+                  <button
+                    type="button"
+                    className="fd-ticker-term"
+                    tabIndex={i >= popularTerms.length ? -1 : undefined}
+                    onClick={() => navigate(`/dictionary/${term.slug}`)}
+                  >
+                    {term.title}
+                  </button>
+                  <span className="fd-ticker-sep" aria-hidden="true">·</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
