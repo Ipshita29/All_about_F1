@@ -112,7 +112,7 @@ function matchAndEvaluate(storedPrediction, actualResults) {
             driverId: p.driverId,
             driverName: p.driverName,
             driverCode: p.driverCode,
-            constructor: p.constructor,
+            constructorName: p.constructorName,
             predictedPosition: p.predictedPosition,
             actualPosition,
             status,
@@ -271,6 +271,13 @@ async function getPredictionHistory() {
 // the predicted winner was correct. Reuses evaluateRace rather than
 // re-deriving correctness, so there is exactly one place that decides
 // "was this prediction right."
+//
+// actualPodium is the real top 3 finishers, built entirely from data
+// evaluateRace already computed (driverEvaluations' actualPosition) —
+// cross-referenced against this same stored prediction's own driver list
+// for driverNumber/constructorId, so the "Actual Podium" the frontend
+// renders uses the identical PodiumStep shape as the predicted one
+// without a second driver-lookup source or API call.
 async function getRacePrediction(season, round) {
     const storedPrediction = await getStoredPrediction(season, round);
     if (!storedPrediction) return null;
@@ -278,10 +285,26 @@ async function getRacePrediction(season, round) {
     const shaped = shapeStoredDoc(storedPrediction);
     const evaluation = await evaluateRace(season, Number(round));
 
+    let actualPodium = [];
+    if (evaluation.eligible) {
+        const predictedById = new Map(shaped.predictions.map((p) => [p.driverId, p]));
+        actualPodium = evaluation.driverEvaluations
+            .filter((d) => d.actualPosition !== null && d.actualPosition <= 3)
+            .sort((a, b) => a.actualPosition - b.actualPosition)
+            .map((d) => ({
+                driverId: d.driverId,
+                driverName: d.driverName,
+                driverNumber: predictedById.get(d.driverId)?.driverNumber ?? null,
+                constructorName: d.constructorName,
+                constructorId: predictedById.get(d.driverId)?.constructorId ?? null,
+            }));
+    }
+
     return {
         ...shaped,
         completed: evaluation.eligible,
         winnerCorrect: evaluation.eligible ? evaluation.metrics.winnerCorrect : null,
+        actualPodium,
     };
 }
 

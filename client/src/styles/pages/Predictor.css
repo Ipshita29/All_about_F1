@@ -138,6 +138,30 @@
     margin: 0 0 var(--space-3);
 }
 
+/* ── Actual Podium — sits directly under Predicted Podium as its own
+   panel when a completed previous race is selected; the predicted one
+   is never touched or replaced. The chip states plainly whether the
+   predicted winner matched the real one — the same signal already used
+   in the header badge and Prediction History, just placed right beside
+   this comparison too. ────────────────────────────────────────────── */
+
+.pr-actual-head { display: flex; justify-content: center; margin-bottom: var(--space-2); }
+
+.pr-result-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-small);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--pr-border);
+}
+
+.pr-result-chip--correct { color: var(--success); border-color: rgba(47, 191, 106, 0.35); background: var(--success-dim); }
+.pr-result-chip--incorrect { color: var(--color-red); border-color: rgba(176, 8, 11, 0.35); background: rgba(176, 8, 11, 0.1); }
+
 /* ── Podium — an actual F1 podium, not three equal cards. Each step is
    a result card sitting on its own riser block, shortest at P2/P3 on the
    dark surface either side, tallest at P1 — centered, on the site's

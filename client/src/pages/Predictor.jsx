@@ -6,10 +6,13 @@
  * :round for a previously-predicted race picked from the selector below —
  * both return the identical podium/table/data-availability shape, so the
  * whole page renders off one "active race" object regardless of which
- * endpoint it came from. This page only renders that response — no
- * prediction math happens here. Every number shown traces directly to a
- * field in the real API response; where the engine doesn't provide
- * something, it's left out rather than invented.
+ * endpoint it came from. A completed previous race additionally carries
+ * actualPodium (the real top 3) and winnerCorrect — the predicted podium
+ * is never replaced by it, both stay visible side by side. This page
+ * only renders that response — no prediction math happens here. Every
+ * number shown traces directly to a field in the real API response;
+ * where the engine doesn't provide something, it's left out rather than
+ * invented.
  */
 import { useEffect, useState } from "react";
 import { BarChart3, History } from "lucide-react";
@@ -169,15 +172,18 @@ function PodiumStep({ p, place, label }) {
                 <span className="pr-podium-place pr-mono">{label}</span>
                 <span className="pr-podium-number pr-mono">{p.driverNumber ?? "—"}</span>
                 <span className="pr-podium-driver">{p.driverName}</span>
-                <span className="pr-podium-constructor">{p.constructor}</span>
+                <span className="pr-podium-constructor">{p.constructorName}</span>
             </div>
             <div className="pr-podium-riser pr-mono" aria-hidden="true">{label}</div>
         </div>
     );
 }
 
-function PredictedPodium({ predictions }) {
-    const [first, second, third] = predictions;
+// Renders any top-3 list as a podium — the predicted top 3 (sorted by
+// predictedPosition) or the actual top 3 finishers (sorted by real
+// finishing position); both arrive from the API already in P1→P3 order.
+function PodiumRow({ entries }) {
+    const [first, second, third] = entries;
     if (!first) return null;
     return (
         <div className="pr-podium">
@@ -218,7 +224,7 @@ function ClassificationTable({ predictions }) {
                                     <span className="pr-driver-name">{p.driverName}</span>
                                 </span>
                             </td>
-                            <td className="pr-team-cell">{p.constructor}</td>
+                            <td className="pr-team-cell">{p.constructorName}</td>
                             <td className="pr-mono">{p.expectedFinish}</td>
                             <td className="pr-mono">{pct(p.winProbability)}</td>
                             <td className="pr-mono">{pct(p.podiumProbability)}</td>
@@ -436,8 +442,23 @@ function Predictor() {
                 {active && (
                     <>
                         <Panel title="Predicted Podium">
-                            <PredictedPodium predictions={active.predictions} />
+                            <PodiumRow entries={active.predictions} />
                         </Panel>
+
+                        {/* Only for a completed previous race — the predicted
+                           podium above is never replaced, this is purely an
+                           addition once there's something real to compare it
+                           against. */}
+                        {active.completed && active.actualPodium?.length > 0 && (
+                            <Panel title="Actual Podium">
+                                <div className="pr-actual-head">
+                                    <span className={`pr-result-chip pr-mono ${active.winnerCorrect ? "pr-result-chip--correct" : "pr-result-chip--incorrect"}`}>
+                                        {active.winnerCorrect ? "✓ Correct" : "✕ Incorrect"}
+                                    </span>
+                                </div>
+                                <PodiumRow entries={active.actualPodium} />
+                            </Panel>
+                        )}
 
                         <Panel title="Predicted Race Order">
                             <ClassificationTable predictions={active.predictions} />

@@ -24,7 +24,11 @@ const driverPredictionSchema = new mongoose.Schema(
         driverCode: String,
         driverNumber: String,
         constructorId: String,
-        constructor: String,
+        // Named constructorName, not constructor — a schema path literally
+        // named "constructor" collides with JS/Mongoose's own reserved
+        // property of that name and gets silently dropped on every save
+        // (confirmed: the field never actually reached MongoDB).
+        constructorName: String,
         predictedPosition: Number,
         expectedFinish: Number,
         winProbability: Number,
