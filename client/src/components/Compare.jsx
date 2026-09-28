@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import useInViewOnce from "../hooks/useInViewOnce";
-import { AnimatedNumber, LayeredImage } from "./EntityDetail";
+import { AnimatedNumber } from "./EntityDetail";
 
 /*
  * Shared building blocks behind the compact Compare Drivers / Compare
  * Teams modal (opened from the Drivers/Teams pages, next to the search
  * bar): the searchable entity picker, the pre-selection empty state, the
- * two stat-reading styles (neutral side-by-side vs. proportional bar),
- * and the modal shell itself.
+ * two large identity cards, the centered metric-row table, and the
+ * modal shell itself.
  */
 
 /* Searchable dropdown used by the Compare modal to pick a driver/
@@ -156,8 +156,7 @@ export function EntitySelect({
 
 /* The pre-selection state inside the Compare modal. Rather than a blank
    canvas, it pre-renders the shape of the comparison to come — a rail
-   per metric that mirrors CompareBar/CompareStat's own layout — so the
-   modal reads as designed before anything is picked. */
+   per metric — so the modal reads as designed before anything is picked. */
 export function CompareEmptyState({ eyebrow, title, description, metrics }) {
     return (
         <div className="cmp-empty">
@@ -188,65 +187,68 @@ function better(a, b, lowerIsBetter) {
     return n1 > n2 ? "a" : "b";
 }
 
-/* Neutral side-by-side reading of one metric — for values where a
-   proportional bar would mislead (championship position, average
-   finish/qualifying position: a smaller number is stronger, not a
-   shorter bar). No colour, no "winner" label — only a subtle weight
-   shift on the stronger figure, exactly the underlying value either way. */
-export function CompareStat({ label, prefix = "", valueA, valueB, lowerIsBetter = false }) {
-    const [ref, inView] = useInViewOnce({ threshold: 0.4 });
-    const lead = better(valueA, valueB, lowerIsBetter);
-    const hasA = valueA !== null && valueA !== undefined;
-    const hasB = valueB !== null && valueB !== undefined;
-
-    return (
-        <div ref={ref} className="cmp-stat">
-            <span className="cmp-stat-label">{label}</span>
-            <div className="cmp-stat-row">
-                <span className={`cmp-stat-val${lead === "a" ? " is-lead" : ""}`}>
-                    {hasA ? <>{prefix}<AnimatedNumber value={valueA} play={inView} /></> : "—"}
-                </span>
-                <span className="cmp-stat-rule" aria-hidden="true" />
-                <span className={`cmp-stat-val cmp-stat-val--right${lead === "b" ? " is-lead" : ""}`}>
-                    {hasB ? <>{prefix}<AnimatedNumber value={valueB} play={inView} /></> : "—"}
-                </span>
-            </div>
-            {!hasA && !hasB && <span className="cmp-stat-na">DATA NOT AVAILABLE</span>}
-        </div>
-    );
+/* Standard WCAG relative-luminance check so card text always reads
+   against the team's own colour — a light livery (Mercedes silver)
+   gets near-black text, a dark one (Ferrari red) gets near-white,
+   instead of hardcoding one text colour for every accent. */
+function getContrastText(hex) {
+    const clean = (hex || "").replace("#", "");
+    if (clean.length !== 6) return "#f5f3ef";
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    const lin = (v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+    const luminance = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+    return luminance > 0.42 ? "#141414" : "#f5f3ef";
 }
 
-/* One large identity card at the top of the modal — the driver's/team's
-   accent colour as an ambient gradient, an oversized translucent racing
-   number sitting behind the artwork (drivers only; teams have no number,
-   so their card leans on the logo instead), and the name/sub-label
-   anchored at the foot. Falls back to a monogram when no cutout/logo
-   resolves — never a random remote photo. */
+/* One large identity card at the top of the modal — solid in the
+   driver's/team's own accent colour, so Ferrari red or Mercedes silver
+   reads instantly without a logo. Drivers get their real racing number
+   as an oversized, translucent mark filling the card (never behind a
+   photo); teams have no number, so their card is just the colour and
+   the name, centred. Text colour is computed per-card so it always
+   holds contrast against that accent. */
 function CompareCard({ visual, label, subLabel }) {
-    const hasImage = Boolean(visual.imageCandidates?.length);
-    const monogram = (
-        <span className="cmp-card-monogram cmp-mono" aria-hidden="true">{visual.monogram}</span>
-    );
+    const hasNumber = visual.number !== null && visual.number !== undefined && visual.number !== "";
+    const textColor = getContrastText(visual.accent);
 
     return (
-        <div className="cmp-card" style={{ "--cmp-card-accent": visual.accent }}>
-            {visual.number !== null && visual.number !== undefined && visual.number !== "" && (
+        <div
+            className={`cmp-card${hasNumber ? "" : " cmp-card--plain"}`}
+            style={{ "--cmp-card-accent": visual.accent, "--cmp-card-text": textColor }}
+        >
+            {hasNumber && (
                 <span className="cmp-card-number cmp-mono" aria-hidden="true">{visual.number}</span>
             )}
-            <div className="cmp-card-media" aria-hidden="true">
-                {hasImage ? (
-                    <LayeredImage
-                        candidates={visual.imageCandidates}
-                        alt=""
-                        className="cmp-card-img"
-                        fallback={monogram}
-                    />
-                ) : monogram}
-            </div>
             <div className="cmp-card-foot">
                 <span className="cmp-card-name">{label}</span>
                 {subLabel && <span className="cmp-card-sub cmp-mono">{subLabel}</span>}
             </div>
+        </div>
+    );
+}
+
+/* One row of the comparison table — the metric label sits in the
+   middle, with each side's value immediately left/right of it, so the
+   two numbers read as directly opposed rather than two separate
+   columns. A stronger weight (not colour) marks the better figure;
+   a missing value is a plain em dash, not a "data not available" block. */
+function CompareMetricRow({ label, prefix = "", valueA, valueB, lowerIsBetter = false }) {
+    const [ref, inView] = useInViewOnce({ threshold: 0.4 });
+    const lead = better(valueA, valueB, lowerIsBetter);
+    const hasA = valueA !== null && valueA !== undefined && valueA !== "";
+    const hasB = valueB !== null && valueB !== undefined && valueB !== "";
+
+    return (
+        <div ref={ref} className="cmp-row">
+            <span className={`cmp-row-val cmp-row-val--a${lead === "a" ? " is-lead" : ""}`}>
+                {hasA ? <>{prefix}<AnimatedNumber value={valueA} play={inView} /></> : "—"}
+            </span>
+            <span className="cmp-row-label cmp-mono">{label}</span>
+            <span className={`cmp-row-val cmp-row-val--b${lead === "b" ? " is-lead" : ""}`}>
+                {hasB ? <>{prefix}<AnimatedNumber value={valueB} play={inView} /></> : "—"}
+            </span>
         </div>
     );
 }
@@ -306,8 +308,8 @@ export function CompareModal({
             <div className="cmp-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
                 <div className="cmp-modal-head">
                     <h2 className="cmp-modal-title">{title}</h2>
-                    <button type="button" className="cmp-modal-close" onClick={onClose} aria-label="Close">
-                        <X size={18} />
+                    <button type="button" className="cmp-modal-close" onClick={onClose} aria-label="Close comparison" title="Close">
+                        <X size={20} strokeWidth={2.5} aria-hidden="true" />
                     </button>
                 </div>
 
@@ -350,13 +352,13 @@ export function CompareModal({
                                 <CompareCard visual={getVisual(a)} label={getLabel(a)} subLabel={getSubLabel?.(a)} />
                                 <CompareCard visual={getVisual(b)} label={getLabel(b)} subLabel={getSubLabel?.(b)} />
                             </div>
-                            <div className="cmp-grid cmp-metrics">
-                                <CompareStat label="Championships" valueA={mA.championships} valueB={mB.championships} />
-                                <CompareStat label="Wins" valueA={mA.wins} valueB={mB.wins} />
-                                <CompareStat label="Podiums" valueA={mA.podiums} valueB={mB.podiums} />
-                                <CompareStat label="Championship Position" prefix="P" valueA={mA.position} valueB={mB.position} lowerIsBetter />
-                                <CompareStat label="Championship Points" valueA={mA.points} valueB={mB.points} />
-                                <CompareStat label={debutLabel} valueA={mA.debut} valueB={mB.debut} lowerIsBetter />
+                            <div className="cmp-metrics">
+                                <CompareMetricRow label="Championships" valueA={mA.championships} valueB={mB.championships} />
+                                <CompareMetricRow label="Wins" valueA={mA.wins} valueB={mB.wins} />
+                                <CompareMetricRow label="Podiums" valueA={mA.podiums} valueB={mB.podiums} />
+                                <CompareMetricRow label="Championship Position" prefix="P" valueA={mA.position} valueB={mB.position} lowerIsBetter />
+                                <CompareMetricRow label="Championship Points" valueA={mA.points} valueB={mB.points} />
+                                <CompareMetricRow label={debutLabel} valueA={mA.debut} valueB={mB.debut} lowerIsBetter />
                             </div>
                         </div>
                     )}
