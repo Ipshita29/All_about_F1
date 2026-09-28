@@ -143,23 +143,9 @@ button:active { transform: scale(0.98); }
     border-radius: 2px;
 }
 
+/* Wrapper + dropdown panel shared by the account avatar menu */
 .navbar-explore {
     position: relative;
-}
-
-.navbar-explore-btn {
-    background: none;
-    border: none;
-    padding: 8px 14px;
-    cursor: pointer;
-}
-
-.navbar-explore-btn svg {
-    transition: transform var(--dur-fast) var(--ease);
-}
-
-.navbar-explore-btn[aria-expanded="true"] svg {
-    transform: rotate(180deg);
 }
 
 .navbar-explore-menu {
@@ -198,10 +184,6 @@ button:active { transform: scale(0.98); }
     color: var(--text-primary);
 }
 
-.navbar-explore-item-active {
-    color: var(--text-primary);
-}
-
 .navbar-right {
     display: flex;
     align-items: center;
@@ -210,9 +192,9 @@ button:active { transform: scale(0.98); }
     flex-shrink: 0;
 }
 
-/* Account avatar — a circular initial, opening the same dropdown panel
-   styling as the "More" menu (.navbar-explore-menu/-item), just anchored
-   to the right so it never overflows off-screen. */
+/* Account avatar — a circular initial, opening a dropdown panel via the
+   shared .navbar-explore-menu/-item treatment, anchored to the right so
+   it never overflows off-screen. */
 .navbar-avatar-btn {
     display: flex;
     align-items: center;

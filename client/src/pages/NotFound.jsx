@@ -9,7 +9,7 @@ function NotFound() {
                     <h1 className="empty-state-title">Page not found</h1>
                     <p className="empty-state-desc">The page you're looking for doesn't exist or has moved.</p>
                     <div className="empty-state-action">
-                        <Button variant="primary" to="/" arrow>Back to Overview</Button>
+                        <Button variant="primary" to="/" arrow>Back to Home</Button>
                     </div>
                 </div>
             </main>

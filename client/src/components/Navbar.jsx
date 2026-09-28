@@ -2,36 +2,27 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL as API } from "../config/api";
 
+/* Exactly the nine navbar destinations, in order — All About F1 (the
+   wordmark, already the leftmost element and always linking home) ·
+   Live · Predictor · Race Weekend · Drivers · Teams · News ·
+   F1 Dictionary · Profile (the account avatar, not a text link here). */
 const PRIMARY_LINKS = [
     { to: "/live", label: "Live" },
     { to: "/predictor", label: "Predictor" },
     { to: "/grandprixdashboard", label: "Race Weekend" },
     { to: "/drivers", label: "Drivers" },
-    { to: "/teams", label: "Constructors" },
+    { to: "/teams", label: "Teams" },
     { to: "/news", label: "News" },
-];
-
-const MORE_LINKS = [
     { to: "/dictionary", label: "F1 Dictionary" },
 ];
-
-function ChevronIcon() {
-    return (
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" />
-        </svg>
-    );
-}
 
 function Navbar() {
     const token = localStorage.getItem("token");
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
-    const [moreOpen, setMoreOpen] = useState(false);
     const [accountOpen, setAccountOpen] = useState(false);
     const [accountName, setAccountName] = useState("");
     const [scrolled, setScrolled] = useState(() => window.scrollY > 24);
-    const moreRef = useRef(null);
     const accountRef = useRef(null);
 
     const isLanding = location.pathname === "/";
@@ -58,25 +49,8 @@ function Navbar() {
     if (lastPath !== location.pathname) {
         setLastPath(location.pathname);
         setMenuOpen(false);
-        setMoreOpen(false);
         setAccountOpen(false);
     }
-
-    useEffect(() => {
-        if (!moreOpen) return undefined;
-        const onKey = (e) => e.key === "Escape" && setMoreOpen(false);
-        const onOutside = (e) => {
-            if (moreRef.current && !moreRef.current.contains(e.target)) {
-                setMoreOpen(false);
-            }
-        };
-        document.addEventListener("keydown", onKey);
-        document.addEventListener("pointerdown", onOutside);
-        return () => {
-            document.removeEventListener("keydown", onKey);
-            document.removeEventListener("pointerdown", onOutside);
-        };
-    }, [moreOpen]);
 
     useEffect(() => {
         if (!accountOpen) return undefined;
@@ -106,7 +80,6 @@ function Navbar() {
         return location.pathname.startsWith(path);
     };
 
-    const moreActive = MORE_LINKS.some((l) => isActive(l.to));
     const transparent = isLanding && !scrolled;
 
     return (
@@ -117,12 +90,6 @@ function Navbar() {
                 </Link>
 
                 <div className="navbar-links">
-                    <Link
-                        to="/"
-                        className={`navbar-link${isActive("/") ? " navbar-link-active" : ""}`}
-                    >
-                        Overview
-                    </Link>
                     {PRIMARY_LINKS.map(({ to, label }) => (
                         <Link
                             key={to}
@@ -132,37 +99,6 @@ function Navbar() {
                             {label}
                         </Link>
                     ))}
-
-                    <div className="navbar-explore" ref={moreRef}>
-                        <button
-                            type="button"
-                            className={`navbar-link navbar-explore-btn${
-                                moreActive ? " navbar-link-active" : ""
-                            }`}
-                            aria-haspopup="true"
-                            aria-expanded={moreOpen}
-                            onClick={() => setMoreOpen((o) => !o)}
-                        >
-                            More <ChevronIcon />
-                        </button>
-                        {moreOpen && (
-                            <div className="navbar-explore-menu" role="menu">
-                                {MORE_LINKS.map(({ to, label }) => (
-                                    <Link
-                                        key={to}
-                                        to={to}
-                                        role="menuitem"
-                                        className={`navbar-explore-item${
-                                            isActive(to) ? " navbar-explore-item-active" : ""
-                                        }`}
-                                        onClick={() => setMoreOpen(false)}
-                                    >
-                                        {label}
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 <div className="navbar-right">
@@ -218,14 +154,7 @@ function Navbar() {
 
             {menuOpen && (
                 <div className="navbar-mobile-menu">
-                    <Link
-                        to="/"
-                        className={`navbar-mobile-link${isActive("/") ? " navbar-mobile-link-active" : ""}`}
-                        onClick={close}
-                    >
-                        Overview
-                    </Link>
-                    {[...PRIMARY_LINKS, ...MORE_LINKS].map(({ to, label }) => (
+                    {PRIMARY_LINKS.map(({ to, label }) => (
                         <Link
                             key={to}
                             to={to}
