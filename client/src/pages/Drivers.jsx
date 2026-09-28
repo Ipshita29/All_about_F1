@@ -4,6 +4,7 @@ import { SearchControls, DriverRoster, DriverCard } from "../components/EntityLi
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import { CompareModal } from "../components/Compare";
 import driverInfo from "../data/driverInfo";
+import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
 import "../styles/pages/EntityPages.css";
 import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
@@ -23,6 +24,22 @@ function driverCompareMetrics(standing) {
         podiums: info?.podiums,
         championships: info?.championships,
         debut: info?.debut,
+    };
+}
+
+/* The Compare Drivers identity card: team accent colour, the driver's
+   real racing number (large and translucent behind the artwork), and
+   the same cutout used elsewhere on this page — never a duplicate
+   image source. */
+function driverCompareVisual(standing) {
+    const { Driver, Constructors } = standing;
+    const constructorId = Constructors?.[0]?.constructorId;
+    const fullName = `${Driver.givenName} ${Driver.familyName}`;
+    return {
+        accent: getTeamAccent(constructorId),
+        number: Driver.permanentNumber,
+        imageCandidates: getDriverAssets(Driver.driverId, fullName).imageCandidates,
+        monogram: Driver.code || Driver.familyName?.slice(0, 3).toUpperCase(),
     };
 }
 
@@ -125,6 +142,8 @@ function Drivers() {
                 getLabel={(s) => `${s.Driver.givenName} ${s.Driver.familyName}`}
                 getSubLabel={(s) => s.Constructors?.[0]?.name ?? s.Driver.nationality}
                 getMetrics={driverCompareMetrics}
+                getVisual={driverCompareVisual}
+                debutLabel="F1 Debut"
             />
         </div>
     );

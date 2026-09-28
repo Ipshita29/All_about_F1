@@ -4,6 +4,7 @@ import { SearchControls, ConstructorRoster, ConstructorCard } from "../component
 import { LoadingSpinner, Stat, Button, EmptyState } from "../components/UI";
 import { CompareModal } from "../components/Compare";
 import teamInfo from "../data/teamInfo";
+import { getTeamAssets } from "../config/teamAssets";
 import "../styles/pages/EntityPages.css";
 import "../styles/pages/Comparison.css";
 import { API_BASE_URL as API } from "../config/api";
@@ -45,6 +46,19 @@ function Teams() {
             podiums: undefined,
             championships: info?.championships,
             debut: info?.founded,
+        };
+    };
+
+    /* The Compare Teams identity card: team accent colour and logo —
+       teams have no racing number, so the card leans entirely on the
+       logo (or a three-letter monogram when none resolves). */
+    const teamCompareVisual = (team) => {
+        const assets = getTeamAssets(team.constructorId);
+        return {
+            accent: assets.accent,
+            number: null,
+            imageCandidates: assets.logo ? [assets.logo] : [],
+            monogram: team.name.slice(0, 3).toUpperCase(),
         };
     };
 
@@ -159,6 +173,8 @@ function Teams() {
                 getLabel={(t) => t.name}
                 getSubLabel={(t) => t.nationality}
                 getMetrics={teamCompareMetrics}
+                getVisual={teamCompareVisual}
+                debutLabel="First Season"
             />
         </div>
     );

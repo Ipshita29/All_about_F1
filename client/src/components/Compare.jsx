@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import useInViewOnce from "../hooks/useInViewOnce";
-import { AnimatedNumber } from "./EntityDetail";
+import { AnimatedNumber, LayeredImage } from "./EntityDetail";
 
 /*
  * Shared building blocks behind the compact Compare Drivers / Compare
@@ -216,62 +216,56 @@ export function CompareStat({ label, prefix = "", valueA, valueB, lowerIsBetter 
     );
 }
 
-/* Proportional two-row bar for count-style metrics (points, wins,
-   podiums, poles) — bar length reads as "how much", which only makes
-   sense when more genuinely means more. Neither bar is tinted by rank;
-   Milano Red is reserved for the page's own accents. */
-export function CompareBar({ label, a, b }) {
-    const [ref, inView] = useInViewOnce({ threshold: 0.4 });
-    const n1 = parseFloat(a.value);
-    const n2 = parseFloat(b.value);
-    const hasA = !Number.isNaN(n1);
-    const hasB = !Number.isNaN(n2);
-    const max = Math.max(hasA ? n1 : 0, hasB ? n2 : 0, 1);
+/* One large identity card at the top of the modal — the driver's/team's
+   accent colour as an ambient gradient, an oversized translucent racing
+   number sitting behind the artwork (drivers only; teams have no number,
+   so their card leans on the logo instead), and the name/sub-label
+   anchored at the foot. Falls back to a monogram when no cutout/logo
+   resolves — never a random remote photo. */
+function CompareCard({ visual, label, subLabel }) {
+    const hasImage = Boolean(visual.imageCandidates?.length);
+    const monogram = (
+        <span className="cmp-card-monogram cmp-mono" aria-hidden="true">{visual.monogram}</span>
+    );
 
     return (
-        <div ref={ref} className="cmp-bar-group">
-            <span className="cmp-bar-label">{label}</span>
-
-            <div className="cmp-bar-row">
-                <span className="cmp-bar-name">{a.name}</span>
-                <span className="cmp-bar-track" aria-hidden="true">
-                    <span
-                        className="cmp-bar-fill cmp-bar-fill--a"
-                        style={{ width: inView && hasA ? `${(n1 / max) * 100}%` : 0 }}
+        <div className="cmp-card" style={{ "--cmp-card-accent": visual.accent }}>
+            {visual.number !== null && visual.number !== undefined && visual.number !== "" && (
+                <span className="cmp-card-number cmp-mono" aria-hidden="true">{visual.number}</span>
+            )}
+            <div className="cmp-card-media" aria-hidden="true">
+                {hasImage ? (
+                    <LayeredImage
+                        candidates={visual.imageCandidates}
+                        alt=""
+                        className="cmp-card-img"
+                        fallback={monogram}
                     />
-                </span>
-                <span className="cmp-bar-val">{hasA ? <AnimatedNumber value={a.value} play={inView} /> : "—"}</span>
+                ) : monogram}
             </div>
-
-            <div className="cmp-bar-row">
-                <span className="cmp-bar-name">{b.name}</span>
-                <span className="cmp-bar-track" aria-hidden="true">
-                    <span
-                        className="cmp-bar-fill cmp-bar-fill--b"
-                        style={{ width: inView && hasB ? `${(n2 / max) * 100}%` : 0 }}
-                    />
-                </span>
-                <span className="cmp-bar-val">{hasB ? <AnimatedNumber value={b.value} play={inView} /> : "—"}</span>
+            <div className="cmp-card-foot">
+                <span className="cmp-card-name">{label}</span>
+                {subLabel && <span className="cmp-card-sub cmp-mono">{subLabel}</span>}
             </div>
-
-            {!hasA && !hasB && <span className="cmp-stat-na">DATA NOT AVAILABLE</span>}
         </div>
     );
 }
 
 /* The compact comparison modal, opened from the Drivers/Teams pages —
-   two EntitySelect pickers, then exactly six metrics (championship
-   position, championship points, wins, podiums, career championships,
-   F1 debut/first season) once both sides are chosen. Generic over
-   driver vs team via the same getter-prop pattern EntitySelect already
-   uses, plus a getMetrics(entity) callback each page supplies with its
-   own data — never a second copy of driver/team lookup logic. */
+   two EntitySelect pickers, then two large identity cards and exactly
+   six metrics (championships, wins, podiums, championship position,
+   championship points, F1 debut/first season) once both sides are
+   chosen. Generic over driver vs team via the same getter-prop pattern
+   EntitySelect already uses: getMetrics(entity) supplies the six stats,
+   getVisual(entity) supplies the card's accent colour, racing number
+   (drivers only), image candidates and monogram fallback — each page
+   wires its own data, never a second copy of driver/team lookup logic. */
 const METRIC_PREVIEW = [
-    "CHAMPIONSHIP POSITION",
-    "CHAMPIONSHIP POINTS",
+    "CHAMPIONSHIPS",
     "WINS",
     "PODIUMS",
-    "CHAMPIONSHIPS",
+    "CHAMPIONSHIP POSITION",
+    "CHAMPIONSHIP POINTS",
     "F1 DEBUT",
 ];
 
@@ -286,6 +280,8 @@ export function CompareModal({
     getLabel,
     getSubLabel,
     getMetrics,
+    getVisual,
+    debutLabel = "F1 Debut / First Season",
 }) {
     const [aId, setAId] = useState("");
     const [bId, setBId] = useState("");
@@ -349,18 +345,19 @@ export function CompareModal({
                             metrics={METRIC_PREVIEW}
                         />
                     ) : (
-                        <div className="cmp-grid cmp-modal-grid">
-                            <div className="cmp-modal-vs">
-                                <span>{getLabel(a)}</span>
-                                <span className="cmp-mono">VS</span>
-                                <span>{getLabel(b)}</span>
+                        <div className="cmp-result">
+                            <div className="cmp-cards">
+                                <CompareCard visual={getVisual(a)} label={getLabel(a)} subLabel={getSubLabel?.(a)} />
+                                <CompareCard visual={getVisual(b)} label={getLabel(b)} subLabel={getSubLabel?.(b)} />
                             </div>
-                            <CompareStat label="Championship Position" prefix="P" valueA={mA.position} valueB={mB.position} lowerIsBetter />
-                            <CompareBar label="Championship Points" a={{ name: getLabel(a), value: mA.points }} b={{ name: getLabel(b), value: mB.points }} />
-                            <CompareBar label="Wins" a={{ name: getLabel(a), value: mA.wins }} b={{ name: getLabel(b), value: mB.wins }} />
-                            <CompareBar label="Podiums" a={{ name: getLabel(a), value: mA.podiums }} b={{ name: getLabel(b), value: mB.podiums }} />
-                            <CompareBar label="Championships" a={{ name: getLabel(a), value: mA.championships }} b={{ name: getLabel(b), value: mB.championships }} />
-                            <CompareStat label="F1 Debut / First Season" valueA={mA.debut} valueB={mB.debut} lowerIsBetter />
+                            <div className="cmp-grid cmp-metrics">
+                                <CompareStat label="Championships" valueA={mA.championships} valueB={mB.championships} />
+                                <CompareStat label="Wins" valueA={mA.wins} valueB={mB.wins} />
+                                <CompareStat label="Podiums" valueA={mA.podiums} valueB={mB.podiums} />
+                                <CompareStat label="Championship Position" prefix="P" valueA={mA.position} valueB={mB.position} lowerIsBetter />
+                                <CompareStat label="Championship Points" valueA={mA.points} valueB={mB.points} />
+                                <CompareStat label={debutLabel} valueA={mA.debut} valueB={mB.debut} lowerIsBetter />
+                            </div>
                         </div>
                     )}
                 </div>
