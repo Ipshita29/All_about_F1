@@ -52,33 +52,98 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    border: 1px solid var(--border-faint);
-    background: transparent;
-    color: var(--text-muted);
-}
-
-.cmp-modal-close:hover { color: var(--text-primary); border-color: var(--border-strong); }
-
-.cmp-modal-body { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); }
-
-.cmp-modal-grid { gap: var(--space-5); }
-
-.cmp-modal-vs {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--border-faint);
-    font-size: 1.05rem;
-    font-weight: 700;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
     color: var(--text-primary);
 }
 
-.cmp-modal-vs .cmp-mono { font-size: 0.72rem; font-weight: 500; color: var(--text-faint); }
+.cmp-modal-close:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cmp-modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cmp-modal-body { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-6); }
+
+.cmp-result { display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* ── Identity cards ───────────────────────────────────────────────── */
+
+.cmp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+.cmp-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 220px;
+    padding: var(--space-5);
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--cmp-card-accent) 40%, var(--border-strong));
+    background: linear-gradient(165deg, color-mix(in srgb, var(--cmp-card-accent) 45%, #0b0b0c) 0%, #0b0b0c 75%);
+}
+
+.cmp-card-number {
+    position: absolute;
+    top: -0.3em;
+    right: -0.04em;
+    font-size: 6.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: color-mix(in srgb, var(--cmp-card-accent) 80%, #fff 20%);
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+}
+
+.cmp-card-media {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.cmp-card-img {
+    max-height: 92%;
+    max-width: 88%;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.45));
+}
+
+.cmp-card-monogram {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--cmp-card-accent) 70%, #fff 30%);
+    opacity: 0.55;
+}
+
+.cmp-card-foot { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 4px; }
+
+.cmp-card-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.cmp-card-sub {
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--cmp-card-accent) 60%, #fff 40%);
+    opacity: 0.85;
+}
+
+/* ── Metric rows, centered beneath the cards ─────────────────────── */
+
+.cmp-metrics { width: 100%; max-width: 420px; margin: 0 auto; }
 
 /* ── Entity pickers (EntitySelect, restyled for the modal) ────────── */
 
@@ -135,7 +200,7 @@
     border-radius: 2px;
 }
 
-/* ── Stat / bar grid ──────────────────────────────────────────────── */
+/* ── Metric rows ──────────────────────────────────────────────────── */
 
 .cmp-grid { display: flex; flex-direction: column; gap: var(--space-5); }
 
@@ -165,40 +230,6 @@
 
 .cmp-stat-na { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; color: var(--text-faint); }
 
-/* CompareBar — proportional two-row bar */
-.cmp-bar-group { display: flex; flex-direction: column; gap: var(--space-3); }
-.cmp-bar-label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.06em; color: var(--text-muted); }
-
-.cmp-bar-row {
-    display: grid;
-    grid-template-columns: 96px 1fr 56px;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.cmp-bar-name { font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.cmp-bar-track {
-    display: block;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--surface-2);
-    overflow: hidden;
-}
-
-.cmp-bar-fill { display: block; height: 100%; border-radius: 3px; transition: width 0.7s var(--ease); }
-.cmp-bar-fill--a { background: var(--text-primary); }
-.cmp-bar-fill--b { background: var(--accent); }
-
-.cmp-bar-val {
-    font-family: var(--font-mono);
-    font-size: 0.94rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
@@ -210,6 +241,7 @@
     .cmp-empty-rails { grid-template-columns: 1fr; }
     .cmp-stat-row { gap: var(--space-3); }
     .cmp-stat-val { font-size: 1.25rem; }
-    .cmp-bar-row { grid-template-columns: 76px 1fr 48px; }
-    .cmp-modal-vs { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+    .cmp-cards { grid-template-columns: 1fr; }
+    .cmp-card { min-height: 180px; }
+    .cmp-card-number { font-size: 5rem; }
 }
