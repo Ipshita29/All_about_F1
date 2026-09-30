@@ -11,6 +11,13 @@
  * and does not change the UI. See predictionDataPolicy.js (Phase 1) for
  * the allowed-data spec this file is built on top of.
  *
+ * Since Phase 3, each sample also carries `mlFeatures`/
+ * `mlFeatureAvailability` — the flat numeric ML feature vector built by
+ * featureEngineeringService.js from the exact raw arrays and Phase 2
+ * feature objects already assembled below. `outcome` and `features`
+ * (this file's own Phase 2 shape) are unchanged; Phase 3 only adds keys,
+ * never alters or removes what was here before.
+ *
  * REUSE, NOT REIMPLEMENTATION
  * Every feature that predictorService.js already computes (championship
  * standing, constructor strength, recent form, circuit history,
@@ -62,6 +69,7 @@ const { getJsonRetry } = require("./jolpicaClient");
 const { cached, TTL } = require("./jolpicaCache");
 const { STAGES, sanitizeStageInputs } = require("./predictionDataPolicy");
 const { resolveActualPosition } = require("./evaluationService");
+const { buildMLFeatureVector } = require("./featureEngineeringService");
 const {
     RECENT_FORM_RACE_COUNT,
     fetchRecentResults,
@@ -324,6 +332,27 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
             const { qualifyingResults: gatedQualifying } = sanitizeStageInputs(stage, { qualifyingResults, sprintResults });
             const qualifying = computeQualifyingFeature(driverId, gatedQualifying, teammateId);
 
+            // Phase 3 — the flat, numeric ML feature vector, built from the
+            // same raw arrays and Phase 2 feature objects already in scope
+            // here. See featureEngineeringService.js for what each key
+            // means and how the qualifying gate is independently enforced
+            // for the new qualifying-derived numbers Phase 2 never computed
+            // (gap to pole, constructor qualifying average).
+            const { mlFeatures, mlFeatureAvailability } = buildMLFeatureVector({
+                stage,
+                driverId,
+                teammateId,
+                teamId,
+                result,
+                recentRaces,
+                circuitRaces,
+                qualifyingResults,
+                sprintResults,
+                teamRoster,
+                resolveActualPosition,
+                phase2: { championshipStanding, constructorStrength, recentForm, circuitHistory, driverVsTeammate, reliability, sprint, qualifying },
+            });
+
             samples.push({
                 season: String(season),
                 round,
@@ -346,6 +375,8 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
                     weather,
                     qualifying,
                 },
+                mlFeatures,
+                mlFeatureAvailability,
             });
         }
     }
