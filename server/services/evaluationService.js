@@ -42,6 +42,7 @@ const { getJson, getJsonRetry } = require("./jolpicaClient");
 const { cached, TTL } = require("./jolpicaCache");
 const RacePrediction = require("../models/RacePrediction");
 const { buildBacktestPrediction, shapeStoredDoc } = require("./predictorService");
+const { STAGES } = require("./predictionDataPolicy");
 
 const BACKTEST_LOOKBACK = 3; // how many recent completed rounds to auto-seed if missing
 
@@ -94,7 +95,7 @@ function isScorable(status) {
 async function getStoredPrediction(season, round) {
     const docs = await RacePrediction.find({ season: String(season), round: Number(round) }).lean();
     if (docs.length === 0) return null;
-    return docs.find((d) => d.stage === "post_qualifying") || docs[0];
+    return docs.find((d) => d.stage === STAGES.POST_QUALIFYING) || docs[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -356,4 +357,14 @@ async function getPerformanceSummary() {
     };
 }
 
-module.exports = { getPredictionHistory, getPerformanceSummary, getRacePrediction };
+module.exports = {
+    getPredictionHistory,
+    getPerformanceSummary,
+    getRacePrediction,
+    // Additive-only, for Phase 2's backtestDatasetService — the exact same
+    // classified/classified_retired/dsq/dns/unclassified rule this file
+    // already uses to grade a prediction, reused as-is so a dataset row's
+    // outcome label is never a second, potentially-drifting copy of this
+    // logic.
+    resolveActualPosition,
+};

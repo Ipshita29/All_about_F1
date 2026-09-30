@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { STAGES } = require("../services/predictionDataPolicy");
 
 /*
  * A stored snapshot of a Phase 12 prediction for one race + stage. This is
@@ -55,7 +56,7 @@ const racePredictionSchema = new mongoose.Schema(
         qualifyingDate: String,
         sprintDate: String,
         hasSprint: Boolean,
-        stage: { type: String, enum: ["pre_qualifying", "post_qualifying"], required: true },
+        stage: { type: String, enum: Object.values(STAGES), required: true },
         source: { type: String, enum: ["live", "backtest"], default: "live" },
         modelName: String,
         modelVersion: String,
