@@ -78,3 +78,11 @@ Thumbs.db
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# =========================
+# ML pipeline generated data (server/ml) — scripts are committed,
+# fetched/derived datasets and trained-model artifacts are not
+# =========================
+server/ml/artifacts/
+__pycache__/
+*.pyc
