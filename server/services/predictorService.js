@@ -116,6 +116,7 @@
 const { getJson, getJsonRetry } = require("./jolpicaClient");
 const { cached, TTL } = require("./jolpicaCache");
 const RacePrediction = require("../models/RacePrediction");
+const { STAGES, sanitizeStageInputs } = require("./predictionDataPolicy");
 
 const MODEL_NAME = "AllAboutF1 Weighted Power-Rank + Plackett-Luce Simulation";
 const MODEL_VERSION = "1.0.0";
@@ -655,6 +656,13 @@ async function loadStoredPrediction(season, round, stage) {
 // ---------------------------------------------------------------------------
 
 function assemblePrediction({ season, round, race, circuitId, stage, qualifyingCompleted, sprintCompleted, driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, sprintResults }) {
+    // See predictionDataPolicy.js — the one enforced gate every prediction
+    // (live or backtest) passes through before any qualifying/sprint data
+    // can reach a feature. For PRE_QUALIFYING this strips qualifyingResults
+    // even if a caller passed real ones in; today's callers never do, but
+    // the guarantee now lives here structurally, not by convention.
+    ({ qualifyingResults, sprintResults } = sanitizeStageInputs(stage, { qualifyingResults, sprintResults }));
+
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -808,7 +816,7 @@ async function buildPredictionInternal() {
     const now = new Date();
     const qualifyingDateTime = race.Qualifying ? new Date(`${race.Qualifying.date}T${race.Qualifying.time || "00:00:00Z"}`) : null;
     const qualifyingCompleted = Boolean(qualifyingDateTime && now >= qualifyingDateTime);
-    const stage = qualifyingCompleted ? "post_qualifying" : "pre_qualifying";
+    const stage = qualifyingCompleted ? STAGES.POST_QUALIFYING : STAGES.PRE_QUALIFYING;
     const sprintDateTime = race.Sprint ? new Date(`${race.Sprint.date}T${race.Sprint.time || "00:00:00Z"}`) : null;
     const sprintCompleted = Boolean(sprintDateTime && now >= sprintDateTime);
 
@@ -897,7 +905,7 @@ async function buildBacktestPrediction(season, round) {
 
     const result = assemblePrediction({
         season, round, race, circuitId,
-        stage: "post_qualifying",
+        stage: STAGES.POST_QUALIFYING,
         qualifyingCompleted: true,
         sprintCompleted: true,
         driverStandings, constructorStandings, recentRaces, circuitRaces, qualifyingResults, sprintResults,
@@ -911,4 +919,24 @@ function round2(n) {
     return Math.round(n * 1000) / 1000;
 }
 
-module.exports = { buildPrediction, buildBacktestPrediction, shapeStoredDoc };
+module.exports = {
+    buildPrediction,
+    buildBacktestPrediction,
+    shapeStoredDoc,
+    // Additive-only, for Phase 2's backtestDatasetService — the exact same
+    // leakage-safe fetch/feature functions this file already uses for live
+    // and backtest predictions, reused as-is (never re-implemented) so the
+    // historical dataset's features are computed identically to the real
+    // predictor's. Nothing above this line changed to make these available.
+    RECENT_FORM_RACE_COUNT,
+    fetchStandings,
+    fetchRecentResults,
+    fetchQualifying,
+    fetchSprintResults,
+    fetchCircuitHistory,
+    computeChampionshipFeature,
+    computeConstructorFeature,
+    computeRecentFormFeature,
+    computeCircuitHistoryFeature,
+    computeQualifyingFeature,
+};
