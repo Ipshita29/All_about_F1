@@ -49,9 +49,16 @@
  * fabricated 0, average, or neutral placeholder. `mlFeatureAvailability`
  * mirrors `mlFeatures` key-for-key with a boolean, so a training
  * pipeline can distinguish "genuinely missing" from "a real low value"
- * without guessing from the number alone. Weather is unconditionally
- * unavailable (see backtestDatasetService.computeWeatherFeature) — no
- * historical archive is integrated, so it is never fabricated here.
+ * without guessing from the number alone.
+ *
+ * WEATHER (Phase 3.5)
+ * Open-Meteo's historical/archive API genuinely covers past F1 race
+ * dates (confirmed live — see weatherService.getHistoricalWeather), so
+ * weather is real, reused data here, not invented: `phase2.weather` is
+ * the race-level reading backtestDatasetService.computeWeatherFeature
+ * already fetched once per race. This file only flattens it into the
+ * vector — a network failure or a date the archive has no data for
+ * still comes through as null/unavailable, per phase2.weather.available.
  */
 
 const { STAGES, sanitizeStageInputs } = require("./predictionDataPolicy");
@@ -97,6 +104,12 @@ const FEATURE_CATALOG = Object.freeze([
     { key: "hadSprint", category: "sprint", stage: "both", description: "Whether this race weekend has a sprint (0/1) — always a known fact, never missing." },
     { key: "sprintPosition", category: "sprint", stage: "both", description: "Reused from Phase 2 sprint.sprintPosition." },
     { key: "sprintPoints", category: "sprint", stage: "both", description: "Reused from Phase 2 sprint.sprintPoints." },
+
+    { key: "weatherAirTemperature", category: "weather", stage: "both", description: "Historical air temperature (°C) at the race's scheduled start time, from Open-Meteo's archive API (Phase 3.5)." },
+    { key: "weatherPrecipitationAmount", category: "weather", stage: "both", description: "Historical measured precipitation (mm) — the archive's actual-amount field, not a forecast probability." },
+    { key: "weatherWindSpeed", category: "weather", stage: "both", description: "Historical wind speed (km/h) at race start." },
+    { key: "weatherHumidity", category: "weather", stage: "both", description: "Historical relative humidity (%) at race start." },
+    { key: "weatherCode", category: "weather", stage: "both", description: "Historical WMO weather code at race start (categorical; kept as its raw numeric code, not one-hot encoded — no training happens in this phase)." },
 ]);
 
 // ---------------------------------------------------------------------------
@@ -318,7 +331,7 @@ function buildMLFeatureVector({
     sprintResults,
     teamRoster,
     resolveActualPosition,
-    phase2, // { championshipStanding, constructorStrength, recentForm, circuitHistory, driverVsTeammate, reliability, sprint, qualifying }
+    phase2, // { championshipStanding, constructorStrength, recentForm, circuitHistory, driverVsTeammate, reliability, sprint, qualifying, weather }
 }) {
     // Independent enforcement of "PRE_QUALIFYING must never contain
     // qualifying-derived features" for the NEW qualifying-shaped numbers
@@ -368,6 +381,12 @@ function buildMLFeatureVector({
         hadSprint: sprint.hadSprint ? 1 : 0,
         sprintPosition: sprint.available ? sprint.sprintPosition : null,
         sprintPoints: sprint.available ? sprint.sprintPoints : null,
+
+        weatherAirTemperature: phase2.weather?.available ? phase2.weather.airTemperature : null,
+        weatherPrecipitationAmount: phase2.weather?.available ? phase2.weather.precipitationAmount : null,
+        weatherWindSpeed: phase2.weather?.available ? phase2.weather.windSpeed : null,
+        weatherHumidity: phase2.weather?.available ? phase2.weather.humidity : null,
+        weatherCode: phase2.weather?.available ? phase2.weather.weatherCode : null,
     };
 
     const mlFeatureAvailability = {};

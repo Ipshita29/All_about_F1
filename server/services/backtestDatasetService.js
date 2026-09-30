@@ -18,17 +18,25 @@
  * (this file's own Phase 2 shape) are unchanged; Phase 3 only adds keys,
  * never alters or removes what was here before.
  *
+ * Since Phase 3.5, `features.weather` is a REAL reading — Open-Meteo's
+ * historical/archive API (confirmed live to cover real past F1 dates,
+ * see weatherService.getHistoricalWeather) is fetched once per race
+ * (weather doesn't vary per driver) and shared across every driver's
+ * sample for that race. A network failure or a date the archive
+ * genuinely has no data for still returns { available: false } — never
+ * a fabricated reading.
+ *
  * REUSE, NOT REIMPLEMENTATION
  * Every feature that predictorService.js already computes (championship
  * standing, constructor strength, recent form, circuit history,
  * qualifying) is called here via predictorService.js's own exported
  * functions — the exact same math, same leakage reasoning, same code.
- * This file only adds THREE genuinely new, dataset-only computations for
- * categories Phase 1 marked "available" but not yet scored anywhere
- * (driver-vs-teammate, reliability/DNF, sprint), built from data that's
- * already being fetched for recentForm — no extra Jolpica calls for them.
- * Weather has no historical source (see computeWeatherFeature) and is
- * honestly recorded as unavailable rather than faked.
+ * This file also adds a handful of genuinely new, dataset-only
+ * computations for categories Phase 1 marked "available" but not yet
+ * scored anywhere (driver-vs-teammate, reliability/DNF, sprint, and now
+ * weather), built from data that's already being fetched for recentForm
+ * — no extra Jolpica calls for the first three; weather is the one
+ * genuinely new external call, made once per race.
  *
  * ONE RECORD, TWO PARTS
  *   outcome  — historical facts about this driver's actual race weekend
@@ -70,6 +78,7 @@ const { cached, TTL } = require("./jolpicaCache");
 const { STAGES, sanitizeStageInputs } = require("./predictionDataPolicy");
 const { resolveActualPosition } = require("./evaluationService");
 const { buildMLFeatureVector } = require("./featureEngineeringService");
+const { getHistoricalWeather } = require("./weatherService");
 const {
     RECENT_FORM_RACE_COUNT,
     fetchRecentResults,
@@ -225,17 +234,34 @@ function computeSprintFeature(driverId, sprintResults) {
     };
 }
 
-// weatherService.js (see its own header) only ever calls Open-Meteo's
-// forecast endpoint, which covers ~16 days ahead — it has no historical
-// archive. Calling it for a past race would either error or silently
-// return today's forecast mislabeled as that race's weather, which is
-// worse than admitting the data doesn't exist. Every dataset row is
-// honest about this instead.
-function computeWeatherFeature() {
-    return {
-        available: false,
-        reason: "no historical weather archive integrated — weatherService.js only provides live/near-term forecasts",
-    };
+// Phase 3.5 — Open-Meteo DOES have a historical/archive endpoint
+// (confirmed live against real past F1 dates/coordinates), so this is now
+// a real fetch, not a permanent stub. One call per RACE (weather is the
+// same for every driver in it — never re-fetched per driver), targeting
+// the race's own scheduled start time, which is knowable well before
+// qualifying (see predictionDataPolicy.js, where `weather` is listed as
+// a PRE_QUALIFYING-available category — available at both stages here).
+// A network failure or a date the archive genuinely has no data for
+// returns { available: false }, never a fabricated reading.
+async function computeWeatherFeature(race) {
+    const lat = race.Circuit?.Location?.lat;
+    const lon = race.Circuit?.Location?.long;
+    const targetIso = race.date && race.time ? `${race.date}T${race.time}` : race.date ? `${race.date}T00:00:00Z` : null;
+    if (!lat || !lon || !targetIso) {
+        return { available: false, reason: "missing circuit coordinates or race date/time" };
+    }
+
+    let weather;
+    try {
+        weather = await getHistoricalWeather(Number(lat), Number(lon), targetIso);
+    } catch {
+        weather = null;
+    }
+
+    if (!weather) {
+        return { available: false, reason: "historical weather archive had no usable reading for this race's date/time" };
+    }
+    return { available: true, ...weather };
 }
 
 // ---------------------------------------------------------------------------
@@ -259,11 +285,12 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
     if (driverStandings.length === 0) return { skipped: true, reason: "insufficient_historical_standings", season, round, samples: [] };
 
     const circuitId = race.Circuit?.circuitId ?? null;
-    const [recentRaces, circuitRaces, qualifyingResults, sprintResults] = await Promise.all([
+    const [recentRaces, circuitRaces, qualifyingResults, sprintResults, weather] = await Promise.all([
         fetchRecentResults(season, round, RECENT_FORM_RACE_COUNT),
         fetchCircuitHistory(circuitId),
         fetchQualifying(season, round), // that race's OWN real qualifying — genuinely pre-race, gated below by stage
         race.Sprint ? fetchSprintResults(season, round) : Promise.resolve([]),
+        computeWeatherFeature(race), // one fetch per RACE, reused for every driver below — weather doesn't vary per driver
     ]);
 
     const fieldSize = driverStandings.length;
@@ -283,7 +310,7 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
         teamRoster.get(teamId).push(r.Driver.driverId);
     }
 
-    const missing = { standings: 0, teammate: 0, recentForm: 0, circuitHistory: 0, qualifying: 0, sprint: 0 };
+    const missing = { standings: 0, teammate: 0, recentForm: 0, circuitHistory: 0, qualifying: 0, sprint: 0, weather: weather.available ? 0 : 1 };
     const samples = [];
 
     for (const result of actualResults) {
@@ -307,7 +334,9 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
         const reliability = computeReliabilityFeature(driverId, recentRaces);
         const sprint = computeSprintFeature(driverId, sprintResults);
         if (race.Sprint && !sprint.available) missing.sprint += 1;
-        const weather = computeWeatherFeature();
+        // `weather` is race-level (computed once above, before this loop) —
+        // every driver in this race shares the same reading, never
+        // re-fetched or re-derived per driver.
 
         const { position: finishPosition, status: classification } = resolveActualPosition(result);
         const gridPosition = Number(result.grid);
@@ -350,7 +379,7 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
                 sprintResults,
                 teamRoster,
                 resolveActualPosition,
-                phase2: { championshipStanding, constructorStrength, recentForm, circuitHistory, driverVsTeammate, reliability, sprint, qualifying },
+                phase2: { championshipStanding, constructorStrength, recentForm, circuitHistory, driverVsTeammate, reliability, sprint, qualifying, weather },
             });
 
             samples.push({
@@ -389,7 +418,7 @@ async function generateRaceSamples(season, round, { stages = [STAGES.PRE_QUALIFY
 // ---------------------------------------------------------------------------
 
 function emptyMissingTotals() {
-    return { standings: 0, teammate: 0, recentForm: 0, circuitHistory: 0, qualifying: 0, sprint: 0 };
+    return { standings: 0, teammate: 0, recentForm: 0, circuitHistory: 0, qualifying: 0, sprint: 0, weather: 0 };
 }
 
 async function generateSeasonDataset(season, { stages, fromRound, toRound } = {}) {
