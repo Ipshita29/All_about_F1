@@ -83,3 +83,61 @@ REMOVED_FEATURES = [
 def load_dataset():
     with open(DATASET_PATH) as f:
         return json.load(f)
+
+
+def run_variant_with_train_gap(feature_cols, train_imp, val_imp, test_imp):
+    """Same models/grids as evaluate_phase9.run_variant, but also scores
+    the chosen model on TRAIN itself, so the train/validation/test gap
+    (Phase 11 requirement 9) can be reported directly — evaluate_phase9.py
+    itself is left untouched; its tune_* functions are reused as-is."""
+    feature_names = [c[len(FEATURE_PREFIX):] for c in feature_cols]
+    train_rows = train_imp[train_imp["outcome_classification"].isin(SCORABLE_STATUSES)]
+
+    result = {"featureCount": len(feature_cols)}
+
+    rf = tune_finish_position_regressor(RandomForestRegressor, RF_REG_GRID, train_rows, feature_cols, val_imp, fixed={"n_jobs": -1})
+    rf_train_scored = train_imp.copy(); rf_train_scored["_score"] = rf["model"].predict(train_imp[feature_cols].values)
+    rf_test_scored = test_imp.copy(); rf_test_scored["_score"] = rf["model"].predict(test_imp[feature_cols].values)
+    result["random_forest"] = {
+        "bestParams": rf["params"],
+        "train": evaluate_scored_split(rf_train_scored, "_score", ascending=True),
+        "validation": rf["valMetrics"],
+        "test": evaluate_scored_split(rf_test_scored, "_score", ascending=True),
+        "featureImportance": sorted(zip(feature_names, rf["model"].feature_importances_.tolist()), key=lambda x: -x[1])[:15],
+    }
+
+    gb = tune_finish_position_regressor(GradientBoostingRegressor, GB_REG_GRID, train_rows, feature_cols, val_imp)
+    gb_train_scored = train_imp.copy(); gb_train_scored["_score"] = gb["model"].predict(train_imp[feature_cols].values)
+    gb_test_scored = test_imp.copy(); gb_test_scored["_score"] = gb["model"].predict(test_imp[feature_cols].values)
+    result["gradient_boosting"] = {
+        "bestParams": gb["params"],
+        "train": evaluate_scored_split(gb_train_scored, "_score", ascending=True),
+        "validation": gb["valMetrics"],
+        "test": evaluate_scored_split(gb_test_scored, "_score", ascending=True),
+        "featureImportance": sorted(zip(feature_names, gb["model"].feature_importances_.tolist()), key=lambda x: -x[1])[:15],
+    }
+
+    lr = tune_winner_classifier(LR_GRID, train_rows, feature_cols, val_imp)
+    lr_train_scored = train_imp.copy(); lr_train_scored["_score"] = lr["model"].predict_proba(lr["scaler"].transform(train_imp[feature_cols].values))[:, 1]
+    lr_test_scored = test_imp.copy(); lr_test_scored["_score"] = lr["model"].predict_proba(lr["scaler"].transform(test_imp[feature_cols].values))[:, 1]
+    result["logistic_regression"] = {
+        "bestParams": lr["params"],
+        "train": evaluate_scored_split(lr_train_scored, "_score", ascending=False),
+        "validation": lr["valMetrics"],
+        "test": evaluate_scored_split(lr_test_scored, "_score", ascending=False),
+    }
+
+    for df in (train_imp, val_imp, test_imp):
+        if "target_didFinish" not in df.columns:
+            df["target_didFinish"] = df["outcome_status"].apply(did_finish)
+    train_dnf = train_imp[train_imp["target_didFinish"].notna()]
+    val_dnf = val_imp[val_imp["target_didFinish"].notna()]
+    test_dnf = test_imp[test_imp["target_didFinish"].notna()]
+
+    lr_dnf = tune_dnf_classifier(LogisticRegression, LR_GRID, train_dnf, feature_cols, val_dnf, needs_scaling=True)
+    rf_dnf = tune_dnf_classifier(RandomForestClassifier, RF_CLS_GRID, train_dnf, feature_cols, val_dnf, needs_scaling=False)
+    result["dnf"] = {
+        "logistic_regression": {"bestParams": lr_dnf["params"], "validationAuc": lr_dnf["key"], "testAuc": eval_dnf_test(lr_dnf, test_dnf, feature_cols)},
+        "random_forest": {"bestParams": rf_dnf["params"], "validationAuc": rf_dnf["key"], "testAuc": eval_dnf_test(rf_dnf, test_dnf, feature_cols)},
+    }
+    return result
