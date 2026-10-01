@@ -191,7 +191,65 @@ function computeDriverRawMetrics(laps, stints, pit, driverNumber) {
     };
 }
 
+// Normalizes every driver's raw figures against the FIELD MEDIAN for that
+// same session — necessary because raw lap times aren't comparable across
+// different circuits (Monaco ~70s/lap vs Spa ~105s/lap). Lower ratio =
+// faster, consistent with "lower is better" everywhere else in this
+// project's feature set.
+function computeSessionSummary(sessionKey) {
+    const laps = readCache(`session_${sessionKey}_laps`) || [];
+    const stints = readCache(`session_${sessionKey}_stints`) || [];
+    const pit = readCache(`session_${sessionKey}_pit`) || [];
+    if (laps.length === 0) return null;
+
+    const driverNumbers = [...new Set(laps.map((l) => l.driver_number))];
+    const raw = new Map();
+    for (const num of driverNumbers) raw.set(num, computeDriverRawMetrics(laps, stints, pit, num));
+
+    const fieldRaceMedian = median([...raw.values()].map((r) => r.raceAvgLap).filter((v) => v !== null));
+    const fieldStintMedian = median([...raw.values()].map((r) => r.bestStintAvg).filter((v) => v !== null));
+    const fieldSectorMedian = {};
+    for (const sec of [1, 2, 3]) {
+        const vals = [...raw.values()].map((r) => r.sectorAvg[sec]).filter((v) => v !== null);
+        fieldSectorMedian[sec] = vals.length ? median(vals) : null;
+    }
+
+    const perDriver = new Map();
+    for (const [num, r] of raw) {
+        const sectorRatio = {};
+        for (const sec of [1, 2, 3]) {
+            sectorRatio[sec] = r.sectorAvg[sec] !== null && fieldSectorMedian[sec] ? r.sectorAvg[sec] / fieldSectorMedian[sec] : null;
+        }
+        perDriver.set(num, {
+            racePaceRatio: r.raceAvgLap !== null && fieldRaceMedian ? r.raceAvgLap / fieldRaceMedian : null,
+            sectorRatio,
+            stintPaceRatio: r.bestStintAvg !== null && fieldStintMedian ? r.bestStintAvg / fieldStintMedian : null,
+            degradationRate: r.degradationRate, // seconds lost per stint (last3-first3), not field-normalized — a time delta, not a pace level
+            pitStopCount: r.pitStopCount,
+            avgPitDuration: r.avgPitDuration,
+        });
+    }
+    return perDriver;
+}
+
+const NEW_FEATURE_KEYS = [
+    "openf1RacePaceRatio",
+    "openf1TeammatePaceDelta",
+    "openf1StintPaceRatio",
+    "openf1TyreDegradationRate",
+    "openf1Sector1PaceRatio",
+    "openf1Sector2PaceRatio",
+    "openf1Sector3PaceRatio",
+    "openf1AvgPitStopDuration",
+    "openf1AvgPitStopsPerRace",
+];
+
+// Below this, a feature is too sparse across the dataset to call
+// "reliable" per this phase's own instruction to reject poor-coverage
+// features — it is dropped from the written output, not just flagged.
+const MIN_ACCEPTABLE_COVERAGE_PCT = 30;
+
 module.exports = {
-    buildDriverNumberMaps, cleanLapsForDriver, computeDriverRawMetrics,
+    buildDriverNumberMaps, computeSessionSummary, cleanLapsForDriver, computeDriverRawMetrics,
     WINDOW, OUTLIER_THRESHOLD, MIN_CLEAN_LAPS_FOR_RACE_PACE, MIN_CLEAN_LAPS_FOR_STINT, MIN_CLEAN_LAPS_FOR_DEGRADATION,
 };
