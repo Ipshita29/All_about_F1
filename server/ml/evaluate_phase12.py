@@ -62,3 +62,49 @@ def load_dataset():
 def lean_cols_for(train_df):
     full_cols = feature_columns_for(train_df)
     return [c for c in full_cols if c[len(FEATURE_PREFIX):] not in REMOVED_FEATURES]
+
+
+# ---------------------------------------------------------------------------
+# Regressor grid (finishPosition) — full grid results kept, not just the best
+# ---------------------------------------------------------------------------
+
+def sweep_regressor(train_rows, cols, val_df):
+    grid_results = []
+    best = None
+    for max_depth in MAX_DEPTH_GRID:
+        for min_samples_leaf in MIN_SAMPLES_LEAF_GRID:
+            model = RandomForestRegressor(
+                n_estimators=N_ESTIMATORS, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
+                random_state=RANDOM_STATE, n_jobs=-1,
+            )
+            model.fit(train_rows[cols].values, train_rows["outcome_finishPosition"].values.astype(float))
+            scored = val_df.copy()
+            scored["_score"] = model.predict(val_df[cols].values)
+            val_metrics = evaluate_scored_split(scored, "_score", ascending=True)
+            key = val_metrics["meanPositionError"] if val_metrics.get("available") and val_metrics.get("meanPositionError") is not None else float("inf")
+            entry = {"max_depth": max_depth, "min_samples_leaf": min_samples_leaf, "validationMeanPositionError": key, "validationWinnerAccuracy": val_metrics.get("winnerAccuracy")}
+            grid_results.append(entry)
+            if best is None or key < best["key"]:
+                best = {"params": {"max_depth": max_depth, "min_samples_leaf": min_samples_leaf}, "model": model, "key": key, "valMetrics": val_metrics}
+    return best, grid_results
+
+
+def sweep_classifier(train_rows, cols, val_rows):
+    y_train = train_rows["target_didFinish"].values.astype(int)
+    y_val = val_rows["target_didFinish"].values.astype(int)
+    can_score = len(set(y_val)) >= 2
+    grid_results = []
+    best = None
+    for max_depth in MAX_DEPTH_GRID:
+        for min_samples_leaf in MIN_SAMPLES_LEAF_GRID:
+            model = RandomForestClassifier(
+                n_estimators=N_ESTIMATORS, max_depth=max_depth, min_samples_leaf=min_samples_leaf,
+                class_weight="balanced", random_state=RANDOM_STATE, n_jobs=-1,
+            )
+            model.fit(train_rows[cols].values, y_train)
+            auc = float(roc_auc_score(y_val, model.predict_proba(val_rows[cols].values)[:, 1])) if can_score else 0.5
+            entry = {"max_depth": max_depth, "min_samples_leaf": min_samples_leaf, "validationAuc": auc}
+            grid_results.append(entry)
+            if best is None or auc > best["key"]:
+                best = {"params": {"max_depth": max_depth, "min_samples_leaf": min_samples_leaf}, "model": model, "key": auc}
+    return best, grid_results
