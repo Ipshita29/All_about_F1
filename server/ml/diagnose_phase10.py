@@ -329,3 +329,104 @@ def section10(df, stage):
             "validationMetrics": evaluate_scored_split(val_scored, "_score", ascending=True),
         }
     return results
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    data, df = load()
+    report = {"stages": {}}
+
+    print("=" * 78)
+    print("PHASE 10 — MODEL & DATA BOTTLENECK DIAGNOSIS")
+    print("=" * 78)
+
+    print("\n### 1. Training-data size and season coverage ###")
+    s1 = section1(df)
+    report["section1_dataCoverage"] = s1
+    for stage, rows in s1.items():
+        print(f"  {stage}: " + " | ".join(f"{split}={v['samples']} samples / {v['races']} races" for split, v in rows.items()))
+
+    report["stages"] = {}
+    for stage in STAGES:
+        print(f"\n{'=' * 78}\nSTAGE: {stage}\n{'=' * 78}")
+        stage_report = {}
+
+        print("\n### 2. Feature correlation (|r| >= 0.7, train split) ###")
+        s2 = section2(df, stage)
+        stage_report["section2_correlation"] = s2
+        if s2:
+            for p in s2[:15]:
+                print(f"  {p['a']} <-> {p['b']}: r={p['r']}")
+        else:
+            print("  none above 0.7")
+
+        print("\n### 3. Feature importance stability (train-fit vs validation permutation) ###")
+        s3 = section3(df, stage)
+        stage_report["section3_importanceStability"] = s3
+        print(f"  Top-10 overlap: {s3['top10Overlap']}/10 -> {s3['top10OverlapNames']}")
+        print(f"  Train-fit top 5: {[n for n,_ in s3['trainImportanceTop10'][:5]]}")
+        print(f"  Validation permutation top 5: {[n for n,_ in s3['validationPermutationImportanceTop10'][:5]]}")
+
+        print("\n### 4. Performance by race (validation & test) ###")
+        (s4, s, model) = section4(df, stage)
+        stage_report["section4_perRace"] = s4
+        val_errs = [r["meanPositionError"] for r in s4["validationPerRace"] if r["meanPositionError"] is not None]
+        test_errs = [r["meanPositionError"] for r in s4["testPerRace"] if r["meanPositionError"] is not None]
+        print(f"  validation meanPositionError: mean={np.mean(val_errs):.3f} std={np.std(val_errs):.3f} min={np.min(val_errs):.3f} max={np.max(val_errs):.3f} (n={len(val_errs)} races)")
+        print(f"  test meanPositionError:       mean={np.mean(test_errs):.3f} std={np.std(test_errs):.3f} min={np.min(test_errs):.3f} max={np.max(test_errs):.3f} (n={len(test_errs)} races)")
+
+        print("\n### 5. Overfitting check (same model, train vs validation vs test) ###")
+        s5 = section5(s, model)
+        stage_report["section5_overfitting"] = s5
+        for split in ["train", "validation", "test"]:
+            m = s5[split]
+            if m.get("available"):
+                print(f"  {split}: winnerAcc={m['winnerAccuracy']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+
+        print("\n### 6. Winner calibration (test) ###")
+        s6 = section6(s, model)
+        stage_report["section6_winnerCalibration"] = s6
+        print(f"  When predicted winner is wrong, their actual finish: {s6['actualPositionOfPredictedWinner']}")
+        print(f"    mean actual position of predicted winner: {s6['meanActualPosOfPredictedWinner']}")
+        print(f"  Real race winner's predicted rank: {s6['predictedPositionOfActualWinner']}")
+        print(f"    mean predicted position of actual winner: {s6['meanPredictedPosOfActualWinner']}")
+
+        print("\n### 8. DNF-heavy vs DNF-light races (test) ###")
+        s8 = section8(df, stage, s4["testPerRace"])
+        stage_report["section8_dnfImpact"] = s8
+        print(f"  median DNFs/race: {s8['medianDnfCountPerRace']}")
+        print(f"  high-DNF races (n={s8['highDnfRaces']['n']}): avg meanPositionError = {s8['highDnfRaces']['avgMeanPositionError']}")
+        print(f"  low-DNF races  (n={s8['lowDnfRaces']['n']}): avg meanPositionError = {s8['lowDnfRaces']['avgMeanPositionError']}")
+
+        print("\n### 9. Baseline vs ML gap — bootstrap 95% CI over test races ###")
+        s9 = section9(s, model, s4["testPerRace"])
+        stage_report["section9_bootstrapGap"] = s9
+        for name, r in s9.items():
+            if r.get("available"):
+                print(f"  {name}: meanDiff={r['meanDiff']:.3f} 95% CI=[{r['ci95'][0]:.3f}, {r['ci95'][1]:.3f}] excludesZero={r['ciExcludesZero']}")
+
+        print("\n### 10. Learning curve (validation only, 2026 never touched) ###")
+        s10 = section10(df, stage)
+        stage_report["section10_learningCurve"] = s10
+        for label, r in s10.items():
+            m = r["validationMetrics"]
+            print(f"  {label}: trainRows={r['trainRows']} trainRaces={r['trainRaces']} -> val winnerAcc={m['winnerAccuracy']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+
+        report["stages"][stage] = stage_report
+
+    print("\n### 7. Target formulation — winner-classifier vs regression-ranking (from Phase 9 results) ###")
+    s7 = section7()
+    report["section7_targetFormulation"] = s7
+    for stage, r in s7.items():
+        print(f"  {stage}: RF={r['regression_based_ranking']['random_forest_winnerAcc']} GB={r['regression_based_ranking']['gradient_boosting_winnerAcc']} LR(direct classifier)={r['direct_binary_winner_classifier']['logistic_regression_winnerAcc']}")
+
+    with open(OUT_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {OUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()
