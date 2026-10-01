@@ -224,3 +224,105 @@ def run_variant(feature_cols, train_imp, val_imp, test_imp):
     }
 
     return result
+
+
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+    existing_predictor = data["existingPredictorPredictions"]["byRound"]
+
+    report = {"generatedAt": data.get("generatedAt"), "phase8FeaturesAdded": data.get("phase8FeaturesAdded", OPENF1_FEATURE_KEYS), "stages": {}}
+
+    print("=" * 78)
+    print("PHASE 9 — MODEL TRAINING & EVALUATION (does OpenF1 help?)")
+    print("=" * 78)
+    print(f"Total samples: {len(df)} | OpenF1 features: {report['phase8FeaturesAdded']}")
+
+    for stage in STAGES:
+        print("\n" + "=" * 78)
+        print(f"STAGE: {stage}")
+        print("=" * 78)
+
+        df_stage = df[df["stage"] == stage]
+        train_df = df_stage[df_stage["split"] == "train"]
+        val_df = df_stage[df_stage["split"] == "validation"]
+        test_df = df_stage[df_stage["split"] == "test"]
+        print(f"Sample counts: train={len(train_df)} validation={len(val_df)} test={len(test_df)}")
+
+        all_usable_cols = feature_columns_for(train_df)
+        openf1_cols = [c for c in all_usable_cols if c[len(FEATURE_PREFIX):] in OPENF1_FEATURE_KEYS]
+        without_openf1_cols = [c for c in all_usable_cols if c not in openf1_cols]
+        with_openf1_cols = all_usable_cols
+
+        print(f"Feature columns — without OpenF1: {len(without_openf1_cols)} | with OpenF1: {len(with_openf1_cols)} (+{len(openf1_cols)})")
+
+        medians = train_df[all_usable_cols].median()
+        train_imp = impute(train_df, all_usable_cols, medians)
+        val_imp = impute(val_df, all_usable_cols, medians)
+        test_imp = impute(test_df, all_usable_cols, medians)
+
+        stage_report = {
+            "sampleCounts": {"train": len(train_df), "validation": len(val_df), "test": len(test_df)},
+            "withoutOpenF1FeatureCount": len(without_openf1_cols),
+            "withOpenF1FeatureCount": len(with_openf1_cols),
+        }
+
+        # ---- Baselines (feature-set independent, reused from evaluate.py logic) ----
+        baselines = {}
+        if f"{FEATURE_PREFIX}championshipStandingScore" in all_usable_cols:
+            col = f"{FEATURE_PREFIX}championshipStandingScore"
+            baselines["championship_position_baseline"] = {
+                "validation": evaluate_scored_split(val_imp, col, ascending=False),
+                "test": evaluate_scored_split(test_imp, col, ascending=False),
+            }
+        if stage == "post_qualifying" and f"{FEATURE_PREFIX}gridPosition" in all_usable_cols:
+            col = f"{FEATURE_PREFIX}gridPosition"
+            baselines["grid_position_baseline"] = {
+                "validation": evaluate_scored_split(val_imp, col, ascending=True),
+                "test": evaluate_scored_split(test_imp, col, ascending=True),
+            }
+            baselines["existing_predictor"] = {"test": evaluate_existing_predictor(test_df, existing_predictor)}
+        stage_report["baselines"] = baselines
+
+        # ---- Two feature-set variants ----
+        print("\nTuning WITHOUT OpenF1 features...")
+        stage_report["without_openf1"] = run_variant(without_openf1_cols, train_imp, val_imp, test_imp)
+        print("Tuning WITH OpenF1 features...")
+        stage_report["with_openf1"] = run_variant(with_openf1_cols, train_imp, val_imp, test_imp)
+
+        report["stages"][stage] = stage_report
+
+        # ---- print concise comparison ----
+        print(f"\n--- {stage}: baselines (test) ---")
+        for name, b in baselines.items():
+            m = b.get("test")
+            if m and m.get("available"):
+                print(f"  {name}: winnerAcc={m['winnerAccuracy']:.3f} podium={m['avgPodiumHitRate']:.3f} top5={m['avgTop5HitRate']:.3f} top10={m['avgTop10HitRate']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+
+        for model_name in ["random_forest", "gradient_boosting", "logistic_regression"]:
+            wo = stage_report["without_openf1"][model_name]["test"]
+            w = stage_report["with_openf1"][model_name]["test"]
+            print(f"\n--- {stage}: {model_name} (test) ---")
+            if wo.get("available"):
+                print(f"  without OpenF1: winnerAcc={wo['winnerAccuracy']:.3f} podium={wo['avgPodiumHitRate']:.3f} top5={wo['avgTop5HitRate']:.3f} top10={wo['avgTop10HitRate']:.3f} meanPosErr={wo['meanPositionError']:.3f}  params={stage_report['without_openf1'][model_name]['bestParams']}")
+            if w.get("available"):
+                print(f"  with OpenF1:    winnerAcc={w['winnerAccuracy']:.3f} podium={w['avgPodiumHitRate']:.3f} top5={w['avgTop5HitRate']:.3f} top10={w['avgTop10HitRate']:.3f} meanPosErr={w['meanPositionError']:.3f}  params={stage_report['with_openf1'][model_name]['bestParams']}")
+
+        print(f"\n--- {stage}: DNF AUC (test) ---")
+        for model_name in ["logistic_regression", "random_forest"]:
+            wo = stage_report["without_openf1"]["dnf"][model_name]
+            w = stage_report["with_openf1"]["dnf"][model_name]
+            print(f"  {model_name}: without={wo['testAuc']} with={w['testAuc']}")
+
+        rf_importance_with = stage_report["with_openf1"]["random_forest"]["featureImportance"][:8]
+        print(f"\n--- {stage}: top features (Random Forest, WITH OpenF1) ---")
+        print(" ", rf_importance_with)
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
