@@ -173,7 +173,97 @@ function classifyCoverage({ lapCount, stintCount, pitCount, sectorData, tyreData
     return complete ? "complete" : "partial";
 }
 
-module.exports = {
-    loadOurRaces, fetchJolpicaSeasonDates, fetchOpenF1SeasonSessions, fetchSessionData,
-    hasSectorData, hasTyreData, classifyCoverage, SEASONS, REPORT_PATH,
-};
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main() {
+    const ourRaces = loadOurRaces();
+    console.log(`[OpenF1 Sweep] ${ourRaces.length} races in the existing dataset to check`);
+
+    const racesBySeason = new Map();
+    for (const r of ourRaces) {
+        if (!racesBySeason.has(r.season)) racesBySeason.set(r.season, []);
+        racesBySeason.get(r.season).push(r);
+    }
+
+    const report = [];
+    let matched = 0;
+    let unmatched = 0;
+
+    for (const season of SEASONS) {
+        const races = racesBySeason.get(season) || [];
+        if (races.length === 0) continue;
+
+        console.log(`\n[OpenF1 Sweep] === Season ${season}: ${races.length} races ===`);
+        const jolpicaDates = await fetchJolpicaSeasonDates(season);
+        const openf1Sessions = await fetchOpenF1SeasonSessions(season);
+
+        // date (YYYY-MM-DD) -> session_key, from OpenF1's own date_start
+        const sessionByDate = new Map();
+        for (const s of openf1Sessions) {
+            if (s.date_start) sessionByDate.set(s.date_start.slice(0, 10), s);
+        }
+
+        for (const r of races) {
+            const jolpicaDate = jolpicaDates[r.round];
+            const session = jolpicaDate ? sessionByDate.get(jolpicaDate) : null;
+
+            if (!session) {
+                unmatched += 1;
+                report.push({
+                    season: r.season, round: r.round, race: r.race, session: "Race",
+                    openf1SessionKey: null, lapRecords: 0, stintRecords: 0, pitRecords: 0,
+                    hasSectorData: false, hasTyreData: false, status: "no_session_match",
+                    notes: jolpicaDate ? `no OpenF1 session found for date ${jolpicaDate}` : "no Jolpica race date found",
+                });
+                console.log(`[OpenF1 Sweep]   round ${r.round} (${r.race}): no_session_match`);
+                continue;
+            }
+
+            matched += 1;
+            const { laps, stints, pit } = await fetchSessionData(session.session_key);
+            const sectorData = hasSectorData(laps);
+            const tyreData = hasTyreData(stints);
+            const status = classifyCoverage({ lapCount: laps.length, stintCount: stints.length, pitCount: pit.length, sectorData, tyreData });
+
+            const notes = [];
+            if (laps.length === 0) notes.push("no lap records");
+            if (stints.length === 0) notes.push("no stint records");
+            if (pit.length === 0) notes.push("no pit-stop records");
+            if (laps.length > 0 && !sectorData) notes.push("laps present but no sector times");
+            if (stints.length > 0 && !tyreData) notes.push("stints present but no compound field");
+
+            report.push({
+                season: r.season, round: r.round, race: r.race, session: "Race",
+                openf1SessionKey: session.session_key,
+                lapRecords: laps.length, stintRecords: stints.length, pitRecords: pit.length,
+                hasSectorData: sectorData, hasTyreData: tyreData, status,
+                notes: notes.length ? notes.join("; ") : "ok",
+            });
+            console.log(`[OpenF1 Sweep]   round ${r.round} (${r.race}): ${status} — laps=${laps.length} stints=${stints.length} pit=${pit.length} sectors=${sectorData} tyres=${tyreData}`);
+
+            await sleep(SESSION_PAUSE_MS);
+        }
+    }
+
+    const summary = {
+        totalRaces: ourRaces.length,
+        matchedSessions: matched,
+        unmatchedSessions: unmatched,
+        byStatus: report.reduce((acc, r) => { acc[r.status] = (acc[r.status] || 0) + 1; return acc; }, {}),
+    };
+
+    fs.writeFileSync(REPORT_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), summary, races: report }, null, 2));
+
+    console.log("\n" + "=".repeat(70));
+    console.log("[OpenF1 Sweep] SUMMARY");
+    console.log("=".repeat(70));
+    console.log(summary);
+    console.log(`\n[OpenF1 Sweep] Full report written to ${REPORT_PATH}`);
+}
+
+main().catch((error) => {
+    console.error("[OpenF1 Sweep] FAILED:", error);
+    process.exit(1);
+});
