@@ -141,3 +141,85 @@ def run_variant_with_train_gap(feature_cols, train_imp, val_imp, test_imp):
         "random_forest": {"bestParams": rf_dnf["params"], "validationAuc": rf_dnf["key"], "testAuc": eval_dnf_test(rf_dnf, test_dnf, feature_cols)},
     }
     return result
+
+
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    report = {"removedFeatures": REMOVED_FEATURES, "stages": {}}
+
+    print("=" * 78)
+    print("PHASE 11 — FEATURE REDUNDANCY REDUCTION & LEAN MODEL VALIDATION")
+    print("=" * 78)
+    print(f"Features removed ({len(REMOVED_FEATURES)}): {REMOVED_FEATURES}")
+
+    for stage in STAGES:
+        print(f"\n{'=' * 78}\nSTAGE: {stage}\n{'=' * 78}")
+
+        stage_df = df[df["stage"] == stage]
+        train_df = stage_df[stage_df["split"] == "train"]
+        val_df = stage_df[stage_df["split"] == "validation"]
+        test_df = stage_df[stage_df["split"] == "test"]
+
+        full_cols = feature_columns_for(train_df)
+        lean_cols = [c for c in full_cols if c[len(FEATURE_PREFIX):] not in REMOVED_FEATURES]
+        removed_here = [c[len(FEATURE_PREFIX):] for c in full_cols if c not in lean_cols]
+        print(f"Full feature set: {len(full_cols)} | Lean feature set: {len(lean_cols)} (removed {len(removed_here)}: {removed_here})")
+
+        medians_full = train_df[full_cols].median()
+        train_full = impute(train_df, full_cols, medians_full)
+        val_full = impute(val_df, full_cols, medians_full)
+        test_full = impute(test_df, full_cols, medians_full)
+
+        medians_lean = train_df[lean_cols].median()
+        train_lean = impute(train_df, lean_cols, medians_lean)
+        val_lean = impute(val_df, lean_cols, medians_lean)
+        test_lean = impute(test_df, lean_cols, medians_lean)
+
+        print("\nTuning FULL feature set...")
+        full_result = run_variant_with_train_gap(full_cols, train_full, val_full, test_full)
+        print("Tuning LEAN feature set...")
+        lean_result = run_variant_with_train_gap(lean_cols, train_lean, val_lean, test_lean)
+
+        stage_report = {
+            "sampleCounts": {"train": len(train_df), "validation": len(val_df), "test": len(test_df)},
+            "fullFeatureCount": len(full_cols),
+            "leanFeatureCount": len(lean_cols),
+            "removedHere": removed_here,
+            "full": full_result,
+            "lean": lean_result,
+        }
+        report["stages"][stage] = stage_report
+
+        for model_name in ["random_forest", "gradient_boosting", "logistic_regression"]:
+            f = full_result[model_name]
+            l = lean_result[model_name]
+            print(f"\n--- {stage}: {model_name} ---")
+            for label, r in [("FULL", f), ("LEAN", l)]:
+                tr, va, te = r["train"], r["validation"], r["test"]
+                if tr.get("available") and va.get("available") and te.get("available"):
+                    gap = tr["meanPositionError"] - te["meanPositionError"]
+                    print(f"  {label} (params={r['bestParams']}):")
+                    print(f"    train:      winnerAcc={tr['winnerAccuracy']:.3f} meanPosErr={tr['meanPositionError']:.3f}")
+                    print(f"    validation: winnerAcc={va['winnerAccuracy']:.3f} meanPosErr={va['meanPositionError']:.3f}")
+                    print(f"    test:       winnerAcc={te['winnerAccuracy']:.3f} podium={te['avgPodiumHitRate']:.3f} top5={te['avgTop5HitRate']:.3f} top10={te['avgTop10HitRate']:.3f} meanPosErr={te['meanPositionError']:.3f}")
+                    print(f"    train-test gap (meanPosErr, more negative = worse overfit): {gap:.3f}")
+
+        print(f"\n--- {stage}: DNF AUC (test) ---")
+        for model_name in ["logistic_regression", "random_forest"]:
+            f = full_result["dnf"][model_name]
+            l = lean_result["dnf"][model_name]
+            print(f"  {model_name}: FULL={f['testAuc']} LEAN={l['testAuc']}")
+
+        print(f"\n--- {stage}: top features, LEAN set (Random Forest) ---")
+        print(" ", lean_result["random_forest"]["featureImportance"][:8])
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
