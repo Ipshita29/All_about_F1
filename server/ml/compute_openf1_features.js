@@ -249,6 +249,211 @@ const NEW_FEATURE_KEYS = [
 // features — it is dropped from the written output, not just flagged.
 const MIN_ACCEPTABLE_COVERAGE_PCT = 30;
 
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main() {
+    console.log("[Phase8] Loading dataset and Phase 7 coverage report...");
+    const dataset = JSON.parse(fs.readFileSync(DATASET_PATH, "utf8"));
+    const coverage = JSON.parse(fs.readFileSync(COVERAGE_REPORT_PATH, "utf8"));
+
+    const sessionByRace = new Map(); // "season|round" -> sessionKey
+    for (const r of coverage.races) {
+        if (r.openf1SessionKey) sessionByRace.set(`${r.season}|${r.round}`, r.openf1SessionKey);
+    }
+
+    const seasons = [...new Set(dataset.samples.map((s) => s.season))].sort();
+    console.log(`[Phase8] Building driverId<->driverNumber maps for seasons: ${seasons.join(", ")}`);
+    const driverNumberMaps = await buildDriverNumberMaps(seasons);
+
+    console.log("[Phase8] Computing per-session driver pace metrics from cached OpenF1 data (no network calls)...");
+    const summaryByRace = new Map();
+    for (const [key, sessionKey] of sessionByRace) {
+        const summary = computeSessionSummary(sessionKey);
+        if (summary) summaryByRace.set(key, summary);
+    }
+    console.log(`[Phase8] ${summaryByRace.size}/${sessionByRace.size} matched sessions produced a usable per-driver summary`);
+
+    // Team rosters per race, reconstructed from the dataset's own
+    // driverId/constructorId columns — same trick Phase 2/5 already use,
+    // no new fetch.
+    const raceDriverTeam = new Map();
+    for (const s of dataset.samples) {
+        const key = `${s.season}|${s.round}`;
+        if (!raceDriverTeam.has(key)) raceDriverTeam.set(key, new Map());
+        raceDriverTeam.get(key).set(s.driverId, s.constructorId);
+    }
+    const teammateByRace = new Map();
+    for (const [key, driverTeamMap] of raceDriverTeam) {
+        const teamRoster = new Map();
+        for (const [driverId, teamId] of driverTeamMap) {
+            if (!teamId) continue;
+            if (!teamRoster.has(teamId)) teamRoster.set(teamId, []);
+            teamRoster.get(teamId).push(driverId);
+        }
+        const mates = new Map();
+        for (const [driverId, teamId] of driverTeamMap) {
+            mates.set(driverId, (teamRoster.get(teamId) || []).find((id) => id !== driverId) || null);
+        }
+        teammateByRace.set(key, mates);
+    }
+
+    const roundsBySeason = new Map();
+    for (const s of dataset.samples) {
+        if (!roundsBySeason.has(s.season)) roundsBySeason.set(s.season, new Set());
+        roundsBySeason.get(s.season).add(Number(s.round));
+    }
+    for (const [season, set] of roundsBySeason) roundsBySeason.set(season, [...set].sort((a, b) => a - b));
+
+    function priorRoundsWindow(season, round) {
+        return (roundsBySeason.get(season) || []).filter((r) => r < round).slice(-WINDOW);
+    }
+
+    function metricsFor(season, round, driverId, driverNumberMap) {
+        const num = driverNumberMap.get(driverId);
+        if (num === undefined) return null;
+        const summary = summaryByRace.get(`${season}|${round}`);
+        if (!summary) return null;
+        return summary.get(num) || null;
+    }
+
+    function rollingAverage(season, round, driverId, field, driverNumberMap) {
+        const vals = [];
+        for (const r of priorRoundsWindow(season, round)) {
+            const m = metricsFor(season, r, driverId, driverNumberMap);
+            if (!m) continue;
+            const v = field.startsWith("sector") ? m.sectorRatio[Number(field.slice(-1))] : m[field];
+            if (v !== null && v !== undefined) vals.push(v);
+        }
+        return vals.length ? round3(mean(vals)) : null;
+    }
+
+    function rollingPitStopsPerRace(season, round, driverId, driverNumberMap) {
+        const counts = [];
+        for (const r of priorRoundsWindow(season, round)) {
+            const m = metricsFor(season, r, driverId, driverNumberMap);
+            if (m) counts.push(m.pitStopCount); // 0 is a real, meaningful value — not missing
+        }
+        return counts.length ? round3(mean(counts)) : null;
+    }
+
+    function rollingTeammateDelta(season, round, driverId, teammateId, driverNumberMap) {
+        if (!teammateId) return null;
+        const deltas = [];
+        for (const r of priorRoundsWindow(season, round)) {
+            const mine = metricsFor(season, r, driverId, driverNumberMap);
+            const theirs = metricsFor(season, r, teammateId, driverNumberMap);
+            if (!mine || !theirs || mine.racePaceRatio === null || theirs.racePaceRatio === null) continue;
+            deltas.push(theirs.racePaceRatio - mine.racePaceRatio); // positive = I'm faster (lower ratio)
+        }
+        return deltas.length ? round3(mean(deltas)) : null;
+    }
+
+    console.log("[Phase8] Computing rolling OpenF1 features for every sample...");
+    let processed = 0;
+    for (const s of dataset.samples) {
+        const season = s.season;
+        const round = Number(s.round);
+        const driverNumberMap = driverNumberMaps[season] || new Map();
+        const teammateId = (teammateByRace.get(`${season}|${round}`) || new Map()).get(s.driverId) || null;
+
+        const newFeatures = {
+            openf1RacePaceRatio: rollingAverage(season, round, s.driverId, "racePaceRatio", driverNumberMap),
+            openf1TeammatePaceDelta: rollingTeammateDelta(season, round, s.driverId, teammateId, driverNumberMap),
+            openf1StintPaceRatio: rollingAverage(season, round, s.driverId, "stintPaceRatio", driverNumberMap),
+            openf1TyreDegradationRate: rollingAverage(season, round, s.driverId, "degradationRate", driverNumberMap),
+            openf1Sector1PaceRatio: rollingAverage(season, round, s.driverId, "sector1", driverNumberMap),
+            openf1Sector2PaceRatio: rollingAverage(season, round, s.driverId, "sector2", driverNumberMap),
+            openf1Sector3PaceRatio: rollingAverage(season, round, s.driverId, "sector3", driverNumberMap),
+            openf1AvgPitStopDuration: rollingAverage(season, round, s.driverId, "avgPitDuration", driverNumberMap),
+            openf1AvgPitStopsPerRace: rollingPitStopsPerRace(season, round, s.driverId, driverNumberMap),
+        };
+
+        s.mlFeatures = { ...s.mlFeatures, ...newFeatures };
+        s.mlFeatureAvailability = { ...s.mlFeatureAvailability };
+        for (const k of Object.keys(newFeatures)) s.mlFeatureAvailability[k] = newFeatures[k] !== null;
+
+        processed += 1;
+        if (processed % 500 === 0) console.log(`[Phase8]   ${processed}/${dataset.samples.length} samples processed`);
+    }
+
+    // ---- Leakage verification (programmatic, not just visual) ------------
+    console.log("\n[Phase8] === LEAKAGE VERIFICATION ===");
+    const spotChecks = [];
+    for (const [season, rounds] of roundsBySeason) {
+        spotChecks.push({ season, round: rounds[0] });
+        spotChecks.push({ season, round: rounds[Math.floor(rounds.length / 2)] });
+        spotChecks.push({ season, round: rounds[rounds.length - 1] });
+    }
+    let leakageOk = true;
+    for (const { season, round } of spotChecks) {
+        const window = priorRoundsWindow(season, round);
+        const ok = window.every((r) => r < round);
+        leakageOk = leakageOk && ok;
+        console.log(`[Phase8]   ${season} R${round}: prior-rounds window = [${window.join(", ")}] -> ${ok ? "PASS" : "FAIL (window includes target or later round)"}`);
+    }
+    console.log(`[Phase8] Leakage verification: ${leakageOk ? "ALL PASSED" : "FAILURES DETECTED"}`);
+
+    // ---- Pre/post stage consistency (these features must never differ) --
+    console.log("\n[Phase8] === PRE/POST STAGE CONSISTENCY CHECK ===");
+    const byDriverRace = new Map();
+    for (const s of dataset.samples) {
+        const k = `${s.season}|${s.round}|${s.driverId}`;
+        if (!byDriverRace.has(k)) byDriverRace.set(k, {});
+        byDriverRace.get(k)[s.stage] = s.mlFeatures;
+    }
+    let stageMismatches = 0;
+    for (const { pre_qualifying, post_qualifying } of byDriverRace.values()) {
+        if (!pre_qualifying || !post_qualifying) continue;
+        for (const key of NEW_FEATURE_KEYS) {
+            if (pre_qualifying[key] !== post_qualifying[key]) stageMismatches += 1;
+        }
+    }
+    console.log(`[Phase8] Stage-consistency mismatches: ${stageMismatches} (expect 0)`);
+
+    // ---- Coverage per feature, and reject anything too sparse ------------
+    console.log("\n[Phase8] === FEATURE COVERAGE ===");
+    const coverageStats = {};
+    for (const key of NEW_FEATURE_KEYS) {
+        const available = dataset.samples.filter((s) => s.mlFeatureAvailability[key]).length;
+        const pct = round3((available / dataset.samples.length) * 100);
+        coverageStats[key] = { available, total: dataset.samples.length, pct };
+        console.log(`[Phase8]   ${key}: ${available}/${dataset.samples.length} (${pct}%)`);
+    }
+
+    const rejected = NEW_FEATURE_KEYS.filter((k) => coverageStats[k].pct < MIN_ACCEPTABLE_COVERAGE_PCT);
+    const kept = NEW_FEATURE_KEYS.filter((k) => !rejected.includes(k));
+    console.log(`\n[Phase8] Features kept (>= ${MIN_ACCEPTABLE_COVERAGE_PCT}% coverage): ${kept.join(", ")}`);
+    console.log(`[Phase8] Features rejected (< ${MIN_ACCEPTABLE_COVERAGE_PCT}% coverage): ${rejected.length ? rejected.join(", ") : "none"}`);
+
+    if (rejected.length) {
+        for (const s of dataset.samples) {
+            for (const key of rejected) {
+                delete s.mlFeatures[key];
+                delete s.mlFeatureAvailability[key];
+            }
+        }
+    }
+
+    dataset.generatedAt = new Date().toISOString();
+    dataset.phase8FeaturesAdded = kept;
+    dataset.phase8FeaturesRejected = rejected.map((k) => ({ key: k, coveragePct: coverageStats[k].pct }));
+    dataset.phase8LeakageVerification = { passed: leakageOk, stageConsistencyMismatches: stageMismatches, spotChecks };
+    dataset.phase8Coverage = coverageStats;
+
+    fs.writeFileSync(OUT_PATH, JSON.stringify(dataset));
+    console.log(`\n[Phase8] Wrote ${dataset.samples.length} samples to ${OUT_PATH}`);
+    console.log(`[Phase8] Final new feature count: ${kept.length}`);
+}
+
+if (require.main === module) {
+    main().catch((error) => {
+        console.error("[Phase8] FAILED:", error);
+        process.exit(1);
+    });
+}
+
 module.exports = {
     buildDriverNumberMaps, computeSessionSummary, cleanLapsForDriver, computeDriverRawMetrics,
     WINDOW, OUTLIER_THRESHOLD, MIN_CLEAN_LAPS_FOR_RACE_PACE, MIN_CLEAN_LAPS_FOR_STINT, MIN_CLEAN_LAPS_FOR_DEGRADATION,
