@@ -205,3 +205,76 @@ def mean_std(values):
     return {"mean": float(np.mean(vals)), "std": float(np.std(vals)), "n": len(vals)}
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    print("=" * 78)
+    print("PHASE 16 — IMPROVE POST ANCHORED MODEL")
+    print("=" * 78)
+    print(f"Core subset: {CORE_SUBSET_COLS}")
+    print(f"Minimal core: {MINIMAL_CORE_COLS}")
+    print(f"Reweight core (x{REPLICATION_FACTOR}): {REWEIGHT_CORE_COLS}")
+
+    period_results = [evaluate_period(df, p) for p in PERIODS]
+    all_models = VARIANT_NAMES + ["grid_only"]
+
+    print("\n--- Per-period test performance ---")
+    for r in period_results:
+        print(f"\n  {r['period']} (train={r['trainRaces']}, val={r['valRaces']}, test={r['testRaces']}) "
+              f"weights={r['weightsChosen']}")
+        for name in all_models:
+            m = r["models"][name]
+            if m.get("available"):
+                print(f"    {name:20s} winnerAcc={m['winnerAccuracy']:.3f} podium={m['avgPodiumHitRate']:.3f} "
+                      f"top5={m['avgTop5HitRate']:.3f} top10={m['avgTop10HitRate']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+        print(f"    rfComponentTrainTestGap={r['rfComponentTrainTestGap']}")
+        print(f"    dnfAuc (shared)={r['dnfAucSharedAcrossVariants']}")
+
+    print("\n--- Aggregate (mean +/- std across periods) ---")
+    aggregate = {}
+    for name in all_models:
+        aggregate[name] = {
+            "winnerAccuracy": mean_std([r["models"][name].get("winnerAccuracy") for r in period_results]),
+            "avgPodiumHitRate": mean_std([r["models"][name].get("avgPodiumHitRate") for r in period_results]),
+            "avgTop5HitRate": mean_std([r["models"][name].get("avgTop5HitRate") for r in period_results]),
+            "avgTop10HitRate": mean_std([r["models"][name].get("avgTop10HitRate") for r in period_results]),
+            "meanPositionError": mean_std([r["models"][name].get("meanPositionError") for r in period_results]),
+        }
+        a = aggregate[name]
+        print(f"  {name:20s} meanPosErr={a['meanPositionError']['mean']:.3f} +/- {a['meanPositionError']['std']:.3f}  "
+              f"winnerAcc={a['winnerAccuracy']['mean']:.3f} +/- {a['winnerAccuracy']['std']:.3f}")
+
+    print("\n--- Pooled bootstrap vs grid-only (60 races) ---")
+    pooled_grid = [race for r in period_results for race in r["_perRaceByModel"]["grid_only"]]
+    comparisons = {}
+    for name in VARIANT_NAMES:
+        pooled_model = [race for r in period_results for race in r["_perRaceByModel"][name]]
+        comp = bootstrap_gap(pooled_model, pooled_grid)
+        comparisons[name] = comp
+        if comp.get("available"):
+            print(f"  {name:20s} meanDiff={comp['meanDiff']:+.3f} 95% CI=[{comp['ci95'][0]:+.3f}, {comp['ci95'][1]:+.3f}] "
+                  f"excludesZero={comp['ciExcludesZero']}")
+
+    for r in period_results:
+        del r["_perRaceByModel"]
+
+    report = {
+        "stage": STAGE,
+        "replicationFactor": REPLICATION_FACTOR,
+        "coreSubsetCols": CORE_SUBSET_COLS,
+        "minimalCoreCols": MINIMAL_CORE_COLS,
+        "reweightCoreCols": REWEIGHT_CORE_COLS,
+        "periods": period_results,
+        "aggregate": aggregate,
+        "vsGridOnlyPooledBootstrap": comparisons,
+    }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
