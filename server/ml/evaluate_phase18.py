@@ -238,3 +238,104 @@ def mean_std(values):
     return {"mean": float(np.mean(vals)), "std": float(np.std(vals)), "n": len(vals)}
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    print("=" * 78)
+    print("PHASE 18 — VOLATILITY-CONDITIONAL ENSEMBLE")
+    print("=" * 78)
+    print(f"Volatility components: {list(VOL_COLS.values())}")
+    print(f"Weight candidates (coarse): {WEIGHT_CANDIDATES}, buckets: {BUCKET_LABELS}")
+
+    period_results = [evaluate_period(df, p) for p in PERIODS]
+    models = ["grid_only", "fixed_ensemble", "volatility_conditional"]
+
+    print("\n--- Per-period results ---")
+    for r in period_results:
+        print(f"\n  {r['period']} (train={r['trainRaces']}, val={r['valRaces']}, test={r['testRaces']}) "
+              f"cutpoints={r['volatilityCutpoints']} fixedW={r['fixedWeightChosen']} bucketW={r['bucketWeightsChosen']}")
+        for name in models:
+            m = r["models"][name]
+            if m.get("available"):
+                print(f"    {name:24s} winnerAcc={m['winnerAccuracy']:.3f} podium={m['avgPodiumHitRate']:.3f} "
+                      f"top5={m['avgTop5HitRate']:.3f} top10={m['avgTop10HitRate']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+        gap = r["rfComponentGap"]
+        print(f"    RF component: train={gap['trainMeanPositionError']:.3f} val={gap['validationMeanPositionError']:.3f} "
+              f"test={gap['testMeanPositionError']:.3f} trainValGap={gap['trainValGap']:.3f} trainTestGap={gap['trainTestGap']:.3f}")
+        print(f"    dnfAuc (shared) = {r['dnfAucSharedAcrossModels']}")
+
+    print("\n--- Aggregate (mean +/- std across periods) ---")
+    aggregate = {}
+    for name in models:
+        aggregate[name] = {
+            "winnerAccuracy": mean_std([r["models"][name].get("winnerAccuracy") for r in period_results]),
+            "avgPodiumHitRate": mean_std([r["models"][name].get("avgPodiumHitRate") for r in period_results]),
+            "avgTop5HitRate": mean_std([r["models"][name].get("avgTop5HitRate") for r in period_results]),
+            "avgTop10HitRate": mean_std([r["models"][name].get("avgTop10HitRate") for r in period_results]),
+            "meanPositionError": mean_std([r["models"][name].get("meanPositionError") for r in period_results]),
+        }
+        a = aggregate[name]
+        print(f"  {name:24s} meanPosErr={a['meanPositionError']['mean']:.3f} +/- {a['meanPositionError']['std']:.3f}  "
+              f"winnerAcc={a['winnerAccuracy']['mean']:.3f} +/- {a['winnerAccuracy']['std']:.3f}")
+
+    print("\n--- Pooled bootstrap vs grid-only (60 races) ---")
+    pooled = {name: [race for r in period_results for race in r["_perRaceByModel"][name]] for name in models}
+    comparisons_vs_grid = {}
+    for name in ["fixed_ensemble", "volatility_conditional"]:
+        comp = bootstrap_gap(pooled[name], pooled["grid_only"])
+        comparisons_vs_grid[name] = comp
+        if comp.get("available"):
+            print(f"  {name:24s} meanDiff={comp['meanDiff']:+.3f} 95% CI=[{comp['ci95'][0]:+.3f}, {comp['ci95'][1]:+.3f}] excludesZero={comp['ciExcludesZero']}")
+
+    print("\n--- Pooled bootstrap: volatility_conditional vs fixed_ensemble (60 races) ---")
+    comp_vs_fixed = bootstrap_gap(pooled["volatility_conditional"], pooled["fixed_ensemble"])
+    if comp_vs_fixed.get("available"):
+        print(f"  meanDiff={comp_vs_fixed['meanDiff']:+.3f} 95% CI=[{comp_vs_fixed['ci95'][0]:+.3f}, {comp_vs_fixed['ci95'][1]:+.3f}] excludesZero={comp_vs_fixed['ciExcludesZero']}")
+
+    print("\n--- Performance by volatility bucket (pooled sample-level) ---")
+    all_sample_rows = [row for r in period_results for row in r["_sampleRows"]]
+    import pandas as pd
+    sample_df = pd.DataFrame(all_sample_rows).dropna(subset=["positionError"])
+    by_bucket = {}
+    for name in models:
+        g = sample_df[sample_df["model"] == name]
+        agg = g.groupby("volatilityBucket")["positionError"].agg(["count", "mean"]).to_dict("index")
+        by_bucket[name] = {b: {"n": agg[b]["count"], "mean": agg[b]["mean"]} for b in agg}
+        print(f"  {name:24s} {by_bucket[name]}")
+
+    bucket_deltas = {}
+    for name in ["fixed_ensemble", "volatility_conditional"]:
+        bucket_deltas[name] = {
+            b: by_bucket[name][b]["mean"] - by_bucket["grid_only"][b]["mean"]
+            for b in BUCKET_LABELS if b in by_bucket[name] and b in by_bucket["grid_only"]
+        }
+    print(f"\n  Model-minus-grid delta by bucket (negative = model better):")
+    for name, deltas in bucket_deltas.items():
+        print(f"    {name:24s} {deltas}")
+
+    for r in period_results:
+        del r["_perRaceByModel"]
+        del r["_sampleRows"]
+
+    report = {
+        "stage": STAGE,
+        "rfVariant": RF_VARIANT,
+        "volatilityComponents": VOL_COLS,
+        "weightCandidates": WEIGHT_CANDIDATES,
+        "periods": period_results,
+        "aggregate": aggregate,
+        "vsGridOnlyPooledBootstrap": comparisons_vs_grid,
+        "volatilityConditionalVsFixedEnsemble": comp_vs_fixed,
+        "performanceByVolatilityBucket": by_bucket,
+        "bucketDeltaVsGrid": bucket_deltas,
+    }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
