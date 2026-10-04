@@ -291,3 +291,61 @@ def aggregate_and_bootstrap(period_results, model_names, baseline_name):
     return aggregate, comparisons
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    print("=" * 78)
+    print("PHASE 15 — VALIDATE ANCHORED MODELS")
+    print("=" * 78)
+
+    post_results = [evaluate_post_period(df, p) for p in PERIODS]
+    post_models = ["grid_only", "phase12_rf", "phase14_ensemble", "post_ensemble_refined"]
+    print_section("POST-QUALIFYING — grid-anchored ensemble, finer weight grid", post_results, post_models)
+    post_agg, post_cmp = aggregate_and_bootstrap(post_results, post_models, "grid_only")
+
+    print("\n  --- Aggregate (mean +/- std across periods) ---")
+    for name in post_models:
+        a = post_agg[name]
+        print(f"    {name:28s} meanPosErr={a['meanPositionError']['mean']:.3f} +/- {a['meanPositionError']['std']:.3f}  "
+              f"winnerAcc={a['winnerAccuracy']['mean']:.3f} +/- {a['winnerAccuracy']['std']:.3f}")
+
+    print("\n  --- Pooled bootstrap vs grid-only (60 races) ---")
+    for name, c in post_cmp.items():
+        if c.get("available"):
+            print(f"    {name:28s} meanDiff={c['meanDiff']:+.3f} 95% CI=[{c['ci95'][0]:+.3f}, {c['ci95'][1]:+.3f}] excludesZero={c['ciExcludesZero']}")
+
+    pre_results = [evaluate_pre_period(df, p) for p in PERIODS]
+    pre_models = ["championship_only", "phase12_pre_rf", "championship_rf_ensemble", "championship_anchored_residual"]
+    print_section("PRE-QUALIFYING — championship-anchored ensemble & residual", pre_results, pre_models)
+    pre_agg, pre_cmp = aggregate_and_bootstrap(pre_results, pre_models, "championship_only")
+
+    print("\n  --- Aggregate (mean +/- std across periods) ---")
+    for name in pre_models:
+        a = pre_agg[name]
+        print(f"    {name:28s} meanPosErr={a['meanPositionError']['mean']:.3f} +/- {a['meanPositionError']['std']:.3f}  "
+              f"winnerAcc={a['winnerAccuracy']['mean']:.3f} +/- {a['winnerAccuracy']['std']:.3f}")
+
+    print("\n  --- Pooled bootstrap vs championship-only (60 races) ---")
+    for name, c in pre_cmp.items():
+        if c.get("available"):
+            print(f"    {name:28s} meanDiff={c['meanDiff']:+.3f} 95% CI=[{c['ci95'][0]:+.3f}, {c['ci95'][1]:+.3f}] excludesZero={c['ciExcludesZero']}")
+
+    for r in post_results + pre_results:
+        del r["_perRaceByModel"]
+
+    report = {
+        "postQualifying": {"periods": post_results, "aggregate": post_agg, "vsGridOnlyPooledBootstrap": post_cmp},
+        "preQualifying": {"periods": pre_results, "aggregate": pre_agg, "vsChampionshipOnlyPooledBootstrap": pre_cmp},
+        "weightCandidatesRefined": REFINED_WEIGHTS,
+        "weightCandidatesPhase14": PHASE14_WEIGHTS,
+    }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
