@@ -205,3 +205,85 @@ def mean_std(values):
     return {"mean": float(np.mean(vals)), "std": float(np.std(vals)), "n": len(vals)}
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+    existing_predictor_2026 = data["existingPredictorPredictions"]["byRound"]
+
+    report = {"periodsDefinition": PERIODS, "rfParamsByStage": RF_PARAMS_BY_STAGE, "stages": {}}
+
+    print("=" * 78)
+    print("PHASE 13 — ROLLING HISTORICAL EVALUATION")
+    print("=" * 78)
+    print(f"Pseudo-test periods: {[p['label'] for p in PERIODS]}")
+
+    for stage in STAGES:
+        print(f"\n{'=' * 78}\nSTAGE: {stage}  (RF params: {RF_PARAMS_BY_STAGE[stage]})\n{'=' * 78}")
+
+        period_results = [evaluate_period(df, stage, p, existing_predictor_2026) for p in PERIODS]
+
+        # ---- 1. Per-season performance ----
+        print("\n--- 1. Per-season (pseudo-test) performance ---")
+        for r in period_results:
+            t = r["test"]
+            if t.get("available"):
+                print(f"  {r['period']} (train={r['trainRaces']} races, val={r['valRaces']} races, test={r['testRaces']} races):")
+                print(f"    winnerAcc={t['winnerAccuracy']:.3f} podium={t['avgPodiumHitRate']:.3f} top5={t['avgTop5HitRate']:.3f} top10={t['avgTop10HitRate']:.3f} meanPosErr={t['meanPositionError']:.3f} dnfAuc={r['dnfAuc']}")
+                print(f"    train-test gap: {r['trainTestGap']:.3f}" if r["trainTestGap"] is not None else "    train-test gap: n/a")
+
+        # ---- 2 & 3. Aggregate + mean/std across periods ----
+        agg = {
+            "winnerAccuracy": mean_std([r["test"].get("winnerAccuracy") for r in period_results]),
+            "avgPodiumHitRate": mean_std([r["test"].get("avgPodiumHitRate") for r in period_results]),
+            "avgTop5HitRate": mean_std([r["test"].get("avgTop5HitRate") for r in period_results]),
+            "avgTop10HitRate": mean_std([r["test"].get("avgTop10HitRate") for r in period_results]),
+            "meanPositionError": mean_std([r["test"].get("meanPositionError") for r in period_results]),
+            "dnfAuc": mean_std([r["dnfAuc"] for r in period_results]),
+            "trainTestGap": mean_std([r["trainTestGap"] for r in period_results]),
+        }
+        print("\n--- 2/3. Aggregate across pseudo-test periods (mean +/- std, n=periods) ---")
+        for k, v in agg.items():
+            if v["mean"] is not None:
+                print(f"  {k}: {v['mean']:.3f} +/- {v['std']:.3f} (n={v['n']} periods)")
+
+        # ---- 4. RF vs baselines — pooled bootstrap across ALL periods' races ----
+        pooled_rf = [race for r in period_results for race in r["_testPerRace"]]
+        pooled_champ = [race for r in period_results for race in r["baselines"].get("championship", {}).get("perRace", [])]
+        comparisons = {"pooled_n_races": len(pooled_rf), "rf_vs_championship": bootstrap_gap(pooled_rf, pooled_champ)}
+
+        if stage == "post_qualifying":
+            pooled_grid = [race for r in period_results for race in r["baselines"].get("grid", {}).get("perRace", [])]
+            comparisons["rf_vs_grid"] = bootstrap_gap(pooled_rf, pooled_grid)
+
+            period_2026 = next(r for r in period_results if r["period"] == "2026")
+            ep_test = period_2026["baselines"].get("existing_predictor", {}).get("test")
+            comparisons["rf_vs_existing_predictor_2026_only"] = {
+                "note": "existing predictor only captured for the real 2026 season — not re-derivable for 2024/2025 without new Jolpica fetches",
+                "rfTest2026": period_2026["test"],
+                "existingPredictorTest2026": ep_test,
+            }
+
+        print("\n--- 4. RF vs baselines (pooled bootstrap across all pseudo-test races) ---")
+        print(f"  pooled test races: {comparisons['pooled_n_races']}")
+        for name in ["rf_vs_championship", "rf_vs_grid"]:
+            c = comparisons.get(name)
+            if c and c.get("available"):
+                print(f"  {name}: meanDiff={c['meanDiff']:.3f} 95% CI=[{c['ci95'][0]:.3f}, {c['ci95'][1]:.3f}] excludesZero={c['ciExcludesZero']}")
+
+        for r in period_results:
+            del r["_testPerRace"]
+
+        report["stages"][stage] = {
+            "periods": period_results,
+            "aggregate": agg,
+            "comparisons": comparisons,
+        }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
