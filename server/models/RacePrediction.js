@@ -57,6 +57,11 @@ const racePredictionSchema = new mongoose.Schema(
         sprintDate: String,
         hasSprint: Boolean,
         stage: { type: String, enum: Object.values(STAGES), required: true },
+        // Which validated single-feature baseline (Phase 20) actually drove
+        // the ranking for this stage — see predictorService.js STAGE_BASELINES.
+        // Optional/Mixed because documents predating Phase 20 have no such
+        // field; shapeStoredDoc() derives one from `stage` for those.
+        baseline: mongoose.Schema.Types.Mixed,
         source: { type: String, enum: ["live", "backtest"], default: "live" },
         modelName: String,
         modelVersion: String,

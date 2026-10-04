@@ -62,16 +62,36 @@
  *                           out-qualifying a teammate (see
  *                           computeQualifyingFeature)
  *
- * WEIGHTS (reasoned, not fitted — see LIMITATIONS for why)
- *   recentForm: 0.32, qualifying: 0.30, constructorStrength: 0.20,
- *   circuitHistory: 0.08, championshipStanding: 0.10
- *   Qualifying carries the single largest weight among the real-time
- *   features: grid position is well established in motorsport analysis
- *   as the strongest single predictor of finishing position. circuitHistory
- *   carries the least — even recency-weighted, it's the most indirect
- *   signal (a different car, teammate, and regulation era at each past
- *   edition). Before qualifying, its weight is redistributed
- *   proportionally across the other four rather than guessed at.
+ * WEIGHTS — VALIDATED BASELINES (Phase 20)
+ * A multi-season, leakage-safe rolling evaluation (server/ml/, Phases
+ * 13-19 — 60 pooled test races across 2024/2025/2026) compared this
+ * engine's richer feature set and several trained RF variants against
+ * two simple single-feature baselines, with pooled bootstrap 95%
+ * confidence intervals. Result: neither stage's ML variant beat its
+ * simple baseline with a CI that excluded zero (see
+ * server/ml/artifacts/final_model_selection.json for the full record).
+ * Per that finding, each stage's weights now put 100% of the ranking
+ * weight on the one validated feature for that stage — see
+ * STAGE_BASELINES below — rather than the previously reasoned-but-
+ * unvalidated 5-feature blend:
+ *   PRE_QUALIFYING  → championshipStanding only (all other weights 0)
+ *   POST_QUALIFYING → qualifying (grid position) only (all other weights 0)
+ * The other four feature functions still run and are still shown in
+ * dataAvailability/features for transparency and to keep this file's
+ * leakage-safe backtest reuse intact — they simply no longer influence
+ * the ranking, since the validated evidence found they didn't help.
+ * The Plackett-Luce simulation below is unchanged: it still turns
+ * whichever single score drives a stage into full win/podium/top-5/
+ * top-10 probabilities, so the API/UI contract (probabilities,
+ * confidence, expectedFinish) is preserved exactly.
+ *
+ * A separate, Python/scikit-learn-trained candidate (the Phase 16
+ * core_subset grid-anchored ensemble) was the best-performing POST
+ * variant found, but is NOT wired in here: it has no existing
+ * integration path into this Node service (no model export/
+ * serialization format, no Python-inference bridge in this repo), and
+ * building one was explicitly out of scope for this phase. It remains
+ * available only as an offline, reproducible artifact under server/ml/.
  *
  * LEAKAGE PREVENTION
  * Every input above is either (a) the CURRENT championship standings —
@@ -118,25 +138,39 @@ const { cached, TTL } = require("./jolpicaCache");
 const RacePrediction = require("../models/RacePrediction");
 const { STAGES, sanitizeStageInputs } = require("./predictionDataPolicy");
 
-const MODEL_NAME = "AllAboutF1 Weighted Power-Rank + Plackett-Luce Simulation";
-const MODEL_VERSION = "1.0.0";
+const MODEL_NAME = "AllAboutF1 Validated Baseline (Championship Standing / Grid Position) + Plackett-Luce Simulation";
+const MODEL_VERSION = "2.0.0";
 
 const RECENT_FORM_RACE_COUNT = 5;
 const SIMULATION_TRIALS = 5000;
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-const WEIGHTS = {
-    recentForm: 0.32,
-    qualifying: 0.30,
-    constructorStrength: 0.2,
-    circuitHistory: 0.08,
-    championshipStanding: 0.1,
+// Per-stage weights — see the WEIGHTS doc block above. Each stage puts all
+// ranking weight on the one feature server/ml/'s Phase 13-19 evaluation
+// actually validated for that stage; the rest are zeroed, not removed, so
+// they still compute and still show up in `features`/dataAvailability.
+const STAGE_BASELINES = {
+    pre_qualifying: {
+        key: "championship_standing",
+        label: "Championship Standing",
+        reason:
+            "Before qualifying, this prediction ranks drivers by current championship standing alone. A multi-season rolling evaluation (server/ml/, Phases 13-19) found this simple baseline was not statistically beaten by any tested machine-learning model.",
+        weights: { recentForm: 0, qualifying: 0, constructorStrength: 0, circuitHistory: 0, championshipStanding: 1 },
+    },
+    post_qualifying: {
+        key: "grid_position",
+        label: "Grid Position",
+        reason:
+            "Once qualifying is complete, this prediction ranks drivers by their grid position alone. The same evaluation found this simple baseline was not statistically beaten by any tested machine-learning model, including a grid-anchored ensemble.",
+        weights: { recentForm: 0, qualifying: 1, constructorStrength: 0, circuitHistory: 0, championshipStanding: 0 },
+    },
 };
 
 const LIMITATIONS = [
     "This is a statistical estimate from publicly available historical/current-season data, not a guarantee — F1 outcomes depend on many factors (incidents, weather, strategy, reliability) this model does not model.",
-    "Weights and the simulation's ability transform (k=4) are reasoned choices, not fitted against held-out historical results — the site's own evaluation history only covers a handful of races so far, far too few to fit weights against without badly overfitting.",
-    "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not yet used as a scoring input to the prediction itself.",
+    "Each stage ranks drivers by a single validated feature — championship standing before qualifying, grid position after — per a multi-season rolling evaluation (server/ml/, Phases 13-19) that found no richer feature blend or trained model beat these simple baselines with statistical confidence. Recent form, constructor strength, and circuit history are still computed and shown for transparency but no longer influence the ranking.",
+    "The simulation's ability transform (k=4) is a reasoned choice, not fitted against held-out historical results.",
+    "Weather is shown as a forecast for the race session, sourced from Open-Meteo — it is not used as a scoring input to the prediction itself.",
     "Historical pit-stop counts and timing are available from the data source; tyre compounds are not, so compound/stint strategy is never shown or implied.",
     "Circuit history uses grid position as a proxy for qualifying position (avoids one qualifying.json fetch per past race at the circuit), weighted toward the most recent editions.",
 ];
@@ -422,23 +456,34 @@ function clamp01(n) {
 }
 
 /*
- * Combines the five features into one 0-1 "strength" score. When
- * qualifying hasn't happened yet, its weight is redistributed
+ * Combines features into one 0-1 "strength" score using the given stage's
+ * weights (see STAGE_BASELINES — one feature carries all the weight per
+ * stage). When qualifying hasn't happened yet, its weight is redistributed
  * proportionally across the remaining available features rather than
  * treating a missing qualifying feature as a 0 (which would wrongly
  * punish every driver equally before quali even exists).
  */
-function combineFeatures(features) {
+function combineFeatures(features, weights) {
     // Only qualifying is ever conditionally excluded; the other four are
     // always present (championship/constructor standings always exist
     // once a season has a classified entrant, recentForm/circuitHistory
     // degrade to neutral defaults rather than becoming unavailable).
     const usableWeights = {};
     let total = 0;
-    for (const [key, weight] of Object.entries(WEIGHTS)) {
+    for (const [key, weight] of Object.entries(weights)) {
         if (key === "qualifying" && !features.qualifying?.available) continue;
         usableWeights[key] = weight;
         total += weight;
+    }
+    // POST_QUALIFYING's validated weighting puts everything on qualifying —
+    // if that fetch unexpectedly comes back empty despite qualifying having
+    // genuinely happened (a transient Jolpica gap), every weight is 0 and
+    // there'd be nothing to rank by. Fall back to championship standing,
+    // which is always available once a season has classified entrants,
+    // rather than divide by zero or rank the whole field identically.
+    if (total === 0) {
+        usableWeights.championshipStanding = 1;
+        total = 1;
     }
     for (const key of Object.keys(usableWeights)) usableWeights[key] = usableWeights[key] / total;
 
@@ -546,6 +591,7 @@ async function persistPrediction(result, source) {
                 sprintDate: result.race.sprintDate,
                 hasSprint: result.race.hasSprint,
                 stage: result.stage,
+                baseline: result.baseline,
                 source,
                 modelName: result.model.name,
                 modelVersion: result.model.version,
@@ -590,6 +636,10 @@ async function persistPrediction(result, source) {
 // exactly one place that knows how a stored doc maps onto the page's data
 // shape — never two copies drifting apart.
 function shapeStoredDoc(doc) {
+    // Older documents (predating Phase 20) never stored a `baseline` —
+    // derive it from the doc's own stage so a historical prediction still
+    // shows a sensible "why" rather than an empty field.
+    const baseline = doc.baseline || STAGE_BASELINES[doc.stage] || null;
     return {
         race: {
             season: doc.season,
@@ -603,6 +653,8 @@ function shapeStoredDoc(doc) {
             sprintDate: doc.sprintDate ?? null,
             hasSprint: Boolean(doc.hasSprint),
         },
+        stage: doc.stage,
+        baseline: baseline ? { key: baseline.key, label: baseline.label, reason: baseline.reason } : null,
         // Only the keys the Data Used card reads — older documents may
         // still carry the retired weatherForecast/pitStopStrategy/
         // tyreCompounds keys, which are simply not copied forward. No
@@ -663,6 +715,8 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
     // the guarantee now lives here structurally, not by convention.
     ({ qualifyingResults, sprintResults } = sanitizeStageInputs(stage, { qualifyingResults, sprintResults }));
 
+    const baseline = STAGE_BASELINES[stage] || STAGE_BASELINES.pre_qualifying;
+
     const fieldSize = driverStandings.length;
     const constructorFieldSize = constructorStandings.length;
     const constructorStandingByTeam = new Map(constructorStandings.map((c) => [c.Constructor.constructorId, c]));
@@ -705,7 +759,7 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
         const qualifying = computeQualifyingFeature(driverId, qualifyingResults, teammateId);
 
         const features = { championshipStanding, constructorStrength, recentForm, circuitHistory, qualifying };
-        const strength = combineFeatures(features);
+        const strength = combineFeatures(features, baseline.weights);
 
         return {
             driverId,
@@ -752,9 +806,13 @@ function assemblePrediction({ season, round, race, circuitId, stage, qualifyingC
             hasSprint: Boolean(race.Sprint),
         },
         stage,
+        // Identifies which validated baseline actually drove the ranking for
+        // this stage (see STAGE_BASELINES) — the UI's explanation of "why
+        // this prediction" reads directly from here, not from `weights`.
+        baseline: { key: baseline.key, label: baseline.label, reason: baseline.reason },
         generatedAt: new Date().toISOString(),
         model: { name: MODEL_NAME, version: MODEL_VERSION },
-        weights: WEIGHTS,
+        weights: baseline.weights,
         // Each entry is a genuine status, not a plain yes/no: "pending" means
         // the data hasn't happened yet (never an integration failure), and
         // "unavailable" is reserved for data that should exist but couldn't
@@ -852,11 +910,18 @@ async function buildPredictionInternal() {
     });
 
     // persistPrediction still needs the full internal shape (model,
-    // weights, generatedAt, stage, limitations — the historical record);
-    // none of that goes out over the API, which only ever gets what the
-    // page actually reads.
+    // weights, generatedAt, limitations — the historical record); none of
+    // that goes out over the API, which only ever gets what the page
+    // actually reads. stage/baseline DO go out — the UI needs them to
+    // show which validated baseline produced this prediction and why.
     persistPrediction(result, "live");
-    const apiResult = { race: result.race, dataAvailability: result.dataAvailability, predictions: result.predictions };
+    const apiResult = {
+        race: result.race,
+        stage: result.stage,
+        baseline: result.baseline,
+        dataAvailability: result.dataAvailability,
+        predictions: result.predictions,
+    };
 
     cache = { key: cacheKey, expiresAt: Date.now() + CACHE_TTL_MS, result: apiResult };
     return apiResult;
@@ -939,4 +1004,10 @@ module.exports = {
     computeRecentFormFeature,
     computeCircuitHistoryFeature,
     computeQualifyingFeature,
+    // Additive-only, Phase 20 — exposed for sanity-checking the validated
+    // baseline weighting directly (no network calls required) rather than
+    // only indirectly through a full buildPrediction()/buildBacktestPrediction() run.
+    STAGE_BASELINES,
+    combineFeatures,
+    assemblePrediction,
 };
