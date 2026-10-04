@@ -403,6 +403,20 @@
 
 .pr-used-list-pending { color: var(--pr-text-secondary); font-style: italic; }
 
+/* ── Prediction basis — which validated baseline drove the ranking. ── */
+
+.pr-used-baseline {
+    margin: 0 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--pr-border);
+    font-size: var(--text-small);
+    color: var(--text-primary);
+}
+
+.pr-used-baseline-reason {
+    color: var(--pr-text-secondary);
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {

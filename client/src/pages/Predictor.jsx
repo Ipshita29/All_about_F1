@@ -354,7 +354,23 @@ const CONDITIONAL_ROWS = [
     ["sprintPerformance", "Sprint performance"],
 ];
 
-function DataUsedCard({ dataAvailability }) {
+// `baseline` identifies which single, multi-season-validated feature
+// actually drove the ranking for this race's stage (see predictorService.js
+// STAGE_BASELINES) — everything else below still lists what data the
+// engine has on hand, but this is the one line that explains "why this
+// order", per Phase 20.
+function BaselineNote({ baseline }) {
+    if (!baseline) return null;
+    return (
+        <p className="pr-used-baseline">
+            Ranked by: <strong>{baseline.label}</strong>
+            <br />
+            <span className="pr-used-baseline-reason">{baseline.reason}</span>
+        </p>
+    );
+}
+
+function DataUsedCard({ dataAvailability, baseline }) {
     const used = DATA_USED_ROWS
         .filter(([key]) => dataAvailability?.[key]?.status === "available")
         .map((row) => ({ label: row[1], status: "available" }));
@@ -370,13 +386,16 @@ function DataUsedCard({ dataAvailability }) {
     const rows = [...used, ...conditional];
 
     return (
-        <ul className="pr-used-list">
-            {rows.map((row) => (
-                <li key={row.label} className={row.status !== "available" ? "pr-used-list-pending" : ""}>
-                    {row.status === "available" ? row.label : `○ ${row.label} — ${row.status === "pending" ? "Pending" : "Not available"}`}
-                </li>
-            ))}
-        </ul>
+        <>
+            <BaselineNote baseline={baseline} />
+            <ul className="pr-used-list">
+                {rows.map((row) => (
+                    <li key={row.label} className={row.status !== "available" ? "pr-used-list-pending" : ""}>
+                        {row.status === "available" ? row.label : `○ ${row.label} — ${row.status === "pending" ? "Pending" : "Not available"}`}
+                    </li>
+                ))}
+            </ul>
+        </>
     );
 }
 
@@ -443,7 +462,7 @@ function Predictor() {
 
     const active = viewingPast
         ? raceDetail.data
-        : { race: data.race, dataAvailability: data.dataAvailability, predictions: data.predictions, completed: false, winnerCorrect: null };
+        : { race: data.race, baseline: data.baseline, dataAvailability: data.dataAvailability, predictions: data.predictions, completed: false, winnerCorrect: null };
 
     const headerRace = active?.race ?? data.race;
     const resultStatus = active?.completed ? { correct: active.winnerCorrect } : null;
@@ -496,7 +515,7 @@ function Predictor() {
                            evidence beyond the podium and the table. */}
                         <div className="pr-grid pr-grid--three">
                             <Panel title="Data Used">
-                                <DataUsedCard dataAvailability={active.dataAvailability} />
+                                <DataUsedCard dataAvailability={active.dataAvailability} baseline={active.baseline} />
                             </Panel>
                             <Panel title="Prediction History">
                                 <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
