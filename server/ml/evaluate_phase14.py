@@ -193,3 +193,72 @@ def mean_std(values):
     return {"mean": float(np.mean(vals)), "std": float(np.std(vals)), "n": len(vals)}
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    period_results = [evaluate_period(df, p) for p in PERIODS]
+
+    print("=" * 78)
+    print("PHASE 14 — GRID-ANCHORED PREDICTION (post-qualifying only)")
+    print("=" * 78)
+
+    model_names = ["grid_only", "phase12_rf", "rf_grid_prioritized", "grid_plus_residual", "grid_anchored_ensemble"]
+
+    print("\n--- Per-period test performance ---")
+    for r in period_results:
+        print(f"\n  {r['period']} (train={r['trainRaces']}, val={r['valRaces']}, test={r['testRaces']}; "
+              f"ensemble weight chosen={r['ensembleWeightChosen']} from search {r['ensembleWeightSearch']})")
+        for name in model_names:
+            m = r["models"][name]
+            if m.get("available"):
+                print(f"    {name:24s} winnerAcc={m['winnerAccuracy']:.3f} podium={m['avgPodiumHitRate']:.3f} "
+                      f"top5={m['avgTop5HitRate']:.3f} top10={m['avgTop10HitRate']:.3f} meanPosErr={m['meanPositionError']:.3f}")
+        print(f"    dnfAuc (shared across RF variants) = {r['dnfAucSharedAcrossRfModels']}")
+
+    print("\n--- Aggregate (mean +/- std across 3 periods) ---")
+    aggregate = {}
+    for name in model_names:
+        agg = {
+            "winnerAccuracy": mean_std([r["models"][name].get("winnerAccuracy") for r in period_results]),
+            "avgPodiumHitRate": mean_std([r["models"][name].get("avgPodiumHitRate") for r in period_results]),
+            "avgTop5HitRate": mean_std([r["models"][name].get("avgTop5HitRate") for r in period_results]),
+            "avgTop10HitRate": mean_std([r["models"][name].get("avgTop10HitRate") for r in period_results]),
+            "meanPositionError": mean_std([r["models"][name].get("meanPositionError") for r in period_results]),
+        }
+        aggregate[name] = agg
+        print(f"  {name:24s} meanPosErr={agg['meanPositionError']['mean']:.3f} +/- {agg['meanPositionError']['std']:.3f}  "
+              f"winnerAcc={agg['winnerAccuracy']['mean']:.3f} +/- {agg['winnerAccuracy']['std']:.3f}")
+
+    print("\n--- Pooled bootstrap vs grid-only baseline (60 races across all periods) ---")
+    pooled_grid = [race for r in period_results for race in r["_perRaceByModel"]["grid_only"]]
+    comparisons = {}
+    for name in model_names[1:]:
+        pooled_model = [race for r in period_results for race in r["_perRaceByModel"][name]]
+        comp = bootstrap_gap(pooled_model, pooled_grid)
+        comparisons[name] = comp
+        if comp.get("available"):
+            print(f"  {name:24s} meanDiff={comp['meanDiff']:+.3f} 95% CI=[{comp['ci95'][0]:+.3f}, {comp['ci95'][1]:+.3f}] "
+                  f"excludesZero={comp['ciExcludesZero']} (negative=model better than grid)")
+
+    for r in period_results:
+        del r["_perRaceByModel"]
+
+    report = {
+        "stage": STAGE,
+        "gridReplicas": GRID_REPLICAS,
+        "ensembleGridWeightsSearched": ENSEMBLE_GRID_WEIGHTS,
+        "postQualifyingRfParams": POST_PARAMS,
+        "periods": period_results,
+        "aggregate": aggregate,
+        "vsGridOnlyPooledBootstrap": comparisons,
+    }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
