@@ -189,3 +189,115 @@ def print_block(title, period_results, model_names):
         print(f"    dnfAuc (shared) = {r['dnfAucSharedAcrossRfModels']}")
 
 
+def main():
+    data = load_dataset()
+    df = flatten_samples(data["samples"])
+
+    print("=" * 78)
+    print("PHASE 19 — FINAL MODEL VALIDATION & PRODUCTION CANDIDATE")
+    print("=" * 78)
+
+    pre_results = [evaluate_pre_period(df, p) for p in PERIODS]
+    post_results = [evaluate_post_period(df, p) for p in PERIODS]
+
+    print_block("PRE-QUALIFYING: championship_only vs phase12_pre_rf", pre_results, ["championship_only", "phase12_pre_rf"])
+    print_block("POST-QUALIFYING: grid_only vs core_subset_ensemble", post_results, ["grid_only", "core_subset_ensemble"])
+
+    pre_agg = aggregate(pre_results, ["championship_only", "phase12_pre_rf"])
+    post_agg = aggregate(post_results, ["grid_only", "core_subset_ensemble"])
+
+    print("\n--- Aggregate (mean +/- std across periods) ---")
+    for label, agg_dict in [("PRE", pre_agg), ("POST", post_agg)]:
+        for name, a in agg_dict.items():
+            print(f"  {label} {name:24s} meanPosErr={a['meanPositionError']['mean']:.3f} +/- {a['meanPositionError']['std']:.3f}  "
+                  f"winnerAcc={a['winnerAccuracy']['mean']:.3f} +/- {a['winnerAccuracy']['std']:.3f}")
+
+    pre_pooled_champ = [race for r in pre_results for race in r["_perRace"]["championship_only"]]
+    pre_pooled_rf = [race for r in pre_results for race in r["_perRace"]["phase12_pre_rf"]]
+    pre_bootstrap = bootstrap_gap(pre_pooled_rf, pre_pooled_champ)
+
+    post_pooled_grid = [race for r in post_results for race in r["_perRace"]["grid_only"]]
+    post_pooled_ens = [race for r in post_results for race in r["_perRace"]["core_subset_ensemble"]]
+    post_bootstrap = bootstrap_gap(post_pooled_ens, post_pooled_grid)
+
+    print("\n--- Pooled bootstrap 95% CI (60 races) ---")
+    print(f"  PRE:  phase12_pre_rf vs championship_only       meanDiff={pre_bootstrap['meanDiff']:+.3f} "
+          f"95% CI=[{pre_bootstrap['ci95'][0]:+.3f}, {pre_bootstrap['ci95'][1]:+.3f}] excludesZero={pre_bootstrap['ciExcludesZero']}")
+    print(f"  POST: core_subset_ensemble vs grid_only          meanDiff={post_bootstrap['meanDiff']:+.3f} "
+          f"95% CI=[{post_bootstrap['ci95'][0]:+.3f}, {post_bootstrap['ci95'][1]:+.3f}] excludesZero={post_bootstrap['ciExcludesZero']}")
+
+    post_statistically_better = bool(post_bootstrap["ciExcludesZero"] and post_bootstrap["meanDiff"] < 0)
+    pre_rf_adds_value = bool(pre_bootstrap["ciExcludesZero"] and pre_bootstrap["meanDiff"] < 0)
+
+    print(f"\n  POST core_subset_ensemble is{'' if post_statistically_better else ' NOT'} statistically better than grid-only.")
+    print(f"  PRE phase12_pre_rf does{'' if pre_rf_adds_value else ' NOT'} add statistically proven value over championship_only.")
+
+    for r in pre_results + post_results:
+        del r["_perRace"]
+
+    results_report = {
+        "pre": {"periods": pre_results, "aggregate": pre_agg, "pooledBootstrapRfVsChampionship": pre_bootstrap},
+        "post": {"periods": post_results, "aggregate": post_agg, "pooledBootstrapEnsembleVsGrid": post_bootstrap},
+    }
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(results_report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+    final_selection = {
+        "preQualifying": {
+            "productionCandidate": "championship_only",
+            "bestSimpleBaseline": "championship_only",
+            "mlAddsStatisticallyProvenValue": pre_rf_adds_value,
+            "mlCandidateEvaluated": "phase12_pre_rf",
+            "pooledBootstrap": pre_bootstrap,
+            "aggregateMeanPositionError": {
+                "championship_only": pre_agg["championship_only"]["meanPositionError"],
+                "phase12_pre_rf": pre_agg["phase12_pre_rf"]["meanPositionError"],
+            },
+        },
+        "postQualifying": {
+            "productionCandidate": "grid_only",
+            "bestSimpleBaseline": "grid_only",
+            "mlAddsStatisticallyProvenValue": post_statistically_better,
+            "mlCandidateEvaluated": "phase16_core_subset_grid_anchored_ensemble",
+            "pooledBootstrap": post_bootstrap,
+            "aggregateMeanPositionError": {
+                "grid_only": post_agg["grid_only"]["meanPositionError"],
+                "core_subset_ensemble": post_agg["core_subset_ensemble"]["meanPositionError"],
+            },
+        },
+        "overallConclusion": (
+            "Across six phases (13-18) of rolling evaluation, grid-anchoring, feature-subset and "
+            "weight tuning, and volatility conditioning, no ML variant for either stage beat its "
+            "simple baseline (championship standing pre-qualifying; grid position post-qualifying) "
+            "with a pooled 95% CI that excludes zero. ML components are directionally competitive "
+            "(post-qualifying ensemble) or directionally behind (pre-qualifying RF) but not proven."
+        ),
+        "whatShouldBeIntegrated": (
+            "The simple baselines (championship standing pre-qualifying, grid position post-qualifying) "
+            "are the only statistically defensible production predictions from this evaluation series."
+        ),
+        "whatShouldRemainExperimental": (
+            "The Phase 16 core_subset grid-anchored ensemble may remain available as an experimental/"
+            "shadow prediction for post-qualifying, clearly labeled as unproven, since it is the only "
+            "ML variant that is at least directionally competitive with its baseline."
+        ),
+        "knownLimitations": [
+            "60 pooled test races (and only 3 independent season-level periods) limits statistical power; "
+            "most comparisons have wide confidence intervals that straddle zero.",
+            "Pre-qualifying features carry materially less signal than post-qualifying ones (no quali/grid data available), "
+            "and no architecture tested (plain RF, ensemble, residual) closed that gap.",
+            "Errors concentrate unevenly by circuit and race volatility (Phase 17/18); average-case metrics can mask this.",
+            "No OpenF1 or other external data was used anywhere in this series; that door remains closed by design, not evidence of no benefit.",
+        ],
+        "furtherMlExperimentationJustified": False,
+        "note": "Stop per Phase 19 scope: no further optimization phase proposed unless a concrete methodological problem surfaces.",
+    }
+    with open(FINAL_PATH, "w") as f:
+        json.dump(final_selection, f, indent=2, default=str)
+    print(f"Final model-selection summary written to {FINAL_PATH}")
+
+
+if __name__ == "__main__":
+    main()
