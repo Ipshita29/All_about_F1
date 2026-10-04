@@ -255,3 +255,107 @@ def diff_vs_grid(summary_dict, metric="mean"):
     return diffs
 
 
+def main():
+    data = load_dataset()
+    df = flatten_with_meta(data["samples"])
+
+    print("=" * 78)
+    print("PHASE 17 — PREDICTION ERROR ANALYSIS")
+    print("=" * 78)
+
+    sample_df, race_df = build_pooled_frames(df)
+
+    # Tertiles of championship standing, computed on the pooled TEST set itself (descriptive only).
+    champ_vals = sample_df[sample_df["model"] == "grid_only"]["championshipScore"].dropna()
+    q1, q2 = champ_vals.quantile([1 / 3, 2 / 3])
+    sample_df["tier"] = pd.cut(
+        sample_df["championshipScore"], bins=[-np.inf, q1, q2, np.inf],
+        labels=["backmarker", "midfield", "top_tier"]
+    )
+
+    sample_df["gridBucket"] = sample_df["gridPosition"].apply(bucket_position)
+    sample_df["predictedBucket"] = sample_df["predictedPosition"].apply(bucket_position)
+    sample_df["deltaBucket"] = sample_df["actualGridDelta"].apply(bucket_delta)
+    race_df["dnfBucket"] = race_df["dnfCount"].apply(bucket_dnf_count)
+    race_df["wetDry"] = race_df["wetRace"].map({True: "wet", False: "dry"})
+
+    report = {}
+
+    print("\n--- 1. By circuit (race-level) ---")
+    by_circuit = summarize_race_level(race_df, "circuitId")
+    report["byCircuit"] = {"summary": by_circuit, "vsGridOnly": diff_vs_grid(by_circuit, "meanPositionError")}
+    for model in MODELS:
+        top = sorted(by_circuit[model].items(), key=lambda kv: -kv[1]["meanPositionError"])[:5]
+        print(f"  {model}: worst circuits by meanPositionError: {[(k, round(v['meanPositionError'],3), v['races']) for k,v in top]}")
+
+    print("\n--- 2. By grid-position range (sample-level) ---")
+    by_grid = summarize(sample_df, "gridBucket")
+    report["byGridRange"] = {"summary": by_grid, "vsGridOnly": diff_vs_grid(by_grid)}
+    for model in MODELS:
+        print(f"  {model}: {by_grid[model]}")
+
+    print("\n--- 3. By driver/team tier (championship tertile, sample-level) ---")
+    by_tier = summarize(sample_df, "tier")
+    report["byTier"] = {"summary": by_tier, "vsGridOnly": diff_vs_grid(by_tier)}
+    for model in MODELS:
+        print(f"  {model}: {by_tier[model]}")
+
+    print("\n--- 4. By DNF count in race (race-level) ---")
+    by_dnf = summarize_race_level(race_df, "dnfBucket")
+    report["byDnfCount"] = {"summary": by_dnf, "vsGridOnly": diff_vs_grid(by_dnf, "meanPositionError")}
+    for model in MODELS:
+        print(f"  {model}: {by_dnf[model]}")
+
+    print("\n--- 5. By position gain/loss magnitude (sample-level) ---")
+    by_delta = summarize(sample_df, "deltaBucket")
+    report["byPositionSwing"] = {"summary": by_delta, "vsGridOnly": diff_vs_grid(by_delta)}
+    for model in MODELS:
+        print(f"  {model}: {by_delta[model]}")
+
+    print("\n--- 6. By race conditions: wet vs dry (race-level) ---")
+    by_wet = summarize_race_level(race_df, "wetDry")
+    report["byWeather"] = {"summary": by_wet, "vsGridOnly": diff_vs_grid(by_wet, "meanPositionError")}
+    for model in MODELS:
+        print(f"  {model}: {by_wet[model]}")
+
+    print("\n--- 7. By season (race-level) ---")
+    by_season = summarize_race_level(race_df, "period")
+    report["bySeason"] = {"summary": by_season, "vsGridOnly": diff_vs_grid(by_season, "meanPositionError")}
+    for model in MODELS:
+        print(f"  {model}: {by_season[model]}")
+
+    print("\n--- 8. By predicted-position bucket (sample-level: predicted vs actual) ---")
+    by_pred = {}
+    for model in MODELS:
+        g = sample_df[(sample_df["model"] == model) & sample_df["predictedBucket"].notna()]
+        agg = g.groupby("predictedBucket").agg(
+            n=("positionError", "count"),
+            meanError=("positionError", "mean"),
+            meanActualPosition=("actualPosition", "mean"),
+        ).to_dict("index")
+        by_pred[model] = {str(k): v for k, v in agg.items()}
+        print(f"  {model}: {by_pred[model]}")
+    report["byPredictedBucket"] = by_pred
+
+    # ---- Concentration: do a small subset of circuits/races account for a disproportionate share of error? ----
+    print("\n--- Error concentration (grid_only, as the common reference) ---")
+    grid_races = race_df[race_df["model"] == "grid_only"].dropna(subset=["meanPositionError"]).copy()
+    grid_races = grid_races.sort_values("meanPositionError", ascending=False)
+    total_error = grid_races["meanPositionError"].sum()
+    top5_share = grid_races.head(5)["meanPositionError"].sum() / total_error if total_error else None
+    print(f"  top-5 worst races account for {top5_share:.1%} of total summed race-level meanPositionError "
+          f"(out of {len(grid_races)} races)")
+    report["errorConcentration"] = {
+        "totalRaces": int(len(grid_races)),
+        "top5WorstRacesShareOfTotalError": float(top5_share) if top5_share is not None else None,
+        "top5WorstRaces": grid_races.head(5)[["season", "round", "circuitId", "meanPositionError"]].to_dict("records"),
+    }
+
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(RESULTS_PATH, "w") as f:
+        json.dump(report, f, indent=2, default=str)
+    print(f"\nFull results written to {RESULTS_PATH}")
+
+
+if __name__ == "__main__":
+    main()
