@@ -380,10 +380,11 @@
 
 .rw-hq-meta { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: var(--space-7); }
 
-/* max-width keeps this balanced on wide screens — without it the left
-   track (minmax(0,1fr)) stretches far past the standby map's own width,
-   leaving a wide dead zone before the schedule card even starts. */
-.rw-hq-hero-cols { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-7); max-width: 860px; align-items: start; }
+/* Full-width 55/45 split — both tracks are percentages of the SAME row,
+   so neither one is a fixed px column the other has to work around; the
+   circuit map and the schedule list both stretch to fill their own
+   track instead of sitting narrower than it with dead space alongside. */
+.rw-hq-hero-cols { display: grid; grid-template-columns: 55% 45%; gap: 40px; align-items: start; }
 
 .rw-hq-hero-main { min-width: 0; }
 
@@ -398,21 +399,18 @@
 /* ── Small label above the podium / weekend-schedule columns ── */
 .rw-hq-subeyebrow { display: block; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-4); }
 
-/* ── Weekend Schedule — a clean white card, icon per session type ── */
+/* ── Weekend Schedule — a plain list on the same dark canvas as the
+   podium column, not a boxed card: thin dividers only, matching the
+   "typography and whitespace over boxed cards" language the rest of
+   this page's columns (.rw-plinth, .rw-highlight) already use. ── */
 
-.rw-schedule-card {
-    background: var(--surface-light-1);
-    color: var(--text-on-light-primary);
-    border: 1px solid var(--border-faint);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-}
+.rw-schedule-card { min-width: 0; }
 
 .rw-schedule-title {
     display: block;
     font-size: 0.62rem;
     letter-spacing: 0.1em;
-    color: var(--text-on-light-muted);
+    color: var(--text-muted);
     margin-bottom: var(--space-4);
 }
 
@@ -422,8 +420,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: 8px 0;
-    border-top: 1px solid var(--border-on-light);
+    padding: 10px 0;
+    border-top: 1px solid var(--border-faint);
 }
 
 .rw-schedule-list li:first-child { border-top: none; }
@@ -432,12 +430,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: rgba(25, 25, 25, 0.05);
-    color: var(--text-on-light-muted);
+    background: var(--surface-2);
+    color: var(--text-muted);
 }
 
 .rw-schedule-row--past .rw-schedule-icon { color: var(--success); }
@@ -448,13 +446,13 @@
     min-width: 0;
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--text-on-light-primary);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.rw-schedule-row--past .rw-schedule-name { color: var(--text-on-light-muted); }
+.rw-schedule-row--past .rw-schedule-name { color: var(--text-muted); }
 .rw-schedule-row--next .rw-schedule-name { font-weight: 700; color: var(--accent); }
 
 .rw-schedule-next-badge {
@@ -466,7 +464,7 @@
     border-radius: var(--radius-full);
 }
 
-.rw-schedule-time { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-on-light-muted); white-space: nowrap; }
+.rw-schedule-time { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
 
 /* ── Section scaffolding (dark sections on the HQ page) ── */
 
@@ -490,14 +488,20 @@
    rhythm without touching anyone else's heading size. */
 .rw-hq-section-title { font-size: clamp(1.5rem, 1vw + 1.2rem, 2.3rem); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0; }
 
-.rw-hq-standby p { font-size: 0.82rem; color: var(--text-muted); max-width: 60ch; margin-bottom: var(--space-2); }
+/* A quiet status line in the same slot the podium plinths occupy once
+   results exist — reuses the dot+mono-label language already used for
+   session/live status elsewhere on this page (.rw-focus-dot, .rw-strip-
+   dot), rather than inventing a new pattern. No red here: red is
+   reserved for the next-session emphasis in the schedule list. */
+.rw-classification-status { display: inline-flex; align-items: center; gap: 7px; margin-top: var(--space-4); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--text-muted); }
+.rw-classification-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
 
 /* The circuit map that used to live in the Race Weekend index's featured
-   card now shows here instead, filling what used to be empty space
-   while a race hasn't happened yet — kept small and quiet (compact
-   CircuitVisualization, subtle border, modest radius) so it reads as a
-   placeholder, not a competing focal point. */
-.rw-hq-standby-map { max-width: 340px; margin-bottom: var(--space-4); }
+   card now shows here instead. Full width of its own grid track (no
+   max-width) so it actually fills the left column rather than floating
+   narrower than it with dead space alongside; subtle border/radius keep
+   it quiet against the page's grey-border language. */
+.rw-hq-standby-map { width: 100%; }
 .rw-hq-standby-map .cv-drawing { border-radius: var(--radius-sm); border-color: var(--border-on-light); box-shadow: none; }
 
 /* ── Podium — plain columns, no boxes ── */
@@ -580,14 +584,14 @@
    type, a length with its imperial conversion) drops to the --long size
    rather than being forced to the same scale as a short number. ── */
 
-.rw-essentials { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+.rw-essentials { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
 
 .rw-essential {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-height: 122px;
-    padding: var(--space-4);
+    min-height: 108px;
+    padding: var(--space-3);
     background: var(--surface);
     border: 1px solid var(--border-faint);
     border-radius: var(--radius-md);

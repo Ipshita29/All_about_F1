@@ -306,10 +306,14 @@ function GrandPrixDetails() {
                                             circuitId={race.Circuit?.circuitId}
                                             circuitName={race.Circuit?.circuitName}
                                             info={circuitData}
-                                            compact
                                         />
                                     </div>
-                                    <p>Podium and driver results populate here once the race weekend is complete.</p>
+                                    {/* Same slot the podium plinths occupy once results exist —
+                                       a subtle status line, not an explanatory paragraph. */}
+                                    <p className="rw-classification-status rw-mono">
+                                        <span className="rw-classification-dot" aria-hidden="true" />
+                                        CLASSIFICATION — PENDING
+                                    </p>
                                 </div>
                             )}
                         </div>
