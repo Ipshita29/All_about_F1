@@ -102,7 +102,10 @@
    Each unit is a real block, not four loose numbers.
    ══════════════════════════════════════════════════════════════════ */
 
-.rw-countdown { display: flex; gap: var(--space-3); margin-bottom: var(--space-6); }
+.rw-countdown { display: flex; gap: var(--space-3); }
+
+/* Countdown + next-session side by side instead of stacked. */
+.rw-hq-timing-row { display: flex; align-items: center; gap: var(--space-7); flex-wrap: wrap; margin-bottom: var(--space-6); }
 
 .rw-countdown-unit {
     display: flex;
@@ -388,7 +391,7 @@
 
 .rw-hq-hero-main { min-width: 0; }
 
-.rw-hq-next-session { margin-bottom: var(--space-6); }
+.rw-hq-next-session { margin-bottom: 0; }
 
 .rw-hq-wiki { font-size: 0.76rem; margin-bottom: 0; }
 .rw-hq-wiki a { color: var(--accent-text); }

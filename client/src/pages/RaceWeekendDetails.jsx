@@ -236,37 +236,39 @@ function GrandPrixDetails() {
                         {race.Circuit.Location.country?.toUpperCase()} · {formattedDate.toUpperCase()}
                     </p>
 
-                    {raceNotStarted && countdown.total > 0 && (
-                        <div
-                            className="rw-countdown"
-                            role="timer"
-                            aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
-                        >
-                            {[
-                                [countdown.days, "DAYS"],
-                                [countdown.hours, "HRS"],
-                                [countdown.minutes, "MIN"],
-                                [countdown.seconds, "SEC"],
-                            ].map(([val, lbl]) => (
-                                <span className="rw-countdown-unit" key={lbl}>
-                                    <b className="rw-mono">{pad(val)}</b>
-                                    <small>{lbl}</small>
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    <div className="rw-hq-timing-row">
+                        {raceNotStarted && countdown.total > 0 && (
+                            <div
+                                className="rw-countdown"
+                                role="timer"
+                                aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
+                            >
+                                {[
+                                    [countdown.days, "DAYS"],
+                                    [countdown.hours, "HRS"],
+                                    [countdown.minutes, "MIN"],
+                                    [countdown.seconds, "SEC"],
+                                ].map(([val, lbl]) => (
+                                    <span className="rw-countdown-unit" key={lbl}>
+                                        <b className="rw-mono">{pad(val)}</b>
+                                        <small>{lbl}</small>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
 
-                    {nextSession && (
-                        <p className="rw-focus-session rw-hq-next-session">
-                            <span className="rw-mono rw-focus-session-label">
-                                {raceNotStarted ? "NEXT SESSION" : "FINAL SESSION"}
-                            </span>
-                            <span className="rw-focus-session-value">
-                                {nextSession.label}{" "}
-                                <span className="rw-mono">— {formatSessionTime(nextSession.date, nextSession.time)}</span>
-                            </span>
-                        </p>
-                    )}
+                        {nextSession && (
+                            <p className="rw-focus-session rw-hq-next-session">
+                                <span className="rw-mono rw-focus-session-label">
+                                    {raceNotStarted ? "NEXT SESSION" : "FINAL SESSION"}
+                                </span>
+                                <span className="rw-focus-session-value">
+                                    {nextSession.label}{" "}
+                                    <span className="rw-mono">— {formatSessionTime(nextSession.date, nextSession.time)}</span>
+                                </span>
+                            </p>
+                        )}
+                    </div>
 
                     <p className="rw-hq-wiki">
                         <a href={race.url} target="_blank" rel="noreferrer">
