@@ -306,9 +306,10 @@ function GrandPrixDetails() {
                                             circuitId={race.Circuit?.circuitId}
                                             circuitName={race.Circuit?.circuitName}
                                             info={circuitData}
+                                            compact
                                         />
                                     </div>
-                                    <p>The podium and driver results will populate here once the race weekend is complete.</p>
+                                    <p>Podium and driver results populate here once the race weekend is complete.</p>
                                 </div>
                             )}
                         </div>

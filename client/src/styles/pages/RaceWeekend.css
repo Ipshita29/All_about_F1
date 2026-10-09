@@ -380,7 +380,10 @@
 
 .rw-hq-meta { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: var(--space-7); }
 
-.rw-hq-hero-cols { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-9); align-items: start; }
+/* max-width keeps this balanced on wide screens — without it the left
+   track (minmax(0,1fr)) stretches far past the standby map's own width,
+   leaving a wide dead zone before the schedule card even starts. */
+.rw-hq-hero-cols { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-7); max-width: 860px; align-items: start; }
 
 .rw-hq-hero-main { min-width: 0; }
 
@@ -400,8 +403,9 @@
 .rw-schedule-card {
     background: var(--surface-light-1);
     color: var(--text-on-light-primary);
+    border: 1px solid var(--border-faint);
     border-radius: var(--radius-lg);
-    padding: var(--space-5);
+    padding: var(--space-4);
 }
 
 .rw-schedule-title {
@@ -418,7 +422,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: 10px 0;
+    padding: 8px 0;
     border-top: 1px solid var(--border-on-light);
 }
 
@@ -469,7 +473,7 @@
 .rw-hq-section {
     max-width: var(--content-width-wide);
     margin: 0 auto;
-    padding: var(--space-7) var(--space-6);
+    padding: var(--space-6) var(--space-6);
     border-top: 1px solid var(--border-faint);
     opacity: 0.5;
     transition: opacity var(--dur-slow) var(--ease);
@@ -477,18 +481,24 @@
 
 .rw-hq-section--in { opacity: 1; }
 
-.rw-hq-section-head { margin-bottom: var(--space-5); }
+.rw-hq-section-head { margin-bottom: var(--space-4); }
 
 .rw-hq-eyebrow { display: block; font-family: var(--font-mono); font-size: var(--text-meta); letter-spacing: 0.14em; color: var(--accent-text); margin-bottom: var(--space-2); }
 
-.rw-hq-section-title { font-size: var(--text-section-title); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0; }
+/* Scoped smaller than --text-section-title (shared with other pages)
+   rather than shrinking that token globally — tightens this page's
+   rhythm without touching anyone else's heading size. */
+.rw-hq-section-title { font-size: clamp(1.5rem, 1vw + 1.2rem, 2.3rem); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0; }
 
-.rw-hq-standby p { font-size: 0.9rem; color: var(--text-secondary); max-width: 60ch; margin-bottom: var(--space-2); }
+.rw-hq-standby p { font-size: 0.82rem; color: var(--text-muted); max-width: 60ch; margin-bottom: var(--space-2); }
 
 /* The circuit map that used to live in the Race Weekend index's featured
    card now shows here instead, filling what used to be empty space
-   while a race hasn't happened yet. */
-.rw-hq-standby-map { max-width: 420px; margin-bottom: var(--space-5); }
+   while a race hasn't happened yet — kept small and quiet (compact
+   CircuitVisualization, subtle border, modest radius) so it reads as a
+   placeholder, not a competing focal point. */
+.rw-hq-standby-map { max-width: 340px; margin-bottom: var(--space-4); }
+.rw-hq-standby-map .cv-drawing { border-radius: var(--radius-sm); border-color: var(--border-on-light); box-shadow: none; }
 
 /* ── Podium — plain columns, no boxes ── */
 
