@@ -488,14 +488,6 @@
    rhythm without touching anyone else's heading size. */
 .rw-hq-section-title { font-size: clamp(1.5rem, 1vw + 1.2rem, 2.3rem); font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0; }
 
-/* A quiet status line in the same slot the podium plinths occupy once
-   results exist — reuses the dot+mono-label language already used for
-   session/live status elsewhere on this page (.rw-focus-dot, .rw-strip-
-   dot), rather than inventing a new pattern. No red here: red is
-   reserved for the next-session emphasis in the schedule list. */
-.rw-classification-status { display: inline-flex; align-items: center; gap: 7px; margin-top: var(--space-4); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--text-muted); }
-.rw-classification-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); flex-shrink: 0; }
-
 /* The circuit map that used to live in the Race Weekend index's featured
    card now shows here instead. Full width of its own grid track (no
    max-width) so it actually fills the left column rather than floating
