@@ -1,22 +1,24 @@
 /*
  * RACE WEEKEND — the championship season as a chronological journey.
  *
- * A dark hero + focus module (the current/next race weekend, with a real
- * countdown and championship-progress readout) leads into a light Cararra
- * season timeline: every round, its winner (once run), and — on hover —a
- * concise podium + fastest-lap preview. Same backend endpoints as before;
- * year select and search are preserved. Winners are now fetched eagerly
- * for every completed round (not just on hover) so the timeline reads
- * chronologically without an interaction first — same existing results
- * endpoint, just called proactively instead of lazily.
+ * A slim upcoming-race strip (round, name/circuit/dates, countdown +
+ * Explore) sits directly above a light Cararra season timeline: every
+ * round, its winner (once run), and — on hover — a concise podium +
+ * fastest-lap preview. The strip replaces what used to be a large dark
+ * featured-race card; the circuit map and detailed session schedule it
+ * used to show live only after following "Explore" into Race HQ
+ * (RaceWeekendDetails.jsx), which already carries that detail. Same
+ * backend endpoints as before; year select and search are preserved.
+ * Winners are now fetched eagerly for every completed round (not just
+ * on hover) so the timeline reads chronologically without an
+ * interaction first — same existing results endpoint, just called
+ * proactively instead of lazily.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import CircuitVisualization from "../components/CircuitVisualization";
-import { Button, LoadingSpinner } from "../components/UI";
+import { LoadingSpinner } from "../components/UI";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
-import { circuitInfo } from "../data/circuitInfo";
 import { formatSessionTime } from "../utils/timeUtils";
 import { getWeekendSessions, formatWeekendRange } from "../utils/landingHelpers";
 import "../styles/pages/RaceWeekend.css";
@@ -35,116 +37,59 @@ function raceStart(race) {
         : new Date(`${race.date}T00:00:00`);
 }
 
-/* ── Season focus module: the current / next race weekend ─────────── */
+/* ── Minimal upcoming-race strip: round, name/circuit/dates, countdown +
+   Explore — the full circuit map and session-by-session schedule only
+   show up after following this into Race HQ (RaceWeekendDetails.jsx),
+   which already carries that detail; see the file header above. ───── */
 
-function FocusModule({ race, year, isLive, liveLabel, doneCount, totalCount }) {
+function UpcomingStrip({ race, year, isLive, liveLabel }) {
     const sessions = getWeekendSessions(race);
     const raceSession = sessions.find((s) => s.key === "Race");
     const countdown = useCountdown(raceSession?.start || null);
-    const [ref, inView] = useInViewOnce({ threshold: 0.2 });
-
-    const now = new Date();
-    const nextUp = sessions.find((s) => s.start > now);
-    const circuit = circuitInfo[race.Circuit?.circuitId];
-    const conditions = circuit?.weatherImpact
-        ? `${circuit.weatherImpact.split(". ")[0]}.`
-        : null;
-    const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
     return (
-        <section
-            ref={ref}
-            className={`rw-focus${inView ? " rw-focus--lit" : ""}${isLive ? " rw-focus--live" : ""}`}
-            aria-label="Current race weekend"
+        <Link
+            to={`/grandprixdashboard/${year}/${race.round}`}
+            viewTransition
+            className={`rw-strip${isLive ? " rw-strip--live" : ""}`}
+            aria-label={`Explore ${race.raceName}`}
         >
-            <div className="rw-focus-head">
-                <span className="rw-focus-status rw-mono">
-                    <span className="rw-focus-dot" aria-hidden="true" />
-                    {isLive ? `LIVE — ${liveLabel}` : "NEXT DESTINATION"}
-                </span>
-                <span className="rw-focus-round rw-mono">
-                    ROUND {race.round} / {totalCount}
+            <div className="rw-strip-left">
+                <span className="rw-strip-dot" aria-hidden="true" />
+                <span className="rw-strip-label rw-mono">
+                    {isLive ? `LIVE · ${liveLabel}` : "NEXT RACE"} · ROUND {race.round}
                 </span>
             </div>
 
-            <div className="rw-focus-body">
-                <div className="rw-focus-info">
-                    <h2 className="rw-focus-title">{race.raceName}</h2>
-                    <p className="rw-focus-meta rw-mono">
-                        {race.Circuit?.circuitName?.toUpperCase()} ·{" "}
-                        {race.Circuit?.Location?.locality?.toUpperCase()},{" "}
-                        {race.Circuit?.Location?.country?.toUpperCase()} ·{" "}
-                        {formatWeekendRange(race)}
-                    </p>
+            <div className="rw-strip-center">
+                <h2
+                    className="rw-strip-title"
+                    style={{ viewTransitionName: `gp-title-${year}-${race.round}` }}
+                >
+                    {race.raceName}
+                </h2>
+                <p className="rw-strip-meta rw-mono">
+                    {race.Circuit?.circuitName?.toUpperCase()} ·{" "}
+                    {race.Circuit?.Location?.locality?.toUpperCase()},{" "}
+                    {race.Circuit?.Location?.country?.toUpperCase()} · {formatWeekendRange(race)}
+                </p>
+            </div>
 
-                    {raceSession && countdown.total > 0 && (
-                        <div
-                            className="rw-countdown"
-                            role="timer"
-                            aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes ${countdown.seconds} seconds`}
-                        >
-                            {[
-                                [countdown.days, "DAYS"],
-                                [countdown.hours, "HRS"],
-                                [countdown.minutes, "MIN"],
-                                [countdown.seconds, "SEC"],
-                            ].map(([val, lbl]) => (
-                                <span className="rw-countdown-unit" key={lbl}>
-                                    <b className="rw-mono">{pad(val)}</b>
-                                    <small>{lbl}</small>
-                                </span>
-                            ))}
-                        </div>
-                    )}
-
-                    {nextUp && (
-                        <p className="rw-focus-session">
-                            <span className="rw-mono rw-focus-session-label">
-                                {isLive ? "CURRENT / NEXT SESSION" : "NEXT SESSION"}
-                            </span>
-                            <span className="rw-focus-session-value">
-                                {nextUp.label} <span className="rw-mono">— {formatSessionTime(nextUp.date, nextUp.time)}</span>
-                            </span>
-                        </p>
-                    )}
-
-                    <div className="rw-focus-progress">
-                        <span className="rw-mono rw-focus-progress-label">
-                            CHAMPIONSHIP PROGRESS — {doneCount} OF {totalCount} ROUNDS COMPLETE
-                        </span>
-                        <div className="rw-progress-track">
-                            <div className="rw-progress-fill" style={{ width: `${progress}%` }} />
-                            <div className="rw-progress-marker" style={{ left: `${progress}%` }} />
-                        </div>
-                    </div>
-
-                    {conditions && (
-                        <p className="rw-focus-weather">
-                            <span className="rw-mono rw-focus-session-label">CONDITIONS BRIEF</span>
-                            {conditions}
-                        </p>
-                    )}
-
-                    <Button
-                        variant="primary"
-                        to={`/grandprixdashboard/${year}/${race.round}`}
-                        viewTransition
-                        arrow
-                        className="rw-focus-cta"
+            <div className="rw-strip-right">
+                {raceSession && countdown.total > 0 && (
+                    <span
+                        className="rw-strip-countdown rw-mono"
+                        role="timer"
+                        aria-label={`Race starts in ${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes`}
                     >
-                        Enter Race HQ
-                    </Button>
-                </div>
-
-                <div className="rw-focus-map">
-                    <CircuitVisualization
-                        circuitId={race.Circuit?.circuitId}
-                        circuitName={race.Circuit?.circuitName}
-                        info={circuit}
-                    />
-                </div>
+                        {pad(countdown.days)}D {pad(countdown.hours)}H {pad(countdown.minutes)}M
+                    </span>
+                )}
+                <span className="rw-strip-explore rw-mono">
+                    Explore <span aria-hidden="true">→</span>
+                </span>
             </div>
-        </section>
+        </Link>
     );
 }
 
@@ -300,15 +245,10 @@ function GrandPrix() {
     }, []);
 
     /* minuteTick re-derives the now-dependent journey states once a minute */
-    const { focusRound, liveLabel, doneCount } = useMemo(() => {
+    const { focusRound, liveLabel } = useMemo(() => {
         const now = new Date();
         let focus = null;
         let live = null;
-        let done = 0;
-        for (const race of grandprix) {
-            const start = raceStart(race);
-            if (start && start < now) done += 1;
-        }
         for (const race of grandprix) {
             const sessions = getWeekendSessions(race);
             const upcoming = sessions.find((s) => s.start > now);
@@ -326,7 +266,7 @@ function GrandPrix() {
                 break;
             }
         }
-        return { focusRound: focus, liveLabel: live, doneCount: done };
+        return { focusRound: focus, liveLabel: live };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [grandprix, minuteTick]);
 
@@ -420,13 +360,11 @@ function GrandPrix() {
                 <>
                     {focusRace && !search && (
                         <div className="rw-main">
-                            <FocusModule
+                            <UpcomingStrip
                                 race={focusRace}
                                 year={year}
                                 isLive={Boolean(liveLabel)}
                                 liveLabel={liveLabel}
-                                doneCount={doneCount}
-                                totalCount={grandprix.length}
                             />
                         </div>
                     )}

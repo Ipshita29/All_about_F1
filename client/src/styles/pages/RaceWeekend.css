@@ -131,86 +131,95 @@
     color: var(--text-muted);
 }
 
-/* ── Focus module (current / next weekend) ── */
-
-.rw-focus {
-    max-width: var(--content-width-wide);
-    margin: 0 auto var(--space-8);
-    padding: var(--space-7) var(--space-6);
-    background: var(--surface);
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--border-faint);
-}
-
-.rw-focus-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-5);
-}
-
-.rw-focus-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-}
-
-.rw-focus--live .rw-focus-status { color: var(--accent-text); }
+/* ── .rw-focus-dot / .rw-focus-session* below are also used by the Race
+   HQ header (RaceWeekendDetails.jsx) — kept even though the old focus
+   module they were first built for is gone. ── */
 
 .rw-focus-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
-.rw-focus--live .rw-focus-dot { background: var(--accent); animation: rwPulse 1.6s ease-in-out infinite; }
 .rw-focus-dot--done { background: var(--success); }
 
-@keyframes rwPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-.rw-focus-round { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); }
-
-.rw-focus-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: var(--space-8);
-}
-
-.rw-focus-info { min-width: 0; }
-
-.rw-focus-title { font-size: clamp(1.8rem, 2vw + 1.2rem, 2.75rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: var(--space-2); }
-
-.rw-focus-meta { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); margin-bottom: var(--space-6); }
-
-.rw-focus-session,
-.rw-focus-weather {
+.rw-focus-session {
     display: flex;
     flex-direction: column;
     gap: 4px;
     font-size: 0.95rem;
     color: var(--text-primary);
     margin-bottom: var(--space-5);
+    padding: var(--space-4);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-md);
+    max-width: 420px;
 }
-
-.rw-focus-session { padding: var(--space-4); background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--radius-md); max-width: 420px; }
 
 .rw-focus-session-label { font-size: 0.6rem; letter-spacing: 0.12em; color: var(--accent-text); }
 .rw-focus-session-value { font-size: 1.1rem; font-weight: 700; }
 .rw-focus-session-value .rw-mono { font-size: 0.7rem; font-weight: 500; color: var(--text-secondary); }
 
-.rw-focus-weather { font-size: 0.86rem; color: var(--text-secondary); max-width: 60ch; }
-.rw-focus-weather .rw-focus-session-label { color: var(--text-muted); }
+/* ── Upcoming-race strip — replaces the old dark featured-race card.
+   One slim row, left/center/right, that bridges the dark hero above it
+   into the light season timeline below: the full circuit map and
+   session schedule only show up after following it into Race HQ. ── */
 
-.rw-focus-progress { margin-bottom: var(--space-5); max-width: 420px; }
+.rw-strip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border-faint);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
 
-.rw-focus-progress-label { display: block; font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: var(--space-3); }
+.rw-strip:hover {
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+}
 
-.rw-progress-track { position: relative; height: 2px; background: var(--border); border-radius: 2px; }
-.rw-progress-fill { position: absolute; inset: 0; width: 0; background: var(--accent); border-radius: 2px; transition: width 0.6s var(--ease); }
-.rw-progress-marker { position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); transform: translate(-50%, -50%); }
+.rw-strip--live { border-color: var(--accent-border); }
 
-.rw-focus-cta { margin-top: var(--space-2); }
+.rw-strip-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+}
 
-.rw-focus-map { width: 100%; margin-top: var(--space-2); }
+.rw-strip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
+.rw-strip--live .rw-strip-dot { background: var(--accent); animation: rwStripPulse 1.6s ease-in-out infinite; }
+
+@keyframes rwStripPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.rw-strip-label { font-size: 0.68rem; letter-spacing: 0.1em; color: var(--text-muted); white-space: nowrap; }
+.rw-strip--live .rw-strip-label { color: var(--accent-text); }
+
+.rw-strip-center { min-width: 0; flex: 1; }
+
+.rw-strip-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text-primary); margin: 0 0 2px; }
+
+.rw-strip-meta {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rw-strip-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    flex-shrink: 0;
+}
+
+.rw-strip-countdown { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+.rw-strip-explore { font-size: 0.74rem; font-weight: 600; color: var(--accent-text); white-space: nowrap; }
+.rw-strip:hover .rw-strip-explore { text-decoration: underline; }
 
 /* ══════════════════════════════════════════════════════════════════
    SEASON TIMELINE (light) — .rw-journey / .rw-stop-*
@@ -476,6 +485,11 @@
 
 .rw-hq-standby p { font-size: 0.9rem; color: var(--text-secondary); max-width: 60ch; margin-bottom: var(--space-2); }
 
+/* The circuit map that used to live in the Race Weekend index's featured
+   card now shows here instead, filling what used to be empty space
+   while a race hasn't happened yet. */
+.rw-hq-standby-map { max-width: 420px; margin-bottom: var(--space-5); }
+
 /* ── Podium — plain columns, no boxes ── */
 
 .rw-podium { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-7); }
@@ -590,17 +604,18 @@
    ══════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 980px) {
-    .rw-focus-body,
     .rw-hq-hero-cols { grid-template-columns: 1fr; }
     .rw-essentials { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 700px) {
-    .rw-hero, .rw-main, .rw-focus, .rw-hq-hero, .rw-hq-main, .rw-hq-section,
+    .rw-hero, .rw-main, .rw-hq-hero, .rw-hq-main, .rw-hq-section,
     .rw-journey-inner {
         padding-left: var(--space-4);
         padding-right: var(--space-4);
     }
+    .rw-strip { flex-wrap: wrap; row-gap: var(--space-3); }
+    .rw-strip-right { width: 100%; justify-content: space-between; }
     .rw-countdown { gap: var(--space-2); }
     .rw-countdown-unit { min-width: 56px; padding: var(--space-2) 0; }
     .rw-countdown-unit b { font-size: 1.6rem; }

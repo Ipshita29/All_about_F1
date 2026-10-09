@@ -11,6 +11,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays, Flag, Gauge, Map, Repeat, RotateCw, Ruler, Timer, Wrench, Zap } from "lucide-react";
 import { circuitInfo } from "../data/circuitInfo";
+import CircuitVisualization from "../components/CircuitVisualization";
 import { LoadingSpinner } from "../components/UI";
 import { formatSessionTime } from "../utils/timeUtils";
 import useCountdown from "../hooks/useCountdown";
@@ -280,7 +281,7 @@ function GrandPrixDetails() {
                 <HqSection eyebrow="CLASSIFICATION" title="Podium & Weekend Schedule">
                     <div className="rw-hq-hero-cols">
                         <div className="rw-hq-hero-main">
-                            <span className="rw-hq-subeyebrow rw-mono">PODIUM</span>
+                            <span className="rw-hq-subeyebrow rw-mono">{raceNotStarted ? "CIRCUIT" : "PODIUM"}</span>
                             {!raceNotStarted && results.length > 0 ? (
                                 <div className="rw-podium">
                                     {podiumOrder.map((idx) => {
@@ -300,7 +301,13 @@ function GrandPrixDetails() {
                                 </div>
                             ) : (
                                 <div className="rw-hq-standby">
-                                    <p>This race has not taken place yet.</p>
+                                    <div className="rw-hq-standby-map">
+                                        <CircuitVisualization
+                                            circuitId={race.Circuit?.circuitId}
+                                            circuitName={race.Circuit?.circuitName}
+                                            info={circuitData}
+                                        />
+                                    </div>
                                     <p>The podium and driver results will populate here once the race weekend is complete.</p>
                                 </div>
                             )}
