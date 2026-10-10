@@ -105,6 +105,26 @@ function buildJolpicaSessionWindows(race) {
     return sessions;
 }
 
+// current/next.json genuinely goes stale: confirmed live that Jolpica/this
+// proxy can keep returning the same race as "next" for a while after that
+// race's own scheduled race session has already elapsed (its results/last
+// just haven't been ingested yet). Without this check, getLiveRaceStatus
+// below would keep reporting that race's name as the upcoming Grand Prix —
+// e.g. showing "Singapore Grand Prix" in the header hours after Singapore's
+// race actually finished, while /grandprixdashboard/latest (a separate
+// fetch) correctly still shows the PREVIOUS round as the latest completed
+// race, since Jolpica hasn't posted Singapore's results yet either. Treating
+// a race whose own estimated window has fully passed as "not a real next
+// race" (null) is the honest call — we don't actually know new information
+// about the next race, we just loaded Jolpica's provisional guess, and that
+// guess is now invalidated by the clock catching up to it.
+function isRaceOver(race, now) {
+    const raceStart = toDate(race.date, race.time);
+    if (!raceStart) return false;
+    const raceEnd = new Date(raceStart.getTime() + SESSION_DURATIONS_MS.race);
+    return now > raceEnd;
+}
+
 function resolveSessionState(sessions, now) {
     const live = sessions.find((s) => now >= s.start && now <= s.end);
     if (live) {
@@ -272,6 +292,50 @@ function normalizeTrack(trackStatus, weather) {
     };
 }
 
+/*
+ * Investigated as the "alternative reliable data source" for a race
+ * whose official classification Jolpica hasn't posted yet (see
+ * grandprixController.js getLatestRace) — confirmed live that F1's own
+ * timing feed DOES retain a just-finished session's full driverList/
+ * timingData in memory (22 drivers, real lap count) even once its
+ * window has ended and isLive has gone false, since nothing resets
+ * that state until a NEW session starts.
+ *
+ * Deliberately NOT used to reconstruct a Results array for display,
+ * though: the feed gives driver code/full-name/team-NAME/position/gap,
+ * never the stable Ergast driverId/constructorId slugs the frontend
+ * uses for driver photos and team colours, nor official points or a
+ * finish Time string — producing those would mean guessing (splitting
+ * "Andrea Kimi Antonelli" into given/family names breaks on exactly
+ * this kind of 3-part name, teams would need a second hardcoded name
+ * lookup, points would be a computed guess at the scoring table). That
+ * crosses into fabricating a plausible-looking classification rather
+ * than reporting real data, which the brief explicitly rules out.
+ *
+ * What IS safe to surface: the race's real, unambiguous lap count —
+ * confirms to the user that the session the dashboard is naming really
+ * has finished, while classification is still honestly "pending".
+ */
+function getRetainedSessionSummary(season, round) {
+    const liveState = f1LiveTimingService.getState();
+    const meeting = liveState.sessionInfo?.Meeting;
+    if (!meeting) return { matches: false };
+
+    const liveRound = String(meeting.Number ?? "");
+    const liveSeason = liveState.sessionInfo?.StartDate?.slice(0, 4) ?? null;
+    const matches = liveRound === String(round) && liveSeason === String(season);
+    if (!matches) return { matches: false };
+
+    const totalLaps = liveState.lapCount?.TotalLaps ?? null;
+    const currentLap = liveState.lapCount?.CurrentLap ?? null;
+    return {
+        matches: true,
+        totalLaps,
+        currentLap,
+        raceFinished: totalLaps != null && currentLap != null && currentLap >= totalLaps,
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Public entry point — GET /api/live/race reads this
 // ---------------------------------------------------------------------------
@@ -284,7 +348,8 @@ async function getLiveRaceStatus() {
 
     let jolpicaRace = null;
     try {
-        jolpicaRace = await fetchNextRace();
+        const candidate = await fetchNextRace();
+        jolpicaRace = candidate && !isRaceOver(candidate, now) ? candidate : null;
     } catch (error) {
         // Schedule fetch failing doesn't need to fail the whole response —
         // the live feed may still be able to answer "is something live now".
@@ -372,4 +437,4 @@ async function getLiveRaceStatus() {
     };
 }
 
-module.exports = { getLiveRaceStatus };
+module.exports = { getLiveRaceStatus, getRetainedSessionSummary };
