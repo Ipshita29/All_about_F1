@@ -152,4 +152,55 @@ async function getHistoricalWeather(lat, lon, targetIso) {
     };
 }
 
-module.exports = { getForecast, getHistoricalWeather };
+/*
+ * Race-time weather for a COMPLETED race — the Live Dashboard's
+ * post-race Weather panel. Two pieces, both from the same already-
+ * fetched hourly archive (fetchHistoricalHourly), never invented:
+ *   point      — the single nearest-hour reading to the race's actual
+ *                start, same matching logic getHistoricalWeather already
+ *                uses (reused via that function directly).
+ *   condition  — how many of the archive's hourly samples that fall
+ *                within [start, start+durationMs] (the race's own real
+ *                elapsed time, from the winner's Results[0].Time.millis)
+ *                were wet (precipitation > 0) vs dry. This is a genuine,
+ *                if coarse, real distribution — a ~1.5h race usually
+ *                only has 1-2 hourly samples in-window, which is still
+ *                real data, just not granular. Only use this to render
+ *                a donut when totalSamples > 0.
+ */
+async function getRaceWeather(lat, lon, startIso, durationMs) {
+    const point = await getHistoricalWeather(lat, lon, startIso);
+
+    const startMs = new Date(startIso).getTime();
+    const dur = Number(durationMs);
+    if (Number.isNaN(startMs) || !Number.isFinite(dur) || dur <= 0) {
+        return point ? { point, condition: { drySamples: 0, wetSamples: 0, totalSamples: 0 } } : null;
+    }
+    const endMs = startMs + dur;
+
+    let data;
+    try {
+        data = await fetchHistoricalHourly(lat, lon, startIso.slice(0, 10));
+    } catch {
+        return point ? { point, condition: { drySamples: 0, wetSamples: 0, totalSamples: 0 } } : null;
+    }
+
+    const times = data?.hourly?.time;
+    let drySamples = 0;
+    let wetSamples = 0;
+    if (Array.isArray(times)) {
+        times.forEach((t, i) => {
+            const ms = new Date(`${t}Z`).getTime();
+            if (ms < startMs || ms > endMs) return;
+            const precip = data.hourly.precipitation?.[i];
+            if (precip == null) return;
+            if (precip > 0) wetSamples += 1;
+            else drySamples += 1;
+        });
+    }
+
+    if (!point && drySamples + wetSamples === 0) return null;
+    return { point, condition: { drySamples, wetSamples, totalSamples: drySamples + wetSamples } };
+}
+
+module.exports = { getForecast, getHistoricalWeather, getRaceWeather };
