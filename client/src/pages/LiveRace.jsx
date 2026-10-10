@@ -10,12 +10,15 @@
  * tightens while a session is actually live and relaxes otherwise.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList } from "recharts";
+import {
+    BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, LabelList, PieChart, Pie, Tooltip,
+    LineChart, Line, Legend,
+} from "recharts";
 import {
     Flag, AlertTriangle, Radio as RadioIcon, Thermometer, Droplets, Wind, Users, Signal, Swords, Timer,
     MapPin, Calendar, Trophy, Wrench, UserRound, Cloud,
     CircleDashed, Sun, CloudSun, Cloudy, CloudFog, CloudDrizzle, CloudRain, CloudSnow,
-    CloudLightning, ShieldAlert, BarChart2, Gauge, Shuffle,
+    CloudLightning, ShieldAlert, BarChart2, Gauge, Shuffle, Play, Pause,
 } from "lucide-react";
 import { EmptyState, Select, Button } from "../components/UI";
 import { LayeredImage } from "../components/EntityDetail";
@@ -294,29 +297,36 @@ function formatDate(dateStr, timeStr) {
    standings/qualifying-history/pit-stop/news fetches — those fed
    sections (Team Focus, Recent Form, Last Strategy, Latest Updates)
    that this page deliberately doesn't have. */
-function useRaceHubData(season) {
-    const [state, setState] = useState({ loading: true, error: false, season: null, schedule: [], latest: null });
-
-    // Reset to loading synchronously during render when season changes,
-    // rather than as the first act of the effect below.
-    if (season && state.season !== season && !state.loading) {
-        setState((s) => ({ ...s, loading: true, error: false }));
-    }
+/*
+ * Deliberately takes NO season argument — it used to be called with
+ * `race?.season`, but `race` (the "next race" guess from Jolpica) can
+ * now genuinely be null once that race's own window has passed and
+ * Jolpica hasn't advanced "current/next" yet (see isRaceOver in
+ * liveRaceService.js) — depending on it here meant the whole hub
+ * (results/weather/gap/team-position, nothing to do with "next race"
+ * at all) would silently never load in exactly that window. Instead:
+ * fetch the latest completed race FIRST (that endpoint needs no season
+ * param at all), then use ITS OWN season for the schedule fetch — so
+ * this hub is fully independent of whether a "next race" is currently
+ * knowable.
+ */
+function useRaceHubData() {
+    const [state, setState] = useState({ loading: true, error: false, schedule: [], latest: null });
 
     useEffect(() => {
-        if (!season) return undefined;
         let cancelled = false;
 
         const getJson = (path, fallback) =>
             fetch(`${API}${path}`).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
 
-        Promise.all([
-            getJson(`/grandprixdashboard/${season}`, []),
-            getJson("/grandprixdashboard/latest", null),
-        ])
-            .then(([schedule, latest]) => {
-                if (cancelled) return;
-                setState({ loading: false, error: false, season, schedule, latest });
+        getJson("/grandprixdashboard/latest", null)
+            .then((latest) => {
+                if (cancelled) return null;
+                const season = latest?.season ?? String(new Date().getFullYear());
+                return getJson(`/grandprixdashboard/${season}`, []).then((schedule) => {
+                    if (cancelled) return;
+                    setState({ loading: false, error: false, schedule, latest });
+                });
             })
             .catch(() => {
                 if (!cancelled) setState((s) => ({ ...s, loading: false, error: true }));
@@ -325,7 +335,7 @@ function useRaceHubData(season) {
         return () => {
             cancelled = true;
         };
-    }, [season]);
+    }, []);
 
     return state;
 }
@@ -335,6 +345,9 @@ function useRaceHubData(season) {
 
 function NextRaceContext({ hub, race }) {
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
+    if (!race) {
+        return <EmptyState title="No upcoming race confirmed" description="The schedule will update once the next Grand Prix is confirmed." />;
+    }
     const weekend = hub.schedule.find((r) => String(r.round) === String(race?.round));
     if (!weekend) return <EmptyState title="Schedule unavailable" description="Next race schedule couldn't be loaded." />;
 
@@ -451,6 +464,21 @@ function NextRaceWeatherForecast({ hub, race }) {
 
     if (hub.loading) return <div className="lr-hub-loading">Loading…</div>;
 
+    // Distinct from "we know the race but have no forecast for it" below —
+    // this is "there's no confirmed upcoming race to forecast at all" (see
+    // isRaceOver in liveRaceService.js), which reads very differently.
+    if (!race) {
+        return (
+            <div className="lr-compact-empty">
+                <Cloud size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">NO UPCOMING RACE CONFIRMED</span>
+                    <span className="lr-compact-empty-desc">The next Grand Prix hasn't been confirmed by the schedule yet.</span>
+                </div>
+            </div>
+        );
+    }
+
     if (forecast.status === "loading" || forecast.status === "idle") {
         return <div className="lr-hub-loading">Loading forecast…</div>;
     }
@@ -522,88 +550,217 @@ function NextRaceWeatherForecast({ hub, race }) {
     );
 }
 
-/* ── Previous Grand Prix — Netflix-style driver results carousel ─────
-   Full classified order from the most recently completed race (real
-   Jolpica Results, never trimmed to a podium), one card per driver.
-   Hover/focus scales the centred card up and nudges it into view —
-   plain CSS transform + transition driven by which index is active,
-   no carousel dependency. ─────────────────────────────────────────── */
+/* ── Recent Grand Prix Results — the most recently completed race
+   (Jolpica current/last, real results, never inferred/hardcoded), a
+   prominent top-3 podium followed by the COMPLETE classification —
+   replaces the old one-card-per-driver carousel. GP name/circuit/date
+   and every result row all come from the same `latest` fetch, so they
+   can never drift out of sync with each other. ─────────────────────── */
 
-function driverResultLine(result, isWinner) {
-    if (isWinner) return { value: result.Time?.time ?? "—", label: "Race Winner" };
-    if (result.status === "Finished" && result.Time?.time) return { value: result.Time.time, label: "Gap" };
-    if (typeof result.status === "string" && result.status.startsWith("+")) return { value: result.status, label: "Gap" };
-    return { value: result.status || "—", label: "Status" };
+function raceResultLine(result, isWinner) {
+    if (isWinner) return { value: result.Time?.time ?? "—", label: "RACE TIME" };
+    if (result.Time?.time) return { value: result.Time.time, label: "GAP" };
+    return { value: result.status || "—", label: "STATUS" };
 }
 
-function PreviousGpCard({ result, isWinner, isActive, onActivate, onDeactivate }) {
-    const fullName = `${result.Driver.givenName} ${result.Driver.familyName}`;
-    const accent = getTeamAccent(result.Constructor.constructorId);
-    const line = driverResultLine(result, isWinner);
+// P2 · P1 · P3 plinth arrangement — same convention already used for
+// the podium on RaceWeekendDetails.jsx, not a new layout idea.
+const PODIUM_ORDER = [1, 0, 2];
 
+function ResultsPodium({ results }) {
     return (
-        <div
-            className={`lr-gp-card${isActive ? " lr-gp-card--active" : ""}`}
-            style={{ "--lr-gp-accent": accent }}
-            tabIndex={0}
-            onMouseEnter={onActivate}
-            onMouseLeave={onDeactivate}
-            onFocus={onActivate}
-            onBlur={onDeactivate}
-        >
-            <DriverPortrait
-                driverId={result.Driver.driverId}
-                fullName={fullName}
-                frameClassName="lr-gp-card-photo"
-                fallbackClassName="lr-driver-card-photo-fallback"
-                fallbackIcon={<UserRound size={28} aria-hidden="true" />}
-            />
-            <div className="lr-gp-card-body">
-                <span className="lr-mono lr-gp-card-pos">{isWinner && <Trophy size={12} aria-hidden="true" />}P{result.position}</span>
-                <span className="lr-gp-card-name">{fullName}</span>
-                <span className="lr-gp-card-team">{result.Constructor.name}</span>
-                <span className="lr-mono lr-gp-card-line">{line.value}<small>{line.label}</small></span>
-            </div>
+        <div className="lr-podium">
+            {PODIUM_ORDER.map((idx) => {
+                const r = results[idx];
+                if (!r) return null;
+                const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
+                const isWinner = r.position === "1";
+                const line = raceResultLine(r, isWinner);
+                return (
+                    <div className={`lr-podium-step lr-podium-step--p${r.position}`} key={r.Driver.driverId}>
+                        <DriverPortrait
+                            driverId={r.Driver.driverId}
+                            fullName={fullName}
+                            frameClassName="lr-podium-photo"
+                            fallbackClassName="lr-driver-card-photo-fallback"
+                            fallbackIcon={<UserRound size={24} aria-hidden="true" />}
+                        />
+                        <span className="lr-podium-team-bar" style={{ background: getTeamAccent(r.Constructor.constructorId) }} aria-hidden="true" />
+                        <span className="lr-mono lr-podium-pos">{isWinner && <Trophy size={12} aria-hidden="true" />}P{r.position}</span>
+                        <span className="lr-podium-name">{fullName}</span>
+                        <span className="lr-podium-team">{r.Constructor.name}</span>
+                        <span className="lr-mono lr-podium-line">{line.value}<small>{line.label}</small></span>
+                    </div>
+                );
+            })}
         </div>
     );
 }
 
-function PreviousGrandPrix({ hub }) {
-    const [activeId, setActiveId] = useState(null);
+// "Finished" or a classified-but-lapped "+N Lap(s)" both count as a
+// real classification, not a DNF — only those two read as normal rows;
+// everything else (Retired, Accident, Disqualified, Did not start…)
+// gets the dimmed/status treatment.
+function isClassifiedFinish(status) {
+    return status === "Finished" || (typeof status === "string" && status.startsWith("+"));
+}
 
-    if (hub.loading) return <div className="lr-hub-loading">Loading previous results…</div>;
-    const latest = hub.latest;
-    if (!latest?.Results?.length) {
-        return <EmptyState title="No completed races yet" description="Results will appear here once a Grand Prix has been completed." onLight />;
-    }
+function ClassificationTable({ results }) {
+    return (
+        <div className="lr-timing-scroll lr-timing-scroll--capped">
+            <table className="lr-timing">
+                <thead>
+                    <tr>
+                        <th>Pos</th><th>Driver</th><th>Team</th><th>Laps</th><th>Time / Gap</th><th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {results.map((r) => {
+                        const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
+                        const classified = isClassifiedFinish(r.status);
+                        return (
+                            <tr key={r.Driver.driverId} className={!classified ? "lr-row-retired" : ""}>
+                                <td className="lr-mono lr-timing-pos">{r.positionText ?? r.position}</td>
+                                <td>
+                                    <span className="lr-driver-chip">
+                                        <DriverAvatar code={r.Driver.code ?? r.Driver.driverId} color={getTeamAccent(r.Constructor.constructorId)} size="sm" />
+                                        {fullName}
+                                    </span>
+                                </td>
+                                <td>{r.Constructor.name}</td>
+                                <td className="lr-mono">{r.laps ?? "—"}</td>
+                                <td className="lr-mono">{classified ? (r.Time?.time ?? "—") : r.status}</td>
+                                <td className="lr-mono">{r.points ?? "0"}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
-    const activate = (id) => (e) => {
-        setActiveId(id);
-        e.currentTarget.scrollIntoView?.({ inline: "center", block: "nearest", behavior: "smooth" });
-    };
+/*
+ * The heading (name/circuit/date) renders unconditionally once a race
+ * has been identified (getLatestRace determines this from the real
+ * calendar now, not from whether results exist yet — see
+ * grandprixController.js) — so Singapore's own identity shows here the
+ * moment its race time has passed, even in the minutes/hours before
+ * Jolpica has posted its classification. Only the podium/table below
+ * swap to a "pending" state; the heading is never generic and never
+ * silently reverts to an older race.
+ */
+function RaceResultsSection({ latest }) {
+    const hasResults = Boolean(latest?.Results?.length);
 
     return (
         <div className="lr-gp">
             <div className="lr-gp-head">
-                <span className="lr-gp-name">{latest.raceName}</span>
+                <span className="lr-gp-name">{latest?.raceName ?? "—"}</span>
                 <span className="lr-gp-meta">
                     <MapPin size={12} aria-hidden="true" />
-                    {latest.Circuit?.circuitName}{latest.Circuit?.Location?.country ? `, ${latest.Circuit.Location.country}` : ""}
-                    <span className="lr-mono">{formatDate(latest.date)}</span>
+                    {latest?.Circuit?.circuitName}{latest?.Circuit?.Location?.country ? `, ${latest.Circuit.Location.country}` : ""}
+                    <span className="lr-mono">{formatDate(latest?.date)}</span>
                 </span>
             </div>
-            <div className="lr-gp-track">
-                {latest.Results.map((r) => (
-                    <PreviousGpCard
-                        key={r.Driver.driverId}
-                        result={r}
-                        isWinner={r.position === "1"}
-                        isActive={activeId === r.Driver.driverId}
-                        onActivate={activate(r.Driver.driverId)}
-                        onDeactivate={() => setActiveId(null)}
-                    />
-                ))}
-            </div>
+            {hasResults ? (
+                <>
+                    <ResultsPodium results={latest.Results} />
+                    <ClassificationTable results={latest.Results} />
+                </>
+            ) : (
+                <div className="lr-compact-empty">
+                    <Trophy size={18} aria-hidden="true" />
+                    <div className="lr-compact-empty-body">
+                        <span className="lr-compact-empty-title">CLASSIFICATION PENDING</span>
+                        <span className="lr-compact-empty-desc">
+                            {latest?.raceName ?? "This race"}'s official classification hasn't been posted by the data provider yet.
+                            {latest?.liveConfirmation?.raceFinished && (
+                                <> Live timing confirms the race finished ({latest.liveConfirmation.currentLap}/{latest.liveConfirmation.totalLaps} laps).</>
+                            )}
+                            {" "}It'll appear here automatically once it is.
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ── Post-race Session Pulse — "most recently completed session's
+   available summary and statistics", per the brief, entirely derived
+   from the SAME `latest` results already fetched for the section
+   above — no extra request. Mirrors the live Session Pulse's own
+   tile-grid shape (.lr-pulse-grid/.lr-pulse-tile) so both states of
+   the SAME panel share one visual language, not two different ones. */
+function PostRaceSessionPulse({ latest }) {
+    const results = latest?.Results ?? [];
+    if (results.length === 0) {
+        return latest?.resultsPending ? (
+            <EmptyState
+                title="Summary pending"
+                description={`${latest?.raceName ?? "This race"}'s session summary will appear once its classification is posted.`}
+            />
+        ) : (
+            <EmptyState title="No recent session" description="A summary will appear once a session has been completed." />
+        );
+    }
+
+    const winner = results.find((r) => r.position === "1");
+    const polesitter = results.find((r) => r.grid === "1");
+    const fastestLapResult = results.find((r) => r.FastestLap?.rank === "1");
+    const dnfCount = results.filter((r) => !isClassifiedFinish(r.status)).length;
+
+    const tiles = [
+        {
+            icon: <Trophy size={15} aria-hidden="true" />,
+            label: "Winner",
+            value: winner?.Driver.code ?? "—",
+            sub: winner?.Constructor.name ?? null,
+            accent: true,
+        },
+        {
+            icon: <Timer size={15} aria-hidden="true" />,
+            label: "Fastest",
+            value: fastestLapResult?.Driver.code ?? "—",
+            sub: fastestLapResult?.FastestLap?.Time?.time ?? null,
+        },
+        {
+            icon: <Flag size={15} aria-hidden="true" />,
+            label: "Pole → Finish",
+            value: polesitter ? `P1→P${polesitter.position}` : "—",
+            sub: polesitter?.Driver.code ?? null,
+        },
+        {
+            icon: <Gauge size={15} aria-hidden="true" />,
+            label: "Laps",
+            value: winner?.laps ?? "—",
+            sub: "COMPLETED",
+        },
+        {
+            icon: <Users size={15} aria-hidden="true" />,
+            label: "Classified",
+            value: `${results.length - dnfCount}/${results.length}`,
+            sub: null,
+        },
+        {
+            icon: <AlertTriangle size={15} aria-hidden="true" />,
+            label: "DNF / Retired",
+            value: dnfCount,
+            sub: null,
+        },
+    ];
+
+    return (
+        <div className="lr-pulse-grid">
+            {tiles.map((tile) => (
+                <div className={`lr-pulse-tile${tile.accent ? " lr-pulse-tile--accent" : ""}`} key={tile.label}>
+                    <span className="lr-pulse-tile-icon">{tile.icon}</span>
+                    <span className="lr-pulse-tile-label">{tile.label}</span>
+                    <span className="lr-mono lr-pulse-tile-value">{tile.value}</span>
+                    {tile.sub && <span className="lr-pulse-tile-sub">{tile.sub}</span>}
+                </div>
+            ))}
         </div>
     );
 }
@@ -622,17 +779,112 @@ function NoSessionBanner() {
 
 /* ── Non-live orchestrator ─────────────────────────────────────────── */
 
+/* Three states, determined from actual data/timestamps, never a
+   manually-set label:
+     LIVE                      — handled entirely outside this
+                                  component (see LiveRace() below);
+                                  isLive comes straight from the
+                                  backend's own session-time check.
+     POST-RACE / NO SESSION    — isLive is false AND the most recent
+                                  race (Jolpica current/last) has real
+                                  Results. Full podium/classification/
+                                  weather/gap/position/pulse.
+     UPCOMING / NO RESULTS     — isLive is false AND there are no
+                                  Results yet at all (e.g. between
+                                  seasons) — just the schedule, plus an
+                                  honest empty state rather than
+                                  rendering charts for a race that
+                                  doesn't exist. */
 function NonLiveHub({ race }) {
-    const hub = useRaceHubData(race?.season);
+    const hub = useRaceHubData();
+
+    if (hub.loading) {
+        return (
+            <div className="lr-hub">
+                <NoSessionBanner />
+                <div className="lr-hub-loading">Loading latest results…</div>
+            </div>
+        );
+    }
+
+    const latest = hub.latest;
+
+    /*
+     * Three distinct cases now, not two — getLatestRace (see
+     * grandprixController.js) determines the selected race from the
+     * real calendar, not from Jolpica's own lagging current/last
+     * pointer, so the race's IDENTITY (name/circuit/date) can be known
+     * — and should be shown — even while its classification genuinely
+     * hasn't posted yet:
+     *   1. !latest?.available — no completed race exists at all this
+     *      season (rare: start of a season, or the schedule fetch
+     *      itself failed). Generic empty state, nothing to name.
+     *   2. latest.resultsPending — the race IS known (e.g. Singapore),
+     *      its results just aren't posted yet. Shows its real identity
+     *      plus real historical weather (works from circuit+date alone,
+     *      independent of Results) and an honest "pending" state for
+     *      everything that genuinely needs Results.
+     *   3. Full results available — the complete post-race dashboard.
+     * All three share the SAME markup below — RaceResultsSection,
+     * PostRaceGapChart, PostRaceTeamPositionChart and
+     * PostRaceSessionPulse each already degrade to an honest, race-
+     * specific "pending" message from latest.resultsPending/raceName
+     * when Results is empty, so there's no separate branch needed for
+     * case 2 vs 3 here. */
+    if (!latest?.available) {
+        return (
+            <div className="lr-hub">
+                <NoSessionBanner />
+                <Panel title={<><Trophy size={13} aria-hidden="true" />Recent Grand Prix Results</>} className="lr-panel--full">
+                    <EmptyState title="No completed races yet" description="Results will appear here once a Grand Prix has been completed." />
+                </Panel>
+                <div className="lr-grid lr-grid--6-6">
+                    <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race</>}>
+                        <NextRaceContext hub={hub} race={race} />
+                    </Panel>
+                    <Panel title={<><Cloud size={13} aria-hidden="true" />Next Race Weather</>} className="lr-panel--chalk">
+                        <NextRaceWeatherForecast hub={hub} race={race} />
+                    </Panel>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="lr-hub">
             <NoSessionBanner />
 
-            <Panel title={<><Flag size={13} aria-hidden="true" />Previous Grand Prix</>} className="lr-panel--full lr-panel--chalk">
-                <PreviousGrandPrix hub={hub} />
+            {/* 1-3: identity/date, podium, full classification — one section. */}
+            <Panel title={<><Trophy size={13} aria-hidden="true" />Recent Grand Prix Results</>} className="lr-panel--full">
+                <RaceResultsSection latest={latest} />
             </Panel>
 
+            {/* 4-5: historical race-time weather, then gap/team-position —
+               read in that order left-to-right, top-to-bottom. Weather
+               renders real conditions for this exact race even while its
+               results are still pending — it only needs the circuit +
+               date, never the classification. */}
+            <div className="lr-grid lr-grid--6-6">
+                <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
+                    <PostRaceWeatherSection latest={latest} />
+                </Panel>
+                <Panel title={<><BarChart2 size={13} aria-hidden="true" />Gap to Leader</>}>
+                    <PostRaceGapChart latest={latest} />
+                </Panel>
+            </div>
+
+            <div className="lr-grid lr-grid--6-6">
+                <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Position</>}>
+                    <PostRaceTeamPositionChart latest={latest} />
+                </Panel>
+                {/* 6: session pulse, last in the completed-race priority list. */}
+                <Panel title={<><Signal size={13} aria-hidden="true" />Session Pulse</>}>
+                    <PostRaceSessionPulse latest={latest} />
+                </Panel>
+            </div>
+
+            {/* Upcoming-race information stays in its own clearly labelled
+               section, never mixed into the historical results above. */}
             <div className="lr-grid lr-grid--6-6">
                 <Panel title={<><Calendar size={13} aria-hidden="true" />Next Race</>}>
                     <NextRaceContext hub={hub} race={race} />
@@ -861,7 +1113,12 @@ function SessionPulsePanel({ data, drivers }) {
     );
 }
 
-/* ── Team focus ────────────────────────────────────────────────────── */
+/* ── Team focus — the teammate-vs-teammate comparison, already has a
+   team selector and already compares two drivers' current positions
+   (head row) plus a shared stat set. Same lap-history gap as Team
+   Position below: no per-lap log exists on the live feed, so this
+   stays a current-snapshot comparison rather than a line graph with
+   fabricated history. ─────────────────────────────────────────────── */
 
 /* Championship position isn't part of the live feed at all — this reuses
    the existing historical standings endpoint (already used by pages/
@@ -976,12 +1233,21 @@ function TeamFocus({ drivers, season }) {
 }
 
 /* ── Team / driver performance — real current positions only, grouped
-   by team and ordered by each team's best-placed car. Bar length is a
-   simple inverse-of-position read (P1 = full bar) so the field's shape
-   is visible at a glance; the "TeamName P1 · P9" pairing from the brief
-   is the pos label printed at the end of each bar. ───────────────────── */
+   by team and ordered by each team's best-placed car.
+   A lap-by-lap position LINE graph is the better chart for this, but
+   the live feed (see liveRaceService.js) only ever reports each car's
+   CURRENT Position — no per-lap history is kept anywhere, so a line
+   across laps would mean inventing every point except the last one.
+   Rather than fabricate that history, this stays a current-position
+   comparison (the explicitly allowed fallback) and picks up the two
+   improvements that don't require history: a team filter, and a
+   tooltip that surfaces the race's actual current lap alongside each
+   driver's real position — both genuinely available fields. Bar
+   length is a simple inverse-of-position read (P1 = full bar) so the
+   field's shape is visible at a glance. ───────────────────── */
 
-function TeamPerformanceSection({ drivers }) {
+function TeamPerformanceSection({ drivers, currentLap }) {
+    const [teamFilter, setTeamFilter] = useState("all");
     const fieldSize = drivers.length || 20;
 
     const byTeam = new Map();
@@ -991,32 +1257,44 @@ function TeamPerformanceSection({ drivers }) {
         byTeam.get(d.team).drivers.push(d);
     }
 
-    const teams = Array.from(byTeam.entries())
+    const allTeams = Array.from(byTeam.entries())
         .map(([team, v]) => ({ team, color: v.color, drivers: v.drivers.sort((a, b) => a.position - b.position) }))
         .sort((a, b) => a.drivers[0].position - b.drivers[0].position);
 
-    if (teams.length === 0) {
+    if (allTeams.length === 0) {
         return <EmptyState title="No positions yet" description="Team performance will appear once drivers are classified." />;
     }
 
+    const teams = teamFilter === "all" ? allTeams : allTeams.filter((t) => t.team === teamFilter);
+
     return (
-        <div className="lr-team-perf">
-            {teams.map((t) => (
-                <div className="lr-team-perf-row" key={t.team}>
-                    <span className="lr-team-perf-name">{t.team}</span>
-                    <div className="lr-team-perf-bars">
-                        {t.drivers.map((d) => (
-                            <span className="lr-team-perf-bar-wrap" key={d.driverNumber} title={`${d.driverCode ?? d.driverNumber} P${d.position}`}>
+        <div className="lr-team-perf-wrap">
+            <Select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)} className="lr-team-select">
+                <option value="all">All Teams</option>
+                {allTeams.map((t) => <option key={t.team} value={t.team}>{t.team}</option>)}
+            </Select>
+            <div className="lr-team-perf">
+                {teams.map((t) => (
+                    <div className="lr-team-perf-row" key={t.team}>
+                        <span className="lr-team-perf-name">{t.team}</span>
+                        <div className="lr-team-perf-bars">
+                            {t.drivers.map((d) => (
                                 <span
-                                    className="lr-team-perf-bar"
-                                    style={{ width: `${Math.max(8, ((fieldSize - d.position + 1) / fieldSize) * 100)}%`, background: t.color }}
-                                />
-                                <span className="lr-mono lr-team-perf-pos">P{d.position}</span>
-                            </span>
-                        ))}
+                                    className="lr-team-perf-bar-wrap"
+                                    key={d.driverNumber}
+                                    title={`${d.driverCode ?? d.driverNumber} — P${d.position}${currentLap != null ? ` on lap ${currentLap}` : ""}`}
+                                >
+                                    <span
+                                        className="lr-team-perf-bar"
+                                        style={{ width: `${Math.max(8, ((fieldSize - d.position + 1) / fieldSize) * 100)}%`, background: t.color }}
+                                    />
+                                    <span className="lr-mono lr-team-perf-pos">P{d.position}</span>
+                                </span>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
@@ -1125,6 +1403,87 @@ function BattlesSection({ drivers }) {
    recharts, already a project dependency, rather than adding a new
    chart library. ────────────────────────────────────────────────── */
 
+/* A thin stem + a small circular marker at the tip, drawn as one custom
+   Bar `shape` rather than reaching for a second chart type — recharts
+   hands the shape function the bar's own pixel geometry (x/y/width/
+   height), so the stem is just a line from the axis origin to the
+   bar's end and the marker is a circle at that same end point. The
+   leader gets a slightly larger, outlined marker instead of a colour
+   change — "highlighted", not re-themed. */
+function LollipopShape(props) {
+    const { x, y, width, height, payload } = props;
+    const cy = y + height / 2;
+    const tipX = x + width;
+    const isLeader = payload.gap === 0;
+    return (
+        <g>
+            <line x1={x} y1={cy} x2={tipX} y2={cy} stroke={payload.color} strokeWidth={2} strokeLinecap="round" />
+            <circle
+                cx={tipX}
+                cy={cy}
+                r={isLeader ? 6 : 4.5}
+                fill={payload.color}
+                stroke={isLeader ? "var(--text-primary)" : "none"}
+                strokeWidth={isLeader ? 1.5 : 0}
+            />
+        </g>
+    );
+}
+
+/* Shared by the live Gap to Leader chart and the post-race version
+   below — same rows shape ({code, gap, color}), same lollipop
+   rendering, just a different `leadLabel` ("LEADER" vs "WINNER") and
+   empty-state copy, so there's exactly one lollipop implementation
+   rather than two near-identical copies. */
+function GapLollipopChart({ rows, leadLabel, EmptyIcon, emptyTitle, emptyDesc }) {
+    if (rows.length === 0) {
+        return (
+            <div className="lr-compact-empty">
+                <EmptyIcon size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">{emptyTitle}</span>
+                    <span className="lr-compact-empty-desc">{emptyDesc}</span>
+                </div>
+            </div>
+        );
+    }
+
+    const maxGap = Math.max(...rows.map((r) => r.gap));
+
+    return (
+        <div className="lr-bar-chart" style={{ height: rows.length * 22 + 28 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 48, bottom: 8, left: 0 }} barCategoryGap={3}>
+                    <XAxis
+                        type="number"
+                        domain={[0, Math.max(1, maxGap * 1.08)]}
+                        tickFormatter={(v) => `${v.toFixed(0)}s`}
+                        tickLine={false}
+                        axisLine={{ stroke: "var(--lr-border)" }}
+                        tick={{ fontFamily: "var(--font-mono)", fontSize: 9, fill: "var(--lr-text-secondary)" }}
+                    />
+                    <YAxis
+                        type="category"
+                        dataKey="code"
+                        width={36}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                    />
+                    <Bar dataKey="gap" shape={LollipopShape} barSize={14} isAnimationActive={false}>
+                        <LabelList
+                            dataKey="gap"
+                            position="right"
+                            formatter={(v) => (v === 0 ? leadLabel : `+${v.toFixed(3)}`)}
+                            style={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                        />
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
 function GapToLeaderChart({ drivers }) {
     const rows = drivers
         .filter((d) => d.status === "racing" && d.position != null)
@@ -1136,41 +1495,351 @@ function GapToLeaderChart({ drivers }) {
         .filter((r) => r.gap !== null)
         .sort((a, b) => a.gap - b.gap);
 
-    if (rows.length === 0) {
+    return (
+        <GapLollipopChart
+            rows={rows}
+            leadLabel="LEADER"
+            EmptyIcon={BarChart2}
+            emptyTitle="NO GAP DATA YET"
+            emptyDesc="Gaps will appear once the leader has set a reference lap."
+        />
+    );
+}
+
+/* ── Post-race Gap to Leader — same lollipop, sourced from the
+   completed race's real classification. A lapped-but-classified
+   driver (status "+1 Lap") has no Time.time to parse into seconds —
+   parseGapSeconds already returns null for anything that doesn't
+   start with "+N.NNN", so those drivers (and retirees, who have
+   neither) are correctly left off the chart rather than plotted with
+   an invented gap. ─────────────────────────────────────────────────── */
+function PostRaceGapChart({ latest }) {
+    const results = latest?.Results ?? [];
+    const rows = results
+        .map((r) => {
+            const isWinner = r.position === "1";
+            const gap = isWinner ? 0 : parseGapSeconds(r.Time?.time);
+            if (gap === null) return null;
+            return {
+                code: r.Driver.code ?? r.Driver.driverId,
+                gap,
+                color: getTeamAccent(r.Constructor.constructorId),
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.gap - b.gap);
+
+    return (
+        <GapLollipopChart
+            rows={rows}
+            leadLabel="WINNER"
+            EmptyIcon={BarChart2}
+            emptyTitle={latest?.resultsPending ? "CLASSIFICATION PENDING" : "NO GAP DATA"}
+            emptyDesc={
+                latest?.resultsPending
+                    ? `${latest?.raceName ?? "This race"}'s results haven't posted yet.`
+                    : "Timing gaps weren't recorded for this race."
+            }
+        />
+    );
+}
+
+/* ── Post-race Weather — race-TIME conditions for the completed race,
+   never the next GP's forecast and never "live" weather (there is no
+   live session). See server/services/weatherService.js getRaceWeather:
+   a single nearest-hour reading at the real race start (point), plus
+   how many of the archive's hourly samples that fall within the race's
+   own actual elapsed time (start -> start+winner's real race duration)
+   were wet vs dry (condition) — a genuine, if sometimes coarse,
+   real distribution, never invented percentages. Mirrors
+   useWeatherForecast's shape/behavior exactly, just a different
+   endpoint and no forecast-specific fields (precipitationProbability,
+   forecastFor). ────────────────────────────────────────────────────── */
+function useRaceWeather(lat, lon, startIso, durationMs) {
+    const hasParams = lat != null && lon != null && Boolean(startIso);
+    const key = `${lat}|${lon}|${startIso}|${durationMs}`;
+
+    const [state, setState] = useState({ seenKey: key, status: hasParams ? "loading" : "unavailable", data: null });
+    if (state.seenKey !== key) {
+        setState({ seenKey: key, status: hasParams ? "loading" : "unavailable", data: null });
+    }
+
+    useEffect(() => {
+        if (!hasParams) return undefined;
+        let cancelled = false;
+
+        const durationPart = durationMs != null ? `&durationMs=${durationMs}` : "";
+        fetch(`${API}/weather/race?lat=${lat}&lon=${lon}&start=${encodeURIComponent(startIso)}${durationPart}`)
+            .then((res) => (res.ok ? res.json() : { available: false }))
+            .then((json) => {
+                if (cancelled) return;
+                setState((s) => ({ ...s, status: json?.available ? "ready" : "unavailable", data: json?.available ? json : null }));
+            })
+            .catch(() => {
+                if (!cancelled) setState((s) => ({ ...s, status: "error", data: null }));
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [lat, lon, startIso, durationMs, hasParams]);
+
+    return state;
+}
+
+const CONDITION_SLICE_COLOR = { Dry: "var(--success)", Wet: "var(--accent)" };
+
+function PostRaceWeatherSection({ latest }) {
+    const location = latest?.Circuit?.Location;
+    const lat = location?.lat != null ? Number(location.lat) : null;
+    const lon = location?.long != null ? Number(location.long) : null;
+    const startIso = latest?.date && latest?.time ? `${latest.date}T${latest.time}` : null;
+    const winner = latest?.Results?.find((r) => r.position === "1");
+    const durationMs = winner?.Time?.millis != null ? Number(winner.Time.millis) : null;
+
+    const weather = useRaceWeather(lat, lon, startIso, durationMs);
+
+    if (weather.status === "loading" || weather.status === "idle") {
+        return <div className="lr-hub-loading">Loading race weather…</div>;
+    }
+
+    // "clearly show Race weather unavailable rather than using unrelated
+    // or fabricated values" — exactly this, word for word, no fallback.
+    if (weather.status !== "ready" || !weather.data) {
         return (
             <div className="lr-compact-empty">
-                <BarChart2 size={18} aria-hidden="true" />
+                <Cloud size={18} aria-hidden="true" />
                 <div className="lr-compact-empty-body">
-                    <span className="lr-compact-empty-title">NO GAP DATA YET</span>
-                    <span className="lr-compact-empty-desc">Gaps will appear once the leader has set a reference lap.</span>
+                    <span className="lr-compact-empty-title">RACE WEATHER UNAVAILABLE</span>
+                    <span className="lr-compact-empty-desc">Historical conditions couldn't be retrieved for this race.</span>
+                </div>
+            </div>
+        );
+    }
+
+    const { point, condition } = weather.data;
+    const slices = [
+        condition?.drySamples > 0 && { name: "Dry", value: condition.drySamples },
+        condition?.wetSamples > 0 && { name: "Wet", value: condition.wetSamples },
+    ].filter(Boolean);
+    const totalSamples = condition?.totalSamples ?? 0;
+
+    const metrics = [
+        point?.airTemperature != null && { icon: <Thermometer size={14} aria-hidden="true" />, label: "Air", value: `${Math.round(point.airTemperature)}°C` },
+        point?.humidity != null && { icon: <Droplets size={14} aria-hidden="true" />, label: "Humidity", value: `${point.humidity}%` },
+        point?.windSpeed != null && { icon: <Wind size={14} aria-hidden="true" />, label: "Wind", value: `${Math.round(point.windSpeed)} m/s` },
+    ].filter(Boolean);
+
+    if (!point && totalSamples === 0) {
+        return (
+            <div className="lr-compact-empty">
+                <Cloud size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">RACE WEATHER UNAVAILABLE</span>
+                    <span className="lr-compact-empty-desc">Historical conditions couldn't be retrieved for this race.</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="lr-bar-chart" style={{ height: rows.length * 22 + 4 }}>
-            <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 48, bottom: 0, left: 0 }} barCategoryGap={3}>
-                    <XAxis type="number" hide />
-                    <YAxis
-                        type="category"
-                        dataKey="code"
-                        width={36}
-                        axisLine={false}
+        <div className="lr-weather">
+            {slices.length > 0 ? (
+                <div className="lr-weather-donut">
+                    <ResponsiveContainer width="100%" height={130}>
+                        <PieChart>
+                            <Pie data={slices} dataKey="value" nameKey="name" innerRadius={38} outerRadius={58} paddingAngle={2} isAnimationActive={false}>
+                                {slices.map((s) => <Cell key={s.name} fill={CONDITION_SLICE_COLOR[s.name]} stroke="var(--lr-surface-card)" strokeWidth={2} />)}
+                            </Pie>
+                            <Tooltip content={<DonutTooltip unit="sample" />} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <ul className="lr-weather-donut-legend">
+                        {slices.map((s) => (
+                            <li key={s.name}>
+                                <span className="lr-weather-donut-swatch" style={{ background: CONDITION_SLICE_COLOR[s.name] }} aria-hidden="true" />
+                                {s.name} <b className="lr-mono">{Math.round((s.value / totalSamples) * 100)}%</b>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : (
+                <div className="lr-compact-empty lr-compact-empty--inline">
+                    <CircleDashed size={16} aria-hidden="true" />
+                    <span className="lr-compact-empty-desc">Not enough hourly samples for a condition breakdown.</span>
+                </div>
+            )}
+            {metrics.length > 0 && (
+                <div className="lr-weather-metrics">
+                    {metrics.map((m) => (
+                        <div className="lr-weather-metric" key={m.label}>
+                            {m.icon}
+                            <span className="lr-mono">{m.value}</span>
+                            <small>{m.label}</small>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ── Post-race Team Position — a genuine lap-by-lap LINE chart, unlike
+   the live dashboard's Team Position (which stays a current-position
+   bar comparison because the live feed has no lap history at all —
+   see TeamPerformanceSection's own comment). For a COMPLETED race,
+   Jolpica's /laps.json genuinely has every driver's position after
+   every lap (see server/controllers/grandprixController.js
+   getRaceLaps) — real historical data, not generated. Defaults to the
+   race-winning team so it opens on two readable lines; the selector
+   switches which team's pair is plotted, same UX as the live Team
+   Focus/Team Position filters. ───────────────────────────────────── */
+function useRaceLaps(season, round) {
+    const key = season && round ? `${season}:${round}` : null;
+
+    // Reset synchronously during render when the race changes, same
+    // pattern useWeatherForecast/useRaceWeather already use above —
+    // the effect below only does the fetch, never an initial setState.
+    const [state, setState] = useState({ key, status: key ? "loading" : "idle", laps: [] });
+    if (state.key !== key) {
+        setState({ key, status: key ? "loading" : "idle", laps: [] });
+    }
+
+    useEffect(() => {
+        if (!key) return undefined;
+        let cancelled = false;
+
+        fetch(`${API}/grandprixdashboard/laps/${season}/${round}`)
+            .then((res) => (res.ok ? res.json() : []))
+            .then((laps) => {
+                if (cancelled) return;
+                setState({ key, status: Array.isArray(laps) && laps.length > 0 ? "ready" : "unavailable", laps: Array.isArray(laps) ? laps : [] });
+            })
+            .catch(() => {
+                if (!cancelled) setState({ key, status: "error", laps: [] });
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [key, season, round]);
+
+    return state;
+}
+
+function PostRaceTeamPositionChart({ latest }) {
+    const season = latest?.season;
+    const round = latest?.round;
+    const lapData = useRaceLaps(season, round);
+
+    const driverMeta = new Map();
+    for (const r of latest?.Results ?? []) {
+        driverMeta.set(r.Driver.driverId, {
+            code: r.Driver.code ?? r.Driver.driverId,
+            team: r.Constructor.name,
+            color: getTeamAccent(r.Constructor.constructorId),
+        });
+    }
+
+    const teams = Array.from(new Set(Array.from(driverMeta.values()).map((m) => m.team))).sort();
+    const winnerTeam = driverMeta.get(latest?.Results?.find((r) => r.position === "1")?.Driver.driverId)?.team;
+    const [teamFilter, setTeamFilter] = useState(null);
+    // Guards against a stale selection from a previous race (e.g. the
+    // hub reloading for a new season) pointing at a team that no
+    // longer exists in this race's field.
+    const activeTeam = (teamFilter && teams.includes(teamFilter)) ? teamFilter : (winnerTeam ?? teams[0] ?? null);
+
+    if (lapData.status === "loading" || lapData.status === "idle") {
+        return <div className="lr-hub-loading">Loading lap-by-lap positions…</div>;
+    }
+    if (lapData.status !== "ready") {
+        return (
+            <div className="lr-compact-empty">
+                <Shuffle size={18} aria-hidden="true" />
+                <div className="lr-compact-empty-body">
+                    <span className="lr-compact-empty-title">{latest?.resultsPending ? "LAP DATA PENDING" : "LAP HISTORY UNAVAILABLE"}</span>
+                    <span className="lr-compact-empty-desc">
+                        {latest?.resultsPending
+                            ? `${latest?.raceName ?? "This race"}'s lap-by-lap data hasn't posted yet.`
+                            : "Lap-by-lap positions couldn't be retrieved for this race."}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    const teamDriverIds = Array.from(driverMeta.entries())
+        .filter(([, m]) => m.team === activeTeam)
+        .map(([id]) => id);
+
+    const fieldSize = driverMeta.size || 20;
+    const chartRows = lapData.laps.map((l) => {
+        const row = { lap: l.lap };
+        for (const id of teamDriverIds) {
+            const code = driverMeta.get(id)?.code;
+            if (l.positions[id] != null) row[code] = l.positions[id];
+        }
+        return row;
+    });
+
+    return (
+        <div className="lr-team-perf-wrap">
+            <Select value={activeTeam ?? ""} onChange={(e) => setTeamFilter(e.target.value)} className="lr-team-select">
+                {teams.map((t) => <option key={t} value={t}>{t}</option>)}
+            </Select>
+            <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={chartRows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                    <XAxis
+                        dataKey="lap"
+                        type="number"
+                        domain={["dataMin", "dataMax"]}
                         tickLine={false}
+                        axisLine={{ stroke: "var(--lr-border)" }}
                         tick={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                        label={{ value: "LAP", position: "insideBottomRight", offset: -4, fontSize: 9, fill: "var(--lr-text-secondary)" }}
                     />
-                    <Bar dataKey="gap" radius={[0, 3, 3, 0]} barSize={11} isAnimationActive={false}>
-                        {rows.map((r) => <Cell key={r.code} fill={r.color} />)}
-                        <LabelList
-                            dataKey="gap"
-                            position="right"
-                            formatter={(v) => (v === 0 ? "LEADER" : `+${v.toFixed(3)}`)}
-                            style={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
-                        />
-                    </Bar>
-                </BarChart>
+                    <YAxis
+                        type="number"
+                        domain={[1, fieldSize]}
+                        reversed
+                        allowDecimals={false}
+                        tickLine={false}
+                        axisLine={false}
+                        width={28}
+                        tick={{ fontFamily: "var(--font-mono)", fontSize: 10, fill: "var(--lr-text-secondary)" }}
+                        tickFormatter={(v) => `P${v}`}
+                    />
+                    <Tooltip
+                        content={({ active, payload, label }) => {
+                            if (!active || !payload?.length) return null;
+                            return (
+                                <div className="lr-donut-tooltip lr-mono">
+                                    LAP {label}
+                                    {payload.map((p) => (
+                                        <div key={p.dataKey}>{p.dataKey}: P{p.value}</div>
+                                    ))}
+                                </div>
+                            );
+                        }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-mono)" }} />
+                    {teamDriverIds.map((id, i) => {
+                        const meta = driverMeta.get(id);
+                        return (
+                            <Line
+                                key={id}
+                                type="monotone"
+                                dataKey={meta.code}
+                                name={meta.code}
+                                stroke={meta.color}
+                                strokeWidth={2}
+                                strokeDasharray={i === 1 ? "5 3" : undefined}
+                                dot={false}
+                                isAnimationActive={false}
+                            />
+                        );
+                    })}
+                </LineChart>
             </ResponsiveContainer>
         </div>
     );
@@ -1245,47 +1914,118 @@ function TyreStrategySection({ drivers, sessionType }) {
 
 /* ── Weather ───────────────────────────────────────────────────────── */
 
-/* Current-snapshot indicator bars, not a time-series graph — the live
-   feed's weather.timestamp is always null (no history is ever kept, see
-   liveRaceService.js), so a trend line would have to be invented. These
-   bars only ever encode the single latest reading against a fixed,
-   sensible scale for that metric. */
+/* Air/track temperature, humidity and wind are single point-in-time
+   readings (weather.timestamp is always null — no history is ever
+   kept, see liveRaceService.js), so they're shown as compact icon
+   metrics, never as a trend. There's no categorical weather field on
+   the feed either (no "sunny/cloudy/overcast" enum to slice a donut
+   by), so the donut doesn't touch temperature/humidity at all — it
+   plots the one real categorical distribution this page already has:
+   the field's current tyre-compound mix. Compound choice is a direct,
+   real proxy for track conditions (wet tyres out = a wet track), which
+   is exactly the "track-condition distribution from actual data"
+   fallback this was built for, not a stand-in for the weather numbers
+   themselves. */
 const WEATHER_METRICS = [
-    { key: "airTemperature", label: "Air Temp", unit: "°C", Icon: Thermometer, max: 45 },
-    { key: "trackTemperature", label: "Track Temp", unit: "°C", Icon: Thermometer, max: 60 },
-    { key: "humidity", label: "Humidity", unit: "%", Icon: Droplets, max: 100 },
-    { key: "windSpeed", label: "Wind", unit: " m/s", Icon: Wind, max: 15 },
+    { key: "airTemperature", label: "Air", unit: "°C", Icon: Thermometer },
+    { key: "trackTemperature", label: "Track", unit: "°C", Icon: Thermometer },
+    { key: "humidity", label: "Humidity", unit: "%", Icon: Droplets },
+    { key: "windSpeed", label: "Wind", unit: "m/s", Icon: Wind },
 ];
 
-function WeatherSection({ weather }) {
+const COMPOUND_SLICE_COLOR = {
+    SOFT: "var(--accent)",
+    MEDIUM: "var(--warning)",
+    HARD: "var(--color-cararra)",
+    INTERMEDIATE: "var(--success)",
+    WET: "var(--lr-text-secondary)",
+};
+
+/* Shared by the live tyre-compound donut and the post-race wet/dry
+   donut — just a different unit noun ("car"/"sample"). */
+function DonutTooltip({ active, payload, unit = "item" }) {
+    if (!active || !payload?.length) return null;
+    const p = payload[0];
+    return (
+        <div className="lr-donut-tooltip lr-mono">
+            {p.name} — {p.value} {unit}{p.value === 1 ? "" : "s"}
+        </div>
+    );
+}
+
+function WeatherSection({ weather, drivers }) {
     if (!weather) {
         return <EmptyState title="No weather data" description="Live conditions will appear once the session reports them." />;
     }
 
-    const rows = WEATHER_METRICS
-        .filter((m) => weather[m.key] != null)
-        .map((m) => ({ ...m, value: weather[m.key], pct: Math.max(2, Math.min(100, (weather[m.key] / m.max) * 100)) }));
-
+    const metrics = WEATHER_METRICS.filter((m) => weather[m.key] != null);
     const isWet = weather.rainfall != null && weather.rainfall > 0;
 
+    const compoundCounts = new Map();
+    for (const d of drivers ?? []) {
+        if (!d.currentTyre) continue;
+        compoundCounts.set(d.currentTyre, (compoundCounts.get(d.currentTyre) ?? 0) + 1);
+    }
+    const totalWithTyres = Array.from(compoundCounts.values()).reduce((a, b) => a + b, 0);
+    const slices = Array.from(compoundCounts.entries()).map(([compound, count]) => ({
+        name: COMPOUND_LABELS[compound] ? `${compound[0]}${compound.slice(1).toLowerCase()}` : compound,
+        value: count,
+        pct: Math.round((count / totalWithTyres) * 100),
+        fill: COMPOUND_SLICE_COLOR[compound] ?? "var(--lr-border)",
+    }));
+
     return (
-        <div className="lr-weather-bars">
-            {rows.map((m) => (
-                <div className="lr-weather-row" key={m.key}>
-                    <span className="lr-weather-label"><m.Icon size={13} aria-hidden="true" />{m.label}</span>
-                    <span className="lr-weather-track"><span className="lr-weather-fill" style={{ width: `${m.pct}%` }} /></span>
-                    <span className="lr-mono lr-weather-value">{m.value}{m.unit}</span>
+        <div className="lr-weather">
+            {slices.length > 0 ? (
+                <div className="lr-weather-donut">
+                    <ResponsiveContainer width="100%" height={150}>
+                        <PieChart>
+                            <Pie
+                                data={slices}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={42}
+                                outerRadius={64}
+                                paddingAngle={2}
+                                isAnimationActive={false}
+                            >
+                                {slices.map((s) => <Cell key={s.name} fill={s.fill} stroke="var(--lr-surface-card)" strokeWidth={2} />)}
+                            </Pie>
+                            <Tooltip content={<DonutTooltip unit="car" />} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    <ul className="lr-weather-donut-legend">
+                        {slices.map((s) => (
+                            <li key={s.name}>
+                                <span className="lr-weather-donut-swatch" style={{ background: s.fill }} aria-hidden="true" />
+                                {s.name} <b className="lr-mono">{s.pct}%</b>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
-            ))}
-            {weather.rainfall != null && (
-                <div className="lr-weather-row">
-                    <span className="lr-weather-label"><Droplets size={13} aria-hidden="true" />Track</span>
-                    <span className="lr-weather-track">
-                        <span className={`lr-weather-fill${isWet ? " lr-weather-fill--wet" : " lr-weather-fill--dry"}`} style={{ width: isWet ? "100%" : "10%" }} />
-                    </span>
-                    <span className="lr-mono lr-weather-value">{isWet ? "RAIN" : "DRY"}</span>
+            ) : (
+                <div className="lr-compact-empty lr-compact-empty--inline">
+                    <CircleDashed size={16} aria-hidden="true" />
+                    <span className="lr-compact-empty-desc">No tyre data yet for a track-condition breakdown.</span>
                 </div>
             )}
+
+            <div className="lr-weather-metrics">
+                {metrics.map((m) => (
+                    <div className="lr-weather-metric" key={m.key}>
+                        <m.Icon size={14} aria-hidden="true" />
+                        <span className="lr-mono">{weather[m.key]}{m.unit}</span>
+                        <small>{m.label}</small>
+                    </div>
+                ))}
+                {weather.rainfall != null && (
+                    <div className="lr-weather-metric">
+                        <Droplets size={14} aria-hidden="true" />
+                        <span className="lr-mono">{isWet ? "WET" : "DRY"}</span>
+                        <small>Track</small>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -1357,7 +2097,78 @@ function RaceControlSection({ events }) {
 
 /* ── Team radio ────────────────────────────────────────────────────── */
 
+function formatClipDuration(seconds) {
+    if (seconds == null || !Number.isFinite(seconds)) return null;
+    const total = Math.round(seconds);
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/* A compact play/pause button + the clip's REAL duration, read off the
+   audio element's own loaded metadata — never assumed. A clip whose
+   URL 404s or never loads (a stale session path is the usual cause,
+   see f1LiveTimingService.teamRadioUrl) falls back to the same
+   "unavailable" state recordingUrl === null already uses, rather than
+   sitting there as a native control stuck at a dead "0:00 / 0:00". */
+function RadioClipPlayer({ src }) {
+    const audioRef = useRef(null);
+    const [state, setState] = useState("loading"); // loading | ready | error
+    const [playing, setPlaying] = useState(false);
+    const [duration, setDuration] = useState(null);
+
+    const toggle = () => {
+        const el = audioRef.current;
+        if (!el) return;
+        if (playing) el.pause();
+        else el.play().catch(() => setState("error"));
+    };
+
+    if (state === "error") {
+        return (
+            <span className="lr-radio-unavailable">
+                <RadioIcon size={12} aria-hidden="true" /> unavailable
+            </span>
+        );
+    }
+
+    return (
+        <span className="lr-radio-player">
+            <audio
+                ref={audioRef}
+                src={src}
+                preload="metadata"
+                onLoadedMetadata={(e) => {
+                    const d = e.currentTarget.duration;
+                    if (Number.isFinite(d) && d > 0) {
+                        setDuration(d);
+                        setState("ready");
+                    } else {
+                        setState("error");
+                    }
+                }}
+                onError={() => setState("error")}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onEnded={() => setPlaying(false)}
+            />
+            <button
+                type="button"
+                className="lr-radio-play"
+                onClick={toggle}
+                disabled={state !== "ready"}
+                aria-label={playing ? "Pause clip" : "Play clip"}
+            >
+                {playing ? <Pause size={12} aria-hidden="true" /> : <Play size={12} aria-hidden="true" />}
+            </button>
+            <span className="lr-mono lr-radio-duration">
+                {state === "ready" ? formatClipDuration(duration) : "—:—"}
+            </span>
+        </span>
+    );
+}
+
 function TeamRadioSection({ teamRadio, drivers }) {
+    const [teamFilter, setTeamFilter] = useState("all");
+
     if (teamRadio.length === 0) {
         return (
             <div className="lr-compact-empty">
@@ -1369,32 +2180,46 @@ function TeamRadioSection({ teamRadio, drivers }) {
             </div>
         );
     }
-    const newestFirst = [...teamRadio].reverse();
+
+    const teams = Array.from(new Set(teamRadio.map((r) => r.team).filter(Boolean))).sort();
+    const newestFirst = [...teamRadio].reverse().filter((r) => teamFilter === "all" || r.team === teamFilter);
+
     return (
-        <ul className="lr-radio">
-            {newestFirst.map((r, i) => {
-                const driver = drivers.find((d) => d.driverNumber === r.driverNumber);
-                const time = r.timestamp
-                    ? new Date(r.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-                    : "—";
-                return (
-                    <li className="lr-radio-item" key={`${r.driverNumber}-${r.timestamp}-${i}`}>
-                        <span className="lr-mono lr-radio-time">{time}</span>
-                        <DriverAvatar code={driver?.driverCode ?? (r.driverNumber ? String(r.driverNumber) : "?")} color={driver?.teamColor} size="sm" />
-                        <span className="lr-radio-driver" title={driver?.name ?? r.team ?? ""}>{driver?.driverCode ?? (r.driverNumber ? `#${r.driverNumber}` : "?")}</span>
-                        <span className="lr-radio-line" aria-hidden="true" />
-                        {r.recordingUrl ? (
-                            <audio controls preload="none" src={r.recordingUrl} className="lr-radio-player" />
-                        ) : (
-                            <span className="lr-radio-unavailable">
-                                <RadioIcon size={12} aria-hidden="true" /> unavailable
-                            </span>
-                        )}
-                        {i === 0 && <span className="lr-radio-new">NEW</span>}
-                    </li>
-                );
-            })}
-        </ul>
+        <div className="lr-radio-wrap">
+            <Select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)} className="lr-team-select">
+                <option value="all">All Teams</option>
+                {teams.map((t) => <option key={t} value={t}>{t}</option>)}
+            </Select>
+
+            {newestFirst.length === 0 ? (
+                <EmptyState title="No clips for this team" description="Switch teams or pick All Teams." />
+            ) : (
+                <ul className="lr-radio">
+                    {newestFirst.map((r, i) => {
+                        const driver = drivers.find((d) => d.driverNumber === r.driverNumber);
+                        const time = r.timestamp
+                            ? new Date(r.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+                            : "—";
+                        return (
+                            <li className="lr-radio-item" key={`${r.driverNumber}-${r.timestamp}-${i}`}>
+                                <span className="lr-mono lr-radio-time">{time}</span>
+                                <DriverAvatar code={driver?.driverCode ?? (r.driverNumber ? String(r.driverNumber) : "?")} color={driver?.teamColor} size="sm" />
+                                <span className="lr-radio-driver" title={driver?.name ?? r.team ?? ""}>{driver?.driverCode ?? (r.driverNumber ? `#${r.driverNumber}` : "?")}</span>
+                                <span className="lr-radio-team" title={r.team ?? ""}>{r.team ?? "—"}</span>
+                                {r.recordingUrl ? (
+                                    <RadioClipPlayer src={r.recordingUrl} />
+                                ) : (
+                                    <span className="lr-radio-unavailable">
+                                        <RadioIcon size={12} aria-hidden="true" /> unavailable
+                                    </span>
+                                )}
+                                {i === 0 && <span className="lr-radio-new">NEW</span>}
+                            </li>
+                        );
+                    })}
+                </ul>
+            )}
+        </div>
     );
 }
 
@@ -1528,7 +2353,7 @@ function LiveRace() {
                         <GapToLeaderChart drivers={drivers} />
                     </Panel>
                     <Panel title={<><Shuffle size={13} aria-hidden="true" />Team Position</>}>
-                        <TeamPerformanceSection drivers={drivers} />
+                        <TeamPerformanceSection drivers={drivers} currentLap={data.race?.currentLap} />
                     </Panel>
                 </div>
 
@@ -1543,7 +2368,7 @@ function LiveRace() {
 
                 <div className="lr-grid lr-grid--6-6">
                     <Panel title={<><Cloud size={13} aria-hidden="true" />Weather</>}>
-                        <WeatherSection weather={data.weather} />
+                        <WeatherSection weather={data.weather} drivers={drivers} />
                     </Panel>
                     <Panel title={<><RadioIcon size={13} aria-hidden="true" />Team Radio</>}>
                         <TeamRadioSection teamRadio={data.teamRadio ?? []} drivers={drivers} />

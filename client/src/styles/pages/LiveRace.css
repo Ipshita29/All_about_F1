@@ -443,22 +443,60 @@
 .lr-pulse-live { display: inline-flex; align-items: center; gap: 5px; color: var(--success); font-weight: 700; letter-spacing: 0.04em; }
 .lr-pulse-live .lr-badge-dot { width: 6px; height: 6px; background: currentColor; animation: lr-pulse 1.6s ease-in-out infinite; }
 
-/* ── Weather — current-snapshot indicator bars, not a trend graph (the
-   feed never carries history, only the latest reading). ─────────────── */
+/* ── Weather — a donut of the field's current tyre-compound mix (a
+   real track-condition distribution, not invented weather percentages)
+   plus compact icon metrics for the single-reading fields (air/track
+   temp, humidity, wind — the feed never carries history for these). ── */
 
-.lr-weather-bars { display: flex; flex-direction: column; gap: 10px; }
+.lr-weather { display: flex; flex-direction: column; gap: var(--space-4); }
 
-.lr-weather-row { display: grid; grid-template-columns: 84px 1fr 56px; align-items: center; gap: var(--space-3); }
+.lr-weather-donut { display: flex; align-items: center; gap: var(--space-3); }
+.lr-weather-donut > div:first-child { flex: 1 1 140px; min-width: 0; }
 
-.lr-weather-label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-micro); color: var(--lr-text-secondary); }
-.lr-weather-label svg { flex-shrink: 0; opacity: 0.8; }
+.lr-weather-donut-legend {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    font-size: var(--text-micro);
+    color: var(--lr-text-secondary);
+    flex-shrink: 0;
+}
 
-.lr-weather-track { height: 6px; border-radius: 3px; background: var(--lr-surface-inner); overflow: hidden; }
-.lr-weather-fill { display: block; height: 100%; border-radius: 3px; background: var(--lr-text-technical); }
-.lr-weather-fill--wet { background: var(--accent); }
-.lr-weather-fill--dry { background: var(--success); }
+.lr-weather-donut-legend li { display: flex; align-items: center; gap: 6px; }
+.lr-weather-donut-legend b { margin-left: auto; color: var(--text-primary); }
 
-.lr-weather-value { font-size: var(--text-small); text-align: right; color: var(--text-primary); }
+.lr-weather-donut-swatch { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.lr-donut-tooltip {
+    background: var(--lr-surface-header);
+    border: 1px solid var(--lr-border);
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    font-size: var(--text-micro);
+    color: var(--text-primary);
+}
+
+.lr-weather-metrics { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+.lr-weather-metric {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--radius-full);
+    background: var(--lr-surface-inner);
+    color: var(--lr-text-secondary);
+    font-size: var(--text-small);
+}
+
+.lr-weather-metric svg { flex-shrink: 0; opacity: 0.8; }
+.lr-weather-metric .lr-mono { color: var(--text-primary); font-weight: 600; }
+.lr-weather-metric small { color: var(--lr-text-secondary); }
+
+.lr-compact-empty--inline { padding: var(--space-3) 0; }
 
 /* ── Team Focus (live) ─────────────────────────────────────────────── */
 
@@ -539,6 +577,9 @@
 
 /* ── Team / driver performance — compact bar-per-driver visualization,
    grouped by team, from real current positions only. ────────────────── */
+
+.lr-team-perf-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.lr-team-perf-wrap .lr-team-select { align-self: flex-start; min-width: 160px; }
 
 .lr-team-perf { display: flex; flex-direction: column; gap: 10px; }
 
@@ -770,6 +811,9 @@
    a connecting rule, then the clip), capped and internally scrollable.
    Not the earlier stacked, multi-line card list: this is the "17:48 GAS
    ──────── ▶ audio" density a timing feed actually wants. */
+.lr-radio-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.lr-radio-wrap .lr-team-select { align-self: flex-start; min-width: 160px; }
+
 .lr-radio {
     list-style: none;
     display: flex;
@@ -792,13 +836,14 @@
 
 .lr-radio-driver { font-weight: 700; color: var(--text-primary); font-size: var(--text-small); flex-shrink: 0; width: 34px; }
 
-.lr-radio-line {
+.lr-radio-team {
     flex: 1 1 auto;
-    min-width: 16px;
-    height: 1px;
-    background-image: linear-gradient(to right, var(--lr-border) 50%, transparent 0%);
-    background-size: 6px 1px;
-    background-repeat: repeat-x;
+    min-width: 0;
+    font-size: var(--text-micro);
+    color: var(--lr-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .lr-radio-new {
@@ -813,7 +858,30 @@
     padding: 2px 8px;
 }
 
-.lr-radio-player { flex: 1 1 140px; max-width: 220px; min-width: 0; height: 28px; }
+/* Compact custom player — a small play/pause circle + the clip's real
+   duration, not the full native scrubber the old <audio controls>
+   rendered (and could show stuck at 0:00 / 0:00 for a dead URL). */
+.lr-radio-player { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.lr-radio-player audio { display: none; }
+
+.lr-radio-play {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--lr-surface-inner);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.lr-radio-play:hover:not(:disabled) { background: var(--accent); color: #fff; }
+.lr-radio-play:disabled { opacity: 0.5; cursor: default; }
+
+.lr-radio-duration { font-size: var(--text-micro); color: var(--lr-text-secondary); width: 34px; }
 
 .lr-radio-unavailable { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-micro); color: var(--text-faint); flex-shrink: 0; }
 
@@ -853,75 +921,64 @@
     color: var(--lr-text-secondary);
 }
 
-/* ── Previous Grand Prix — Netflix-style driver results carousel ─────
-   Fixed-width cards in a natively horizontally-scrolling flex track
-   (wheel/trackpad scroll just works, no library). The active card
-   (hover or keyboard focus) scales up in place via transform + a
-   raised z-index — no width/layout change, so neighbours never
-   reflow or jump. ─────────────────────────────────────────────────── */
+/* ── Recent Grand Prix Results — a compact top-3 podium followed by
+   the full classification table, on this hub's dark panels (matching
+   the rest of the dashboard's instrument-panel tone, not the chalk/
+   editorial treatment the old driver carousel used) so the same
+   dark-theme tokens the live Gap/Team Position/Weather panels already
+   use work here unchanged — no light/dark variant of the same chart
+   code needed. ────────────────────────────────────────────────────── */
 
-.lr-gp { display: flex; flex-direction: column; gap: var(--space-3); }
+.lr-gp { display: flex; flex-direction: column; gap: var(--space-4); }
 
 .lr-gp-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
-.lr-gp-name { font-size: var(--text-h2); font-weight: 800; color: var(--lr-light-text); letter-spacing: -0.01em; }
+.lr-gp-name { font-size: var(--text-h2); font-weight: 800; color: var(--text-primary); letter-spacing: -0.01em; }
 
-.lr-gp-meta { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-small); color: var(--lr-light-text-2); }
+.lr-gp-meta { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-small); color: var(--lr-text-secondary); }
 .lr-gp-meta svg { flex-shrink: 0; opacity: 0.7; }
-.lr-gp-meta .lr-mono { margin-left: 4px; color: var(--lr-light-text-3); }
+.lr-gp-meta .lr-mono { margin-left: 4px; color: var(--text-faint); }
 
-.lr-gp-track {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-4);
-    overflow-x: auto;
-    overflow-y: visible;
-    scroll-snap-type: x proximity;
-    padding: var(--space-6) var(--space-2) var(--space-3);
-    margin: 0 calc(-1 * var(--space-2));
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
+/* Flex, not a 3-equal-column grid — a grid's 1fr columns stretched
+   every photo to fill whatever width the panel had (400px+ portraits
+   on a wide screen), which was the actual cause of the oversized
+   podium. Each step now sizes to its OWN fixed width instead, with P1
+   deliberately wider/taller than P2/P3; the whole thing lands at
+   roughly 128px (P1 photo) + ~6px gap + ~80px of text ≈ 215-260px tall,
+   comfortably inside a 250-350px podium. */
+.lr-podium { display: flex; justify-content: center; align-items: flex-end; gap: var(--space-5); }
 
-.lr-gp-track::-webkit-scrollbar { display: none; }
+.lr-podium-step { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; flex: 0 0 96px; }
+.lr-podium-step--p1 { order: 2; flex-basis: 124px; }
+.lr-podium-step--p2 { order: 1; }
+.lr-podium-step--p3 { order: 3; }
 
-.lr-gp-card {
-    flex: 0 0 168px;
-    scroll-snap-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transform: scale(1);
-    transform-origin: center top;
-    transition: transform var(--dur-normal) var(--ease);
-    outline: none;
-}
-
-.lr-gp-card--active { transform: scale(1.16); z-index: 2; }
-
-.lr-gp-card-photo {
+.lr-podium-photo {
     position: relative;
-    aspect-ratio: 5 / 7;
-    border-radius: 10px;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
     overflow: hidden;
-    background: linear-gradient(180deg, rgba(25, 25, 25, 0.08), rgba(25, 25, 25, 0.02));
-    border: 2px solid transparent;
-    transition: border-color var(--dur-fast) var(--ease);
+    background: linear-gradient(180deg, var(--lr-surface-inner), var(--lr-surface-card));
+    border: 1px solid var(--lr-border);
 }
 
-.lr-gp-card--active .lr-gp-card-photo { border-color: var(--lr-gp-accent, var(--accent)); }
+.lr-podium-step--p1 .lr-podium-photo { border: 2px solid var(--accent); }
+.lr-podium-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 
-.lr-gp-card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+/* A thin team-colour strip under the photo — the "subtle team-color
+   accent" the brief asks for, kept small enough that it never
+   competes with the restrained red P1 highlight above. */
+.lr-podium-team-bar { display: block; width: 100%; height: 3px; border-radius: 2px; margin-top: -2px; }
 
-.lr-gp-card-body { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+.lr-podium-pos { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--lr-text-secondary); font-size: var(--text-micro); }
+.lr-podium-step--p1 .lr-podium-pos { color: var(--accent); font-weight: 700; font-size: var(--text-small); }
 
-.lr-gp-card-pos { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--lr-light-text-3); }
-.lr-gp-card--active .lr-gp-card-pos { color: var(--accent); }
+.lr-podium-name { font-size: var(--text-micro); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.lr-podium-step--p1 .lr-podium-name { font-size: var(--text-small); }
+.lr-podium-team { font-size: 0.62rem; color: var(--lr-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
-.lr-gp-card-name { font-size: var(--text-small); font-weight: 700; color: var(--lr-light-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lr-gp-card-team { font-size: var(--text-micro); color: var(--lr-light-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.lr-gp-card-line { font-size: var(--text-micro); color: var(--lr-light-text-2); display: flex; flex-direction: column; gap: 1px; }
-.lr-gp-card-line small { font-family: var(--font-sans); font-size: 0.58rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--lr-light-text-3); }
+.lr-podium-line { font-size: 0.62rem; color: var(--text-primary); display: flex; flex-direction: column; gap: 1px; }
+.lr-podium-line small { font-family: var(--font-sans); font-size: 0.56rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 
@@ -933,5 +990,11 @@
 
 @media (max-width: 640px) {
     .lr-panel { padding: 16px; }
-    .lr-gp-card { flex-basis: 126px; }
+    .lr-weather-donut { flex-direction: column; align-items: stretch; }
+    .lr-weather-donut-legend { flex-direction: row; flex-wrap: wrap; gap: var(--space-3); }
+    .lr-podium { flex-wrap: wrap; gap: var(--space-4); }
+    .lr-podium-step, .lr-podium-step--p1 { flex-basis: 108px; }
+    .lr-podium-step--p1 { order: 0; }
+    .lr-podium-step--p2 { order: 1; }
+    .lr-podium-step--p3 { order: 2; }
 }
