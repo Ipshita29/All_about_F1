@@ -9,12 +9,12 @@
  *
  *   Hero (dark) → NextGrandPrix (light) → GridInvite (floating) →
  *   PlatformOverview (dark) → RaceIntelligence (light) →
- *   ChampionshipSection (dark) → PaddockNews (light) →
- *   PaddockDirectory (dark) → GarageFooter (dark), with PitWallRadio floating.
+ *   ChampionshipSection (dark) → PaddockDirectory (dark) →
+ *   GarageFooter (dark), with PitWallRadio floating.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Flag, Newspaper, Radio, Shield, Sparkles, Users, X } from "lucide-react";
+import { BookOpen, Flag, Radio, Shield, Sparkles, Users, X } from "lucide-react";
 
 import { Button } from "../components/UI";
 import useCountdown from "../hooks/useCountdown";
@@ -27,9 +27,6 @@ import {
     positionsGained,
     isFavouriteDriver,
     isFavouriteTeam,
-    articleIsForYou,
-    formatArticleTime,
-    isRelevantF1Article,
 } from "../utils/landingHelpers";
 import { getWordOfTheDay } from "../utils/dictionaryHelpers";
 
@@ -475,94 +472,6 @@ function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
- * FROM THE PADDOCK — quiet editorial news section on a light Cararra
- * surface: one featured story with a fixed-ratio image, three
- * text-only supporting stories. Articles are filtered to exclude
- * stories clearly about a different racing series before display.
- * ══════════════════════════════════════════════════════════════════ */
-
-function ForYouTag() {
-    return <span className="lp-news-foryou">FOR YOU</span>;
-}
-
-/* Small thumbnail for a supporting story. Same real article.image field
-   the featured story and the News page both use — this was previously
-   just never rendered here at all, not a bad data source; a neutral
-   surface fills in only if the image genuinely has none or fails to load. */
-function NewsThumb({ article, className }) {
-    const [failed, setFailed] = useState(false);
-    const hasImage = Boolean(article.image) && !failed;
-    return (
-        <span className={`news-item-img${hasImage ? "" : " news-item-img--missing"}${className ? ` ${className}` : ""}`} aria-hidden="true">
-            {hasImage ? (
-                <img src={article.image} alt="" loading="lazy" onError={() => setFailed(true)} />
-            ) : (
-                <span className="news-item-img-mark">FROM THE PADDOCK</span>
-            )}
-        </span>
-    );
-}
-
-function PaddockNews({ articles, favs, error }) {
-    const relevant = (articles || []).filter(isRelevantF1Article);
-
-    if (error) {
-        return (
-            <section className="news" aria-label="Formula 1 news">
-                <SectionHeader onLight eyebrow="LATEST STORIES" title="From The Paddock" />
-                <p className="lp-inline-state">NEWS FEED UNAVAILABLE — COULD NOT REACH THE NEWS SERVER</p>
-            </section>
-        );
-    }
-
-    if (!relevant.length) return null;
-
-    const [featured, ...rest] = relevant;
-    const supporting = rest.slice(0, 3);
-
-    return (
-        <section className="news" aria-label="Formula 1 news">
-            <div className="news-head">
-                <SectionHeader onLight eyebrow="LATEST STORIES" title="From The Paddock" />
-                <Button variant="secondary" to="/news" arrow>View All Stories</Button>
-            </div>
-
-            <div className="news-grid">
-                <a href={featured.url} target="_blank" rel="noreferrer" className="news-featured">
-                    <NewsThumb article={featured} className="news-featured-img" />
-                    <div className="news-featured-body">
-                        <p className="news-meta">
-                            {featured.source?.toUpperCase()} · {formatArticleTime(featured.publishedAt)}
-                            {articleIsForYou(featured, favs) && <ForYouTag />}
-                        </p>
-                        <h3 className="news-featured-title">{featured.title}</h3>
-                        {featured.description && <p className="news-featured-desc">{featured.description}</p>}
-                        <span className="news-readmore">READ STORY →</span>
-                    </div>
-                </a>
-
-                <div className="news-side">
-                    {supporting.map((article) => (
-                        <a key={article.id} href={article.url} target="_blank" rel="noreferrer" className="news-item">
-                            <NewsThumb article={article} className="news-item-img--large" />
-                            <div className="news-item-body">
-                                <p className="news-meta">
-                                    {article.source?.toUpperCase()} · {formatArticleTime(article.publishedAt)}
-                                    {articleIsForYou(article, favs) && <ForYouTag />}
-                                </p>
-                                <h3 className="news-item-title">{article.title}</h3>
-                                {article.description && <p className="news-item-desc">{article.description}</p>}
-                                <span className="news-readmore">READ STORY →</span>
-                            </div>
-                        </a>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ══════════════════════════════════════════════════════════════════
  * Floating "Term of the Day" chip — a quiet nudge toward the F1
  * Dictionary. Appears only after the visitor scrolls past the hero,
  * hides while the footer is on screen. The term comes from the
@@ -691,8 +600,7 @@ const DESTINATIONS = [
     { n: "03", to: "/grandprixdashboard", label: "Race Weekend", copy: "Every GP, session & result", icon: Flag },
     { n: "04", to: "/drivers", label: "Drivers", copy: "The full grid", icon: Users },
     { n: "05", to: "/teams", label: "Teams", copy: "Constructors", icon: Shield },
-    { n: "06", to: "/news", label: "News", copy: "Inside the paddock", icon: Newspaper },
-    { n: "07", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen },
+    { n: "06", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen },
 ];
 
 function PaddockDirectory({ isLive }) {
@@ -764,7 +672,6 @@ const FOOTER_GROUPS = [
     {
         title: "FOLLOW",
         links: [
-            { to: "/news", label: "News" },
             { to: "/dictionary", label: "F1 Dictionary" },
         ],
     },
@@ -825,8 +732,6 @@ function LandingPage() {
     const [driverStandings, setDriverStandings] = useState([]);
     const [constructorStandings, setConstructorStandings] = useState([]);
     const [latestRace, setLatestRace] = useState(null);
-    const [newsArticles, setNewsArticles] = useState([]);
-    const [newsError, setNewsError] = useState(false);
 
     /* re-evaluated every minute so a session flips to LIVE without a reload */
     const [minuteTick, setMinuteTick] = useState(0);
@@ -871,16 +776,6 @@ function LandingPage() {
     }, []);
 
     useEffect(() => {
-        fetch(`${API}/news`)
-            .then((res) => res.json())
-            .then((data) => {
-                if (Array.isArray(data)) setNewsArticles(data);
-                else setNewsError(true);
-            })
-            .catch(() => setNewsError(true));
-    }, []);
-
-    useEffect(() => {
         const id = setInterval(() => setMinuteTick((t) => t + 1), 60000);
         return () => clearInterval(id);
     }, []);
@@ -920,8 +815,6 @@ function LandingPage() {
                 constructorStandings={constructorStandings}
                 favs={favs}
             />
-
-            <PaddockNews articles={newsArticles} favs={favs} error={newsError} />
 
             <PaddockDirectory isLive={Boolean(liveSession)} />
 
