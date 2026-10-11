@@ -586,68 +586,52 @@ function PitWallRadio({ favs, footerRef }) {
 
 /* ══════════════════════════════════════════════════════════════════
  * EVERY ROAD IN — the site's directory, not a generic nav-card grid.
- * Live leads as one dominant full-width feature (it's the only
- * destination with something genuinely time-sensitive to show); the
- * other six sit in an even two-column grid below. The live indicator
- * reuses the exact liveSession value the rest of the homepage already
- * computes from the real schedule — never a fabricated "on air" state.
+ * Six equal destination tiles in a 3×2 grid, alternating red and
+ * white/cream accents over the shared black card surface — a
+ * checkered-flag rhythm using only the site's red/white/black palette.
+ * The live indicator on the Live tile reuses the exact liveSession
+ * value the rest of the homepage already computes from the real
+ * schedule — never a fabricated "on air" state.
  * ══════════════════════════════════════════════════════════════════ */
 
-const LIVE_DESTINATION = { n: "01", to: "/live", label: "Live", copy: "The race as it happens", icon: Radio };
-
 const DESTINATIONS = [
-    { n: "02", to: "/predictor", label: "Predictor", copy: "Predict the grid", icon: Sparkles },
-    { n: "03", to: "/grandprixdashboard", label: "Race Weekend", copy: "Every GP, session & result", icon: Flag },
-    { n: "04", to: "/drivers", label: "Drivers", copy: "The full grid", icon: Users },
-    { n: "05", to: "/teams", label: "Teams", copy: "Constructors", icon: Shield },
-    { n: "06", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen },
+    { n: "01", to: "/live", label: "Live", copy: "The race as it happens", icon: Radio, accent: "red" },
+    { n: "02", to: "/predictor", label: "Predictor", copy: "Predict the grid", icon: Sparkles, accent: "white" },
+    { n: "03", to: "/grandprixdashboard", label: "Race Weekend", copy: "Every GP, session & result", icon: Flag, accent: "red" },
+    { n: "04", to: "/drivers", label: "Drivers", copy: "The full grid", icon: Users, accent: "white" },
+    { n: "05", to: "/teams", label: "Teams", copy: "Constructors", icon: Shield, accent: "red" },
+    { n: "06", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen, accent: "white" },
 ];
 
 function PaddockDirectory({ isLive }) {
-    const LiveIcon = LIVE_DESTINATION.icon;
     return (
         <section className="lp-paddock" aria-label="The Paddock — every destination">
             <SectionHeader eyebrow="EXPLORE" title="EVERY ROAD IN" description="Your way into every part of Formula 1." />
             <span className="lp-paddock-meta">
-                {String(DESTINATIONS.length + 1).padStart(2, "0")} DESTINATIONS · {SEASON}
+                {String(DESTINATIONS.length).padStart(2, "0")} DESTINATIONS · {SEASON}
             </span>
 
-            <div className="lp-paddock-directory">
-                <Link to={LIVE_DESTINATION.to} className="lp-paddock-feature">
-                    <div className="lp-paddock-feature-left">
-                        <span className="lp-paddock-feature-icon" aria-hidden="true"><LiveIcon size={22} /></span>
-                        <div>
-                            <span className="lp-paddock-feature-num">{LIVE_DESTINATION.n}</span>
-                            <h3 className="lp-paddock-feature-title">{LIVE_DESTINATION.label.toUpperCase()}</h3>
-                            <p className="lp-paddock-feature-copy">{LIVE_DESTINATION.copy}</p>
-                        </div>
-                    </div>
-                    <div className="lp-paddock-feature-right">
-                        {isLive && (
-                            <span className="lp-paddock-live-dot">
-                                <i aria-hidden="true" /> LIVE
-                            </span>
-                        )}
-                        <span className="lp-paddock-arrow" aria-hidden="true">→</span>
-                    </div>
-                </Link>
-
-                <div className="lp-paddock-grid">
-                    {DESTINATIONS.map((d) => {
-                        const Icon = d.icon;
-                        return (
-                            <Link key={d.to} to={d.to} className="lp-paddock-tile">
-                                <div className="lp-paddock-tile-head">
-                                    <span className="lp-paddock-tile-num">{d.n}</span>
-                                    <Icon size={18} className="lp-paddock-tile-icon" aria-hidden="true" />
-                                </div>
-                                <h3>{d.label.toUpperCase()}</h3>
-                                <p>{d.copy}</p>
-                                <span className="lp-paddock-tile-go">ENTER <i aria-hidden="true">→</i></span>
-                            </Link>
-                        );
-                    })}
-                </div>
+            <div className="lp-paddock-grid">
+                {DESTINATIONS.map((d) => {
+                    const Icon = d.icon;
+                    const live = d.to === "/live" && isLive;
+                    return (
+                        <Link key={d.to} to={d.to} className="lp-paddock-tile" data-accent={d.accent}>
+                            <div className="lp-paddock-tile-head">
+                                <span className="lp-paddock-tile-icon" aria-hidden="true"><Icon size={20} /></span>
+                                {live && (
+                                    <span className="lp-paddock-live-dot">
+                                        <i aria-hidden="true" /> LIVE
+                                    </span>
+                                )}
+                            </div>
+                            <span className="lp-paddock-tile-num">{d.n}</span>
+                            <h3 className="lp-paddock-tile-title">{d.label.toUpperCase()}</h3>
+                            <p className="lp-paddock-tile-copy">{d.copy}</p>
+                            <span className="lp-paddock-tile-go">ENTER <i aria-hidden="true">→</i></span>
+                        </Link>
+                    );
+                })}
             </div>
         </section>
     );
