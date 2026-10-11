@@ -126,14 +126,17 @@
 
 /* ── Metric rows, centered beneath the cards ─────────────────────── */
 
-.cmp-metrics { display: flex; flex-direction: column; width: 100%; max-width: 460px; margin: 0 auto; }
+/* Spans the same width as .cmp-cards above it (no inner max-width) so
+   each side's value column sits directly under that side's card
+   instead of floating as a narrower, visually disconnected block. */
+.cmp-metrics { display: flex; flex-direction: column; width: 100%; }
 
 .cmp-row {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    gap: var(--space-4);
-    padding: 12px 0;
+    gap: var(--space-5);
+    padding: 14px 0;
     border-bottom: 1px solid var(--border-faint);
 }
 
@@ -145,15 +148,18 @@
     font-weight: 500;
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
+    line-height: 1.1;
 }
 
 .cmp-row-val--a { text-align: right; }
 .cmp-row-val--b { text-align: left; }
+/* The better figure: bolder and brighter, never a colour swap — a
+   subtle cue, not a scoreboard. */
 .cmp-row-val.is-lead { font-weight: 700; color: var(--text-primary); }
 
 .cmp-row-label {
     font-size: 0.62rem;
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     text-align: center;

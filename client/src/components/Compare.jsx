@@ -114,6 +114,24 @@ export function EntitySelect({
                 </svg>
             </button>
 
+            {/* Only shown once something is actually picked — clears this
+                side back to the placeholder/empty state rather than
+                forcing a re-pick from the dropdown to change your mind. */}
+            {selected && (
+                <button
+                    type="button"
+                    className="ex-combo-clear"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onChange("");
+                    }}
+                    aria-label={`Remove ${getLabel(selected)}`}
+                    title="Remove"
+                >
+                    <X size={14} strokeWidth={2.5} aria-hidden="true" />
+                </button>
+            )}
+
             {open && (
                 <div className="ex-combo-panel" role="listbox">
                     <div className="ex-combo-search">
