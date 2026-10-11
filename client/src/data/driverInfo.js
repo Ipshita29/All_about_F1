@@ -929,6 +929,42 @@ const driverInfo = {
     instagram: "@arvidlindblad",
     twitter: "@ArvidLindblad"
   }
+},
+
+"Sergio Pérez": {
+  nickname: "Checo / Minister of Defence",
+  description:
+    "Sergio Pérez is a Mexican Formula 1 driver who made his debut with Sauber in 2011 and went on to race for Force India/Racing Point, Red Bull Racing, and now Cadillac F1 from 2026. His best championship finish was runner-up in 2023, and he was a key part of Red Bull's title-winning seasons as Max Verstappen's teammate.",
+  drivingStyle:
+    "Known as the 'Minister of Defence' for his ability to hold position under pressure and defend using every inch of the track. Also an exceptional tyre manager, often able to stretch a strategy further than his rivals late in a race.",
+  championships: 0,
+  raceWins: 6,
+  podiums: 39,
+  polePositions: 3,
+  debut: "2011 Australian Grand Prix (Sauber)",
+  bestSeason: "2023 — Runner-up in the Drivers' Championship with Red Bull",
+  careerHighlights: [
+    "First Mexican Formula 1 race winner — 2020 Sakhir Grand Prix",
+    "Runner-up in the 2023 Drivers' Championship",
+    "Six Grand Prix victories across Racing Point and Red Bull",
+    "39 career podium finishes",
+    "Returns to the grid with Cadillac F1's debut season in 2026"
+  ],
+  famousRaces: [
+    "2020 Sakhir Grand Prix — First F1 win after recovering from last place on lap one",
+    "2021 Abu Dhabi Grand Prix — Decisive defensive drive that held up Lewis Hamilton for Verstappen's title fight"
+  ],
+  funFacts: [
+    "He is widely known by his nickname 'Checo'.",
+    "He is the most experienced Mexican driver in Formula 1 history.",
+    "He returns to the grid with Cadillac F1 in 2026 after a year away from the sport."
+  ],
+  quote:
+    "I never give up, I always try until the end.",
+  socials: {
+    instagram: "@schecoperez",
+    twitter: "@SChecoPerez"
+  }
 }
 
 };

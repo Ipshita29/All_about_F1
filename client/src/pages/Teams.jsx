@@ -26,6 +26,7 @@ function Teams() {
     const [loadedYear, setLoadedYear] = useState(null);
     const [standings, setStandings] = useState([]);
     const [driverStandings, setDriverStandings] = useState([]);
+    const [teamPodiums, setTeamPodiums] = useState({});
     const [search, setSearch] = useState("");
     const [year, setYear] = useState("2026");
     const [compareOpen, setCompareOpen] = useState(false);
@@ -33,9 +34,11 @@ function Teams() {
 
     /* The six metrics the Compare Teams modal shows — reuses this page's
        own already-fetched standings (position/points/wins-this-season)
-       plus the shared teamInfo career data (championships/founded).
-       Team podiums have no data source anywhere in the app, so that
-       metric honestly shows as unavailable rather than a guess. */
+       plus the shared teamInfo career data (championships/founded) and
+       teamPodiums (career podiums, fetched below — see that effect for
+       why this needed its own endpoint). podiums is left undefined
+       (renders as "—") only while that fetch hasn't resolved yet for
+       this constructor, never guessed. */
     const teamCompareMetrics = (team) => {
         const s = standings.find((s) => s.Constructor.constructorId === team.constructorId);
         const info = teamInfo[team.constructorId];
@@ -43,7 +46,7 @@ function Teams() {
             position: s?.position,
             points: s?.points,
             wins: s?.wins,
-            podiums: undefined,
+            podiums: teamPodiums[team.constructorId],
             championships: info?.championships,
             debut: info?.founded,
         };
@@ -79,6 +82,21 @@ function Teams() {
             .then((data) => setDriverStandings(Array.isArray(data) ? data : []))
             .catch(() => setDriverStandings([]));
     }, [year]);
+
+    /* Career podium counts — all-time, independent of the selected year,
+       so this only fetches the constructors Compare hasn't already seen
+       (switching years rarely introduces a genuinely new constructorId).
+       See teamController.getConstructorPodiums for why this needed its
+       own endpoint rather than a field already on constructor/standings. */
+    useEffect(() => {
+        const ids = teams.map((t) => t.constructorId).filter((id) => id && !(id in teamPodiums));
+        if (ids.length === 0) return;
+        fetch(`${API}/teams/podiums?ids=${ids.join(",")}`)
+            .then((res) => (res.ok ? res.json() : {}))
+            .then((data) => setTeamPodiums((prev) => ({ ...prev, ...data })))
+            .catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [teams]);
 
     const filtered = teams.filter((t) =>
         t.name.toLowerCase().includes(search.toLowerCase())
