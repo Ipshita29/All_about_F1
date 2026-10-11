@@ -2,9 +2,9 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL as API } from "../config/api";
 
-/* Exactly the nine navbar destinations, in order — All About F1 (the
+/* Exactly the eight navbar destinations, in order — All About F1 (the
    wordmark, already the leftmost element and always linking home) ·
-   Live · Predictor · Race Weekend · Drivers · Teams · News ·
+   Live · Predictor · Race Weekend · Drivers · Teams ·
    F1 Dictionary · Profile (the account avatar, not a text link here). */
 const PRIMARY_LINKS = [
     { to: "/live", label: "Live" },
@@ -12,7 +12,6 @@ const PRIMARY_LINKS = [
     { to: "/grandprixdashboard", label: "Race Weekend" },
     { to: "/drivers", label: "Drivers" },
     { to: "/teams", label: "Teams" },
-    { to: "/news", label: "News" },
     { to: "/dictionary", label: "F1 Dictionary" },
 ];
 

@@ -9,7 +9,6 @@ const connectDB = require("./config/db")
 const authRoutes = require("./routes/authRoutes")
 const authMiddleware = require("./middleware/authMiddleware");
 const userRoutes = require("./routes/userRoutes");
-const newsRoutes = require ("./routes/news.js");
 const liveRaceRoutes = require("./routes/liveRaceRoutes");
 const predictorRoutes = require("./routes/predictorRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
@@ -37,7 +36,6 @@ app.use("/drivers",driverRoutes)
 app.use("/grandprixdashboard",grandprixRoutes)
 app.use("/auth", authRoutes)
 app.use("/user", userRoutes);
-app.use("/news", newsRoutes);
 app.use("/api/live", liveRaceRoutes);
 app.use("/api/predictor", predictorRoutes);
 app.use("/weather", weatherRoutes);

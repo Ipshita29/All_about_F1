@@ -14,7 +14,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import F1Dictionary from "./pages/F1Dictionary";
 import DictionaryCategory from "./pages/DictionaryCategory";
 import DictionaryTerm from "./pages/DictionaryTerm";
-import NewsPage from "./pages/NewsPage";
 import LiveRace from "./pages/LiveRace";
 import Predictor from "./pages/Predictor"
 import "./App.css";
@@ -44,7 +43,6 @@ function AppShell() {
         <Route path="/dictionary" element={<F1Dictionary />} />
         <Route path="/dictionary/category/:categorySlug" element={<DictionaryCategory />} />
         <Route path="/dictionary/:slug" element={<DictionaryTerm />} />
-        <Route path="/news" element={<NewsPage />} />
         <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </>
