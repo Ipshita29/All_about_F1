@@ -27,6 +27,9 @@ import {
     positionsGained,
     isFavouriteDriver,
     isFavouriteTeam,
+    getLocalDriverPortrait,
+    getTeamColor,
+    getTeamLogo,
 } from "../utils/landingHelpers";
 import { getWordOfTheDay } from "../utils/dictionaryHelpers";
 
@@ -382,16 +385,100 @@ function RaceIntelligence({ race }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
- * THE TITLE FIGHT — a curated top 3, not a standings table. An
- * accessible DRIVERS | CONSTRUCTORS toggle switches which
- * championship is shown; "View Full Standings" hands off to the
- * real roster page for the rest.
+ * THE TITLE FIGHT — a cinematic top-3 leaderboard, not a standings
+ * table. Near-black canvas, a glowing red/teal track-curve backdrop
+ * with a moving light trail, three horizontal cards (driver portrait,
+ * team, points) with a staggered entrance and an animated point
+ * count-up, and a glowing P1 highlight. An accessible DRIVERS |
+ * CONSTRUCTORS toggle switches which championship is shown; "View
+ * Full Standings" hands off to the real roster page for the rest.
  * ══════════════════════════════════════════════════════════════════ */
 
 const VIEWS = [
     { id: "drivers", label: "DRIVERS" },
     { id: "constructors", label: "CONSTRUCTORS" },
 ];
+
+function initialsOf(text) {
+    return (text || "")
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+}
+
+/* Decorative only: a pair of glowing track curves (racing red + a
+   subtle teal secondary line) with one bright segment animated along
+   the red curve via stroke-dashoffset — a moving "light trail", not a
+   literal motion-path, so it stays cheap and works in every browser. */
+function ChampTrackGlow() {
+    return (
+        <svg
+            className="champ-track"
+            viewBox="0 0 1200 500"
+            fill="none"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+        >
+            <path
+                className="champ-track-line champ-track-line--red"
+                d="M-60 420 C 180 420, 220 300, 340 260 C 460 220, 520 120, 700 110 C 880 100, 950 180, 1260 160"
+            />
+            <path
+                className="champ-track-line champ-track-line--teal"
+                d="M-60 480 C 220 480, 300 380, 440 340 C 600 300, 680 220, 900 210 C 1040 205, 1100 230, 1260 220"
+            />
+            <path
+                className="champ-track-trail"
+                d="M-60 420 C 180 420, 220 300, 340 260 C 460 220, 520 120, 700 110 C 880 100, 950 180, 1260 160"
+            />
+        </svg>
+    );
+}
+
+/* Counts up from its previous value to `value` whenever it changes —
+   initial mount, a fresh standings fetch, or a tab switch all read as
+   a genuine recount rather than a static number. Jumps straight to
+   the final value under prefers-reduced-motion. */
+function AnimatedPoints({ value }) {
+    const target = Number(value) || 0;
+    const prefersReducedMotion =
+        typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    const [display, setDisplay] = useState(target);
+    const fromRef = useRef(target);
+
+    useEffect(() => {
+        if (prefersReducedMotion) {
+            fromRef.current = target;
+            return undefined;
+        }
+
+        const from = fromRef.current;
+        if (from === target) return undefined;
+
+        const duration = 900;
+        const start = performance.now();
+        let raf;
+
+        const tick = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setDisplay(Math.round(from + (target - from) * eased));
+            if (progress < 1) {
+                raf = requestAnimationFrame(tick);
+            } else {
+                fromRef.current = target;
+            }
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, prefersReducedMotion]);
+
+    return <>{(prefersReducedMotion ? target : display).toLocaleString("en-US")}</>;
+}
 
 function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
     const [view, setView] = useState("drivers");
@@ -412,72 +499,95 @@ function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
 
     return (
         <section className="champ" aria-label="Championship standings">
-            <div className="champ-head">
-                <SectionHeader eyebrow="WORLD CHAMPIONSHIP" title="The Title Fight" />
-                <div className="champ-toggle" role="tablist" aria-label="Championship type">
-                    {VIEWS.map((v, i) => (
-                        <button
-                            key={v.id}
-                            ref={(el) => (tabRefs.current[i] = el)}
-                            role="tab"
-                            aria-selected={view === v.id}
-                            tabIndex={view === v.id ? 0 : -1}
-                            className={`champ-tab${view === v.id ? " is-active" : ""}`}
-                            onClick={() => setView(v.id)}
-                            onKeyDown={(e) => onTabKeyDown(e, i)}
-                        >
-                            {v.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {!hasData ? (
-                <p className="lp-inline-state">STANDINGS UNAVAILABLE</p>
-            ) : (
-                <ol className="champ-podium">
-                    {top3.map((s, i) => {
-                        const driver = isDrivers ? s.Driver : null;
-                        const constructor = isDrivers ? s.Constructors?.[0] : s.Constructor;
-                        const fav = isDrivers
-                            ? isFavouriteDriver(favs, driver) || isFavouriteTeam(favs, constructor)
-                            : isFavouriteTeam(favs, constructor);
-                        const isLeader = i === 0;
-                        return (
-                            <li
-                                key={isDrivers ? driver.driverId : constructor.constructorId}
-                                className={`champ-spot${isLeader ? " champ-spot--leader" : ""}`}
+            <ChampTrackGlow />
+            <div className="champ-inner">
+                <div className="champ-head">
+                    <SectionHeader eyebrow="WORLD CHAMPIONSHIP" title="The Title Fight" />
+                    <div className="champ-toggle" role="tablist" aria-label="Championship type">
+                        {VIEWS.map((v, i) => (
+                            <button
+                                key={v.id}
+                                ref={(el) => (tabRefs.current[i] = el)}
+                                role="tab"
+                                aria-selected={view === v.id}
+                                tabIndex={view === v.id ? 0 : -1}
+                                className={`champ-tab${view === v.id ? " is-active" : ""}`}
+                                onClick={() => setView(v.id)}
+                                onKeyDown={(e) => onTabKeyDown(e, i)}
                             >
-                                <div className="champ-spot-top">
-                                    <span className="champ-spot-pos">P{s.position}</span>
-                                    {isLeader && <span className="champ-spot-tag">CHAMPIONSHIP LEADER</span>}
-                                    {fav && <span className="champ-spot-fav">FAV</span>}
-                                </div>
+                                {v.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                                <h3 className="champ-spot-name">
-                                    {isDrivers ? (
-                                        <>{driver.givenName} <b>{driver.familyName}</b></>
-                                    ) : (
-                                        <b>{constructor.name}</b>
-                                    )}
-                                </h3>
-                                <p className="champ-spot-team">
-                                    {isDrivers ? constructor?.name : constructor.nationality}
-                                </p>
+                {!hasData ? (
+                    <p className="lp-inline-state">STANDINGS UNAVAILABLE</p>
+                ) : (
+                    <ol className="champ-podium">
+                        {top3.map((s, i) => {
+                            const driver = isDrivers ? s.Driver : null;
+                            const constructor = isDrivers ? s.Constructors?.[0] : s.Constructor;
+                            const fav = isDrivers
+                                ? isFavouriteDriver(favs, driver) || isFavouriteTeam(favs, constructor)
+                                : isFavouriteTeam(favs, constructor);
+                            const isLeader = i === 0;
+                            const name = isDrivers ? fullName(driver) : constructor.name;
+                            const portrait = isDrivers ? getLocalDriverPortrait(name) : null;
+                            const teamColor = getTeamColor(constructor?.constructorId) || "var(--accent-text)";
+                            const teamLogo = getTeamLogo(constructor?.constructorId);
 
-                                <div className="champ-spot-pts">
-                                    <span className="champ-spot-pts-value">{s.points}</span>
-                                    <span className="champ-spot-pts-label">POINTS</span>
-                                </div>
-                            </li>
-                        );
-                    })}
-                </ol>
-            )}
+                            return (
+                                <li
+                                    key={isDrivers ? driver.driverId : constructor.constructorId}
+                                    className={`champ-card${isLeader ? " champ-card--leader" : ""}`}
+                                    style={{ "--card-i": i, "--team-color": teamColor }}
+                                >
+                                    <span className="champ-card-rank">P{s.position}</span>
 
-            <Button variant="secondary" to={isDrivers ? "/drivers" : "/teams"} arrow className="champ-more">
-                View Full Standings
-            </Button>
+                                    <span className="champ-card-portrait">
+                                        {portrait ? (
+                                            <img src={portrait} alt="" loading="lazy" />
+                                        ) : teamLogo ? (
+                                            <img src={teamLogo} alt="" className="champ-card-portrait-logo" loading="lazy" />
+                                        ) : (
+                                            <span className="champ-card-portrait-fallback">{initialsOf(name)}</span>
+                                        )}
+                                    </span>
+
+                                    <span className="champ-card-id">
+                                        <h3 className="champ-card-name">
+                                            {isDrivers ? (
+                                                <>{driver.givenName} <b>{driver.familyName}</b></>
+                                            ) : (
+                                                <b>{constructor.name}</b>
+                                            )}
+                                        </h3>
+                                        <p className="champ-card-team">
+                                            {teamLogo && <img src={teamLogo} alt="" className="champ-card-team-logo" loading="lazy" />}
+                                            {isDrivers ? constructor?.name : constructor.nationality}
+                                        </p>
+                                    </span>
+
+                                    <span className="champ-card-badges">
+                                        {isLeader && <span className="champ-card-tag">LEADER</span>}
+                                        {fav && <span className="champ-card-fav">FAV</span>}
+                                    </span>
+
+                                    <span className="champ-card-pts">
+                                        <span className="champ-card-pts-value"><AnimatedPoints value={s.points} /></span>
+                                        <span className="champ-card-pts-label">POINTS</span>
+                                    </span>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                )}
+
+                <Button variant="secondary" to={isDrivers ? "/drivers" : "/teams"} arrow className="champ-more">
+                    View Full Standings
+                </Button>
+            </div>
         </section>
     );
 }

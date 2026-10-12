@@ -416,11 +416,51 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   THE TITLE FIGHT (dark) — .champ-*
+   THE TITLE FIGHT (near-black, cinematic) — .champ-*
+   A glowing red/teal track backdrop with a moving light trail behind
+   three horizontal leaderboard cards. P1 gets a pulsing red glow;
+   P2/P3 carry a quieter teal accent. All motion is disabled under
+   prefers-reduced-motion (see RESPONSIVE/ACCESSIBILITY at the end).
    ══════════════════════════════════════════════════════════════════ */
 
 .champ {
-    background: var(--bg);
+    --champ-teal: #2bd9c9;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1a1414 0%, #0b0b0c 55%, #090909 100%);
+    max-width: 100%;
+}
+
+.champ-track {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.champ-track-line { stroke-width: 2; fill: none; opacity: 0.4; }
+.champ-track-line--red { stroke: var(--color-red-bright); filter: drop-shadow(0 0 10px rgba(229, 52, 45, 0.55)); }
+.champ-track-line--teal { stroke: var(--champ-teal); opacity: 0.22; filter: drop-shadow(0 0 8px rgba(43, 217, 201, 0.45)); }
+
+.champ-track-trail {
+    stroke: #fff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    fill: none;
+    opacity: 0.85;
+    stroke-dasharray: 50 900;
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 16px var(--color-red-bright));
+    animation: champTrailMove 5.5s linear infinite;
+}
+
+@keyframes champTrailMove {
+    to { stroke-dashoffset: -950; }
+}
+
+.champ-inner {
+    position: relative;
+    z-index: 1;
     max-width: var(--content-width);
     margin: 0 auto;
     padding: var(--space-9) var(--space-6) var(--space-8);
@@ -432,12 +472,18 @@
     justify-content: space-between;
     gap: var(--space-4);
     flex-wrap: wrap;
-    margin-bottom: var(--space-7);
+    margin-bottom: var(--space-6);
+}
+
+.champ .section-header-title {
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.015em;
 }
 
 .champ-toggle {
     display: flex;
-    background: var(--surface);
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 3px;
@@ -451,117 +497,204 @@
     border-radius: 5px;
     font-family: var(--font-mono);
     font-size: 0.72rem;
+    font-style: italic;
+    font-weight: 600;
     letter-spacing: 0.06em;
     color: var(--text-muted);
     cursor: pointer;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .champ-tab:hover { opacity: 1; color: var(--text-secondary); }
-.champ-tab.is-active { background: var(--surface-3); color: var(--text-primary); }
+.champ-tab.is-active { background: var(--color-red-bright); color: #fff; }
+
+/* ── Three horizontal leaderboard cards ── */
 
 .champ-podium {
     list-style: none;
     padding: 0;
-    margin: 0 0 var(--space-7);
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
-    align-items: start;
-}
-
-.champ-spot {
+    margin: 0 0 var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    padding: 0 0 0 var(--space-5);
-    border-left: 1px solid var(--border-faint);
+    gap: var(--space-4);
 }
 
-.champ-podium .champ-spot:first-child { padding-left: 0; border-left: none; }
-
-/* P1 — restrained distinction: a quiet elevated panel, bigger type,
-   stronger accent. No colour bar, no glow, no giant card. */
-.champ-spot--leader {
-    background: var(--surface);
-    border: 1px solid var(--border-faint);
+.champ-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px 64px 1fr auto auto;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
     border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    margin: calc(var(--space-3) * -1) 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--border);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-16px);
+    animation: champCardIn 560ms var(--ease) backwards;
+    animation-delay: calc(var(--card-i, 0) * 120ms);
+    transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
-.champ-podium .champ-spot--leader:first-child { padding-left: var(--space-6); }
+@keyframes champCardIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
 
-.champ-spot-top { display: flex; align-items: center; gap: var(--space-3); }
+.champ-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--team-color, var(--champ-teal));
+    opacity: 0.8;
+}
 
-.champ-spot-pos {
+.champ-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--team-color, var(--champ-teal));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.champ-card--leader {
+    border-color: rgba(229, 52, 45, 0.5);
+    background: linear-gradient(120deg, rgba(229, 52, 45, 0.14), rgba(255, 255, 255, 0.02));
+    animation: champCardIn 560ms var(--ease) backwards, champLeaderGlow 2.4s ease-in-out infinite;
+    animation-delay: calc(var(--card-i, 0) * 120ms), 560ms;
+}
+
+@keyframes champLeaderGlow {
+    0%, 100% { box-shadow: 0 0 0 rgba(229, 52, 45, 0); }
+    50% { box-shadow: 0 0 32px rgba(229, 52, 45, 0.45); }
+}
+
+.champ-card--leader:hover { transform: translateY(-3px); border-color: var(--color-red-bright); }
+
+.champ-card-rank {
     font-family: var(--font-mono);
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--text-faint);
-    line-height: 1;
-}
-
-.champ-spot--leader .champ-spot-pos { font-size: 2rem; color: var(--accent-text); }
-
-.champ-spot-tag {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: var(--accent-text);
-}
-
-.champ-spot-name {
     font-size: 1.1rem;
-    font-weight: 500;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--text-faint);
+    text-align: center;
+}
+
+.champ-card--leader .champ-card-rank { font-size: 1.5rem; color: var(--accent-text); }
+
+.champ-card-portrait {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 2px solid var(--team-color, var(--champ-teal));
+    flex-shrink: 0;
+}
+
+.champ-card--leader .champ-card-portrait { width: 68px; height: 68px; box-shadow: 0 0 18px rgba(229, 52, 45, 0.5); }
+
+.champ-card-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.champ-card-portrait-logo { object-fit: contain !important; padding: 8px; }
+
+.champ-card-portrait-fallback {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.champ-card-id { min-width: 0; }
+
+.champ-card-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-style: italic;
     color: var(--text-primary);
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.champ-spot-name b { font-weight: 700; }
-.champ-spot--leader .champ-spot-name { font-size: 1.5rem; }
+.champ-card-name b { font-weight: 800; }
+.champ-card--leader .champ-card-name { font-size: 1.3rem; }
 
-.champ-spot-team {
-    font-size: 0.8rem;
+.champ-card-team {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
     color: var(--text-muted);
-    margin: 0;
+    margin: 2px 0 0;
 }
 
-.champ-spot-fav {
+.champ-card-team-logo { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+
+.champ-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+.champ-card-tag {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #fff;
+    background: var(--color-red-bright);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+}
+
+.champ-card-fav {
     font-family: var(--font-mono);
     font-size: 0.56rem;
     letter-spacing: 0.06em;
-    color: var(--accent-text);
-    border: 1px solid var(--accent-border);
+    color: var(--champ-teal);
+    border: 1px solid rgba(43, 217, 201, 0.4);
     padding: 1px 6px;
     border-radius: var(--radius-full);
 }
 
-.champ-spot-pts {
+.champ-card-pts {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-top: auto;
-    padding-top: var(--space-3);
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+    min-width: 72px;
 }
 
-.champ-spot-pts-value {
+.champ-card-pts-value {
     font-family: var(--font-mono);
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
     color: var(--text-primary);
 }
 
-.champ-spot--leader .champ-spot-pts-value { font-size: 2rem; color: var(--accent-text); }
+.champ-card--leader .champ-card-pts-value { font-size: 1.9rem; color: var(--accent-text); }
 
-.champ-spot-pts-label {
+.champ-card-pts-label {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     letter-spacing: 0.08em;
     color: var(--text-muted);
 }
 
 .champ-more { margin-top: var(--space-2); }
+
+@media (prefers-reduced-motion: reduce) {
+    .champ-track-trail { animation: none; opacity: 0.5; }
+    .champ-card {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+    .champ-card--leader { animation: none; box-shadow: 0 0 20px rgba(229, 52, 45, 0.35); }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    THE PADDOCK (dark) — .lp-paddock-*
@@ -853,7 +986,7 @@
     .next-gp-inner,
     .platform,
     .ri-inner,
-    .champ,
+    .champ-inner,
     .lp-paddock { padding-left: var(--space-4); padding-right: var(--space-4); }
 
     .ri-stats { flex-direction: column; gap: var(--space-5); }
@@ -865,11 +998,19 @@
     }
     .ri-stats .ri-stat:first-child { padding-top: 0; border-top: none; }
 
-    .champ-podium { grid-template-columns: 1fr; gap: var(--space-5); }
-    .champ-spot { border-left: none; padding-left: 0; border-top: 1px solid var(--border-faint); padding-top: var(--space-4); }
-    .champ-podium .champ-spot:first-child { border-top: none; padding-top: 0; }
-    .champ-spot--leader { margin: 0; }
-    .champ-podium .champ-spot--leader:first-child { padding-left: var(--space-5); }
+    .champ-card {
+        grid-template-columns: 36px 44px 1fr auto;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+    }
+    .champ-card-badges { display: none; }
+    .champ-card-portrait { width: 44px; height: 44px; }
+    .champ-card--leader .champ-card-portrait { width: 52px; height: 52px; }
+    .champ-card-name { font-size: 0.92rem; }
+    .champ-card--leader .champ-card-name { font-size: 1.05rem; }
+    .champ-card-team { font-size: 0.7rem; }
+    .champ-card-pts-value { font-size: 1.2rem; }
+    .champ-card--leader .champ-card-pts-value { font-size: 1.4rem; }
 
     .platform-row { grid-template-columns: 32px 1fr 18px; row-gap: 4px; }
     .platform-row-copy { grid-column: 2; }
