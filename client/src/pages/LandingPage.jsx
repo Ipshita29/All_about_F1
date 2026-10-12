@@ -76,6 +76,17 @@ function AbstractLines() {
 function Hero() {
     return (
         <section className="hero" aria-label="All About F1">
+            <video
+                className="hero-video"
+                src="/main.mov"
+                poster="/homepage.png"
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-hidden="true"
+            />
+            <div className="hero-overlay" aria-hidden="true" />
             <AbstractLines />
             <div className="hero-inner">
                 <p className="hero-eyebrow">FORMULA 1 · RACE INTELLIGENCE</p>
