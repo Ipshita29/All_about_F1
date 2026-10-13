@@ -9,11 +9,14 @@
  */
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, Flag, Gauge, Map, Repeat, RotateCw, Ruler, Timer, Wrench, Zap } from "lucide-react";
+import { CalendarDays, Cloud, Droplets, Flag, Gauge, Map, Repeat, RotateCw, Ruler, Timer, Wind, Wrench, Zap } from "lucide-react";
 import { circuitInfo } from "../data/circuitInfo";
 import CircuitVisualization from "../components/CircuitVisualization";
 import { LoadingSpinner } from "../components/UI";
+import { LayeredImage } from "../components/EntityDetail";
+import { getDriverAssets, getTeamAccent } from "../config/driverAssets";
 import { formatSessionTime } from "../utils/timeUtils";
+import { compassDirection, weatherCondition } from "../utils/weatherDisplay";
 import useCountdown from "../hooks/useCountdown";
 import useInViewOnce from "../hooks/useInViewOnce";
 import { getWeekendSessions } from "../utils/landingHelpers";
@@ -82,6 +85,145 @@ function CountUp({ value }) {
     return <span ref={ref}>{shown}</span>;
 }
 
+/* Real local cutout, resolved strictly by Ergast driverId — never by
+   finishing position or array index, so a podium reorder (see
+   podiumOrder below) can never pair a driver with someone else's
+   photo. Falls back to a styled monogram rather than a random remote
+   photo, same rule driverAssets.js documents for every other page. */
+function DriverPortrait({ driverId, fullName, frameClassName, fallbackClassName }) {
+    const candidates = driverId ? getDriverAssets(driverId, fullName).imageCandidates : [];
+    const initials = (fullName || "")
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    return (
+        <div className={frameClassName}>
+            <LayeredImage
+                candidates={candidates}
+                alt={fullName || ""}
+                fallback={<span className={fallbackClassName}>{initials}</span>}
+            />
+        </div>
+    );
+}
+
+/* ── Weather — historical race-time conditions for a completed race,
+   forecast conditions for an upcoming one. Same /weather/race and
+   /weather/forecast endpoints the Live Dashboard already uses, so a
+   provider outage degrades (via weatherService.js's own wttr.in
+   fallback) rather than ever leaving this card silently empty; the
+   card itself still renders a clear, explicit message if every
+   provider genuinely has nothing for this race. ── */
+function useRaceWeather({ race, raceNotStarted, raceSession, winnerMillis }) {
+    const lat = race?.Circuit?.Location?.lat;
+    const lon = race?.Circuit?.Location?.long;
+    const hasCoords = Boolean(lat && lon);
+    const key = `${lat}|${lon}|${raceNotStarted}|${raceSession?.start}|${race?.date}|${race?.time}|${winnerMillis}`;
+
+    // Reset synchronously during render when the request's own identity
+    // changes, rather than as the first act of the effect below — the
+    // effect itself only ever does the actual async fetch.
+    const [state, setState] = useState({ seenKey: key, status: hasCoords ? "loading" : "unavailable", data: null });
+    if (state.seenKey !== key) {
+        setState({ seenKey: key, status: hasCoords ? "loading" : "unavailable", data: null });
+    }
+
+    useEffect(() => {
+        if (!hasCoords) return undefined;
+        let cancelled = false;
+
+        const handle = (res) => (res.ok ? res.json() : { available: false });
+
+        let request;
+        if (raceNotStarted) {
+            const targetIso = raceSession?.start
+                ? raceSession.start.toISOString()
+                : new Date(`${race.date}T${race.time || "00:00:00Z"}`).toISOString();
+            request = fetch(`${API}/weather/forecast?lat=${lat}&lon=${lon}&time=${encodeURIComponent(targetIso)}`).then(handle);
+        } else {
+            const startIso = `${race.date}T${race.time || "00:00:00Z"}`;
+            const durationPart = winnerMillis ? `&durationMs=${winnerMillis}` : "";
+            request = fetch(`${API}/weather/race?lat=${lat}&lon=${lon}&start=${encodeURIComponent(startIso)}${durationPart}`).then(handle);
+        }
+
+        request
+            .then((data) => {
+                if (cancelled) return;
+                const reading = raceNotStarted ? data : data?.point;
+                setState((s) => ({
+                    ...s,
+                    status: data?.available && reading ? "ready" : "unavailable",
+                    data: data?.available && reading ? reading : null,
+                }));
+            })
+            .catch(() => { if (!cancelled) setState((s) => ({ ...s, status: "unavailable", data: null })); });
+
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [key, hasCoords]);
+
+    return state;
+}
+
+function WeatherCard({ weather, raceNotStarted }) {
+    if (weather.status === "idle" || weather.status === "loading") {
+        return (
+            <div className="rw-weather rw-weather--loading">
+                <LoadingSpinner label="Loading weather" />
+            </div>
+        );
+    }
+
+    if (weather.status !== "ready" || !weather.data) {
+        return (
+            <div className="rw-weather rw-weather--empty">
+                <Cloud size={22} aria-hidden="true" />
+                <p>
+                    Weather data isn't available for this {raceNotStarted ? "session" : "race"} right now —
+                    every provider we checked came back empty.
+                </p>
+            </div>
+        );
+    }
+
+    const d = weather.data;
+    const cond = weatherCondition(d.weatherCode);
+    const Icon = cond.Icon;
+    const direction = compassDirection(d.windDirection);
+
+    return (
+        <div className="rw-weather">
+            <div className="rw-weather-main">
+                <Icon size={30} aria-hidden="true" />
+                {d.airTemperature != null && (
+                    <span className="rw-weather-temp rw-mono">{Math.round(d.airTemperature)}°C</span>
+                )}
+                <span className="rw-weather-cond">{cond.label}</span>
+            </div>
+            <div className="rw-weather-metrics">
+                {d.humidity != null && (
+                    <span className="rw-weather-metric">
+                        <Droplets size={13} aria-hidden="true" />
+                        {Math.round(d.humidity)}% HUMIDITY
+                    </span>
+                )}
+                {d.windSpeed != null && (
+                    <span className="rw-weather-metric">
+                        <Wind size={13} aria-hidden="true" />
+                        {Math.round(d.windSpeed)} KM/H{direction ? ` ${direction}` : ""}
+                    </span>
+                )}
+            </div>
+            {d.provider === "wttr" && (
+                <span className="rw-weather-source rw-mono">VIA BACKUP PROVIDER</span>
+            )}
+        </div>
+    );
+}
+
 function GrandPrixDetails() {
     const { year, id } = useParams();
     const [race, setRace] = useState(null);
@@ -125,12 +267,18 @@ function GrandPrixDetails() {
     const sessions = race ? getWeekendSessions(race) : [];
     const raceSession = sessions.find((s) => s.key === "Race");
     const countdown = useCountdown(raceSession?.start || null);
+    const raceNotStarted = race ? new Date(race.date + "T00:00:00") > new Date() : false;
+    const weather = useRaceWeather({
+        race,
+        raceNotStarted,
+        raceSession,
+        winnerMillis: results[0]?.Time?.millis,
+    });
 
     if (!race) return <div className="rw rw-loading"><LoadingSpinner /></div>;
 
     const now = new Date();
     const raceDate = new Date(race.date + "T00:00:00");
-    const raceNotStarted = raceDate > now;
     const hasSprint = Boolean(race.Sprint);
 
     const formattedDate = raceDate.toLocaleDateString("en-GB", {
@@ -289,8 +437,21 @@ function GrandPrixDetails() {
                                     {podiumOrder.map((idx) => {
                                         const r = results[idx];
                                         if (!r) return null;
+                                        const driverFullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
                                         return (
-                                            <div className={`rw-plinth rw-plinth--p${idx + 1}`} key={r.position}>
+                                            <div className={`rw-plinth rw-plinth--p${idx + 1}`} key={r.Driver.driverId}>
+                                                <DriverPortrait
+                                                    driverId={r.Driver.driverId}
+                                                    fullName={driverFullName}
+                                                    frameClassName="rw-plinth-photo"
+                                                    fallbackClassName="rw-plinth-photo-fallback"
+                                                />
+                                                <span
+                                                    className="rw-plinth-number rw-mono"
+                                                    style={{ color: getTeamAccent(r.Constructor.constructorId) }}
+                                                >
+                                                    #{r.number || r.Driver.permanentNumber || "—"}
+                                                </span>
                                                 <span className="rw-plinth-pos rw-mono">P{r.position}</span>
                                                 <span className="rw-plinth-name">
                                                     {r.Driver.givenName} <b>{r.Driver.familyName}</b>
@@ -343,6 +504,11 @@ function GrandPrixDetails() {
                             </ol>
                         </div>
                     </div>
+                </HqSection>
+
+                {/* ── Weather ─────────────────────────────────────────── */}
+                <HqSection eyebrow="CONDITIONS" title={raceNotStarted ? "Forecast" : "Race Weather"}>
+                    <WeatherCard weather={weather} raceNotStarted={raceNotStarted} />
                 </HqSection>
 
                 {!raceNotStarted && results.length > 0 && (
