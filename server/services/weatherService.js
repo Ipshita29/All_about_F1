@@ -36,13 +36,10 @@ async function fetchHourly(lat, lon) {
     });
 }
 
-async function getForecast(lat, lon, targetIso) {
+async function fetchPrimaryForecast(lat, lon, targetMs) {
     const data = await fetchHourly(lat, lon);
     const times = data?.hourly?.time;
     if (!Array.isArray(times) || times.length === 0) return null;
-
-    const targetMs = new Date(targetIso).getTime();
-    if (Number.isNaN(targetMs)) return null;
 
     let bestIndex = -1;
     let bestDiff = Infinity;
@@ -58,6 +55,7 @@ async function getForecast(lat, lon, targetIso) {
 
     const hourly = data.hourly;
     return {
+        provider: "open-meteo",
         forecastFor: `${times[bestIndex]}Z`,
         airTemperature: hourly.temperature_2m?.[bestIndex] ?? null,
         precipitationProbability: hourly.precipitation_probability?.[bestIndex] ?? null,
@@ -66,6 +64,112 @@ async function getForecast(lat, lon, targetIso) {
         humidity: hourly.relative_humidity_2m?.[bestIndex] ?? null,
         weatherCode: hourly.weathercode?.[bestIndex] ?? null,
     };
+}
+
+/*
+ * ── Fallback provider: wttr.in ──────────────────────────────────────
+ * Free, keyless, global. Only ever consulted when Open-Meteo's own
+ * request throws or comes back with nothing usable — this is a safety
+ * net, not a second source of truth, so the UI never sits on a blank
+ * weather card just because one upstream had a bad moment. wttr.in's
+ * own data only spans "today" plus ~2 days ahead, so it is only tried
+ * when the requested moment actually falls in that window; outside it,
+ * this correctly returns null rather than guessing.
+ */
+const WTTR_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+
+// wttr.in reports WorldWeatherOnline's own condition codes, not Open-
+// Meteo's WMO codes the rest of this app (and the frontend's condition
+// table) already uses — mapped onto the closest WMO equivalent so every
+// caller can keep reading a single `weatherCode` field regardless of
+// which provider actually answered.
+const WWO_TO_WMO = {
+    113: 0, 116: 1, 119: 2, 122: 3,
+    143: 45, 248: 45, 260: 48,
+    176: 80, 263: 51, 266: 51, 281: 56, 284: 57, 293: 51, 296: 61,
+    299: 63, 302: 63, 305: 65, 308: 65, 311: 66, 314: 67,
+    179: 71, 182: 67, 185: 56, 227: 77, 230: 86, 317: 71, 320: 73,
+    323: 71, 326: 71, 329: 73, 332: 73, 335: 75, 338: 75, 350: 77,
+    353: 80, 356: 81, 359: 82, 362: 85, 365: 86, 368: 71, 371: 73,
+    374: 85, 377: 86,
+    200: 95, 386: 95, 389: 97, 392: 96, 395: 99,
+};
+
+function fetchWttr(lat, lon) {
+    const key = `weather-wttr:${lat}:${lon}`;
+    return cached(key, TTL.FORECAST, async () => {
+        const url = `https://wttr.in/${lat},${lon}?format=j1`;
+        const response = await fetch(url, { headers: { "User-Agent": "curl" } });
+        if (!response.ok) throw new Error("wttr.in request failed");
+        return response.json();
+    });
+}
+
+// wttr.in's own `hourly[].time` is minutes-past-midnight written without
+// padding ("0", "300", … "2100", one entry per 3h) — paired with that
+// day's `date` to build a real timestamp comparable to any other.
+function wttrHourToDate(dateStr, timeField) {
+    const minutes = Number(timeField);
+    if (Number.isNaN(minutes)) return null;
+    const hour = Math.floor(minutes / 100);
+    return new Date(`${dateStr}T${String(hour).padStart(2, "0")}:00:00Z`);
+}
+
+function wttrReadingFrom(hour, forecastFor) {
+    return {
+        provider: "wttr",
+        forecastFor,
+        airTemperature: hour.tempC != null ? Number(hour.tempC) : null,
+        precipitationProbability: hour.chanceofrain != null ? Number(hour.chanceofrain) : null,
+        precipitationAmount: hour.precipMM != null ? Number(hour.precipMM) : null,
+        windSpeed: hour.windspeedKmph != null ? Number(hour.windspeedKmph) : null,
+        windDirection: hour.winddirDegree != null ? Number(hour.winddirDegree) : null,
+        humidity: hour.humidity != null ? Number(hour.humidity) : null,
+        weatherCode: WWO_TO_WMO[Number(hour.weatherCode)] ?? 3,
+    };
+}
+
+async function fetchFallbackReading(lat, lon, targetMs) {
+    let data;
+    try {
+        data = await fetchWttr(lat, lon);
+    } catch {
+        return null;
+    }
+
+    const days = data?.weather;
+    if (!Array.isArray(days) || days.length === 0) return null;
+
+    let best = null;
+    let bestDiff = Infinity;
+    for (const day of days) {
+        for (const hour of day.hourly || []) {
+            const d = wttrHourToDate(day.date, hour.time);
+            if (!d) continue;
+            const diff = Math.abs(d.getTime() - targetMs);
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = { hour, forecastFor: d.toISOString() };
+            }
+        }
+    }
+
+    if (!best || bestDiff > WTTR_WINDOW_MS) return null;
+    return wttrReadingFrom(best.hour, best.forecastFor);
+}
+
+async function getForecast(lat, lon, targetIso) {
+    const targetMs = new Date(targetIso).getTime();
+    if (Number.isNaN(targetMs)) return null;
+
+    try {
+        const primary = await fetchPrimaryForecast(lat, lon, targetMs);
+        if (primary) return primary;
+    } catch {
+        // falls through to the fallback provider below
+    }
+
+    return fetchFallbackReading(lat, lon, targetMs);
 }
 
 /*
@@ -113,17 +217,9 @@ async function fetchHistoricalHourly(lat, lon, dateStr) {
 // category. Returns null (never a fabricated value) if the date is
 // malformed, the archive has no data for it, or the nearest recorded
 // hour is implausibly far from the target.
-async function getHistoricalWeather(lat, lon, targetIso) {
-    const targetMs = new Date(targetIso).getTime();
-    if (Number.isNaN(targetMs)) return null;
-
+async function fetchPrimaryHistorical(lat, lon, targetIso, targetMs) {
     const dateStr = targetIso.slice(0, 10);
-    let data;
-    try {
-        data = await fetchHistoricalHourly(lat, lon, dateStr);
-    } catch {
-        return null;
-    }
+    const data = await fetchHistoricalHourly(lat, lon, dateStr);
 
     const times = data?.hourly?.time;
     if (!Array.isArray(times) || times.length === 0) return null;
@@ -142,6 +238,7 @@ async function getHistoricalWeather(lat, lon, targetIso) {
 
     const hourly = data.hourly;
     return {
+        provider: "open-meteo",
         observedFor: `${times[bestIndex]}Z`,
         airTemperature: hourly.temperature_2m?.[bestIndex] ?? null,
         precipitationAmount: hourly.precipitation?.[bestIndex] ?? null,
@@ -150,6 +247,28 @@ async function getHistoricalWeather(lat, lon, targetIso) {
         humidity: hourly.relative_humidity_2m?.[bestIndex] ?? null,
         weatherCode: hourly.weathercode?.[bestIndex] ?? null,
     };
+}
+
+// A genuinely past date has no second provider to fall back to — wttr.in
+// only ever knows "today" onward — EXCEPT the one real-world case this
+// route actually serves close to real time: a race that just finished
+// within the last couple of days, where the archive hasn't ingested that
+// day yet. There, wttr's current/near-term reading is a fair stand-in for
+// "race-day conditions" and is clearly tagged `provider: "wttr"` rather
+// than presented as if it were the archived reading.
+async function getHistoricalWeather(lat, lon, targetIso) {
+    const targetMs = new Date(targetIso).getTime();
+    if (Number.isNaN(targetMs)) return null;
+
+    try {
+        const primary = await fetchPrimaryHistorical(lat, lon, targetIso, targetMs);
+        if (primary) return primary;
+    } catch {
+        // falls through to the fallback provider below
+    }
+
+    const fallback = await fetchFallbackReading(lat, lon, targetMs);
+    return fallback ? { ...fallback, observedFor: fallback.forecastFor } : null;
 }
 
 /*
