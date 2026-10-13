@@ -40,13 +40,16 @@ function pad(n) {
     return String(n).padStart(2, "0");
 }
 
-/* Section wrapper: eyebrow heading + one-time reveal on scroll */
-function HqSection({ eyebrow, title, children }) {
+/* Section wrapper: eyebrow heading + one-time reveal on scroll.
+   `compact` is for a section whose content is naturally short (the
+   Weather card) so it doesn't carry the same vertical padding as the
+   bigger sections around it and bloat the gap between them. */
+function HqSection({ eyebrow, title, children, compact = false }) {
     const [ref, inView] = useInViewOnce({ threshold: 0.12 });
     return (
         <section
             ref={ref}
-            className={`rw-hq-section${inView ? " rw-hq-section--in" : ""}`}
+            className={`rw-hq-section${compact ? " rw-hq-section--compact" : ""}${inView ? " rw-hq-section--in" : ""}`}
         >
             <header className="rw-hq-section-head">
                 {eyebrow && <span className="rw-hq-eyebrow rw-mono">{eyebrow}</span>}
@@ -507,7 +510,7 @@ function GrandPrixDetails() {
                 </HqSection>
 
                 {/* ── Weather ─────────────────────────────────────────── */}
-                <HqSection eyebrow="CONDITIONS" title={raceNotStarted ? "Forecast" : "Race Weather"}>
+                <HqSection eyebrow="CONDITIONS" title={raceNotStarted ? "Forecast" : "Race Weather"} compact>
                     <WeatherCard weather={weather} raceNotStarted={raceNotStarted} />
                 </HqSection>
 
