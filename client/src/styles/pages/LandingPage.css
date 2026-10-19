@@ -661,11 +661,11 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   THE PADDOCK (dark) — .lp-paddock-*
-   Six equal destination tiles on the shared black card surface,
-   alternating red and white/cream accents in a checkered-flag rhythm
-   — strictly the site's red/white/black palette, no added hues.
-   Titles in Inter, numbers/metadata in JetBrains Mono.
+   THE PADDOCK (dark surface, light cards) — .lp-paddock-*
+   Six equal destination tiles in a clean, minimal white/cream card
+   treatment — flat surface, no gradient, no colored top border, no
+   tinted overlay — sitting on the section's own dark background for
+   contrast. Titles in Inter, numbers/metadata in JetBrains Mono.
    ══════════════════════════════════════════════════════════════════ */
 
 .lp-paddock {
@@ -705,9 +705,6 @@
     gap: var(--space-5);
 }
 
-.lp-paddock-tile[data-accent="red"]   { --tile-accent: var(--color-red-bright); --tile-accent-soft: rgba(229, 52, 45, 0.18); --tile-icon-contrast: #ffffff; }
-.lp-paddock-tile[data-accent="white"] { --tile-accent: var(--color-cararra); --tile-accent-soft: rgba(240, 237, 232, 0.14); --tile-icon-contrast: var(--color-carbon); }
-
 .lp-paddock-tile {
     position: relative;
     display: flex;
@@ -715,33 +712,19 @@
     min-height: 236px;
     padding: var(--space-6);
     border-radius: var(--radius-lg);
-    background: linear-gradient(160deg, var(--tile-accent-soft), var(--surface) 60%);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
+    background: var(--surface-light-1);
+    border: 1px solid var(--border-on-light);
+    color: var(--text-on-light-primary);
     overflow: hidden;
     transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
-.lp-paddock-tile::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    height: 3px;
-    background: var(--tile-accent);
-    opacity: 0.6;
-    transition: opacity var(--dur-fast) var(--ease);
-}
-
 .lp-paddock-tile:hover {
-    transform: translateY(-4px);
-    border-color: var(--tile-accent);
+    transform: translateY(-2px);
+    border-color: var(--border-on-light-strong);
     box-shadow: var(--shadow-md);
-    color: var(--text-primary);
+    color: var(--text-on-light-primary);
 }
-
-.lp-paddock-tile:hover::before { opacity: 1; }
 
 .lp-paddock-tile-head {
     display: flex;
@@ -758,12 +741,12 @@
     height: 44px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: var(--tile-accent-soft);
-    color: var(--tile-accent);
+    background: rgba(25, 25, 25, 0.06);
+    color: var(--text-on-light-secondary);
     transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.lp-paddock-tile:hover .lp-paddock-tile-icon { background: var(--tile-accent); color: var(--tile-icon-contrast); }
+.lp-paddock-tile:hover .lp-paddock-tile-icon { background: rgba(25, 25, 25, 0.1); color: var(--text-on-light-primary); }
 
 .lp-paddock-live-dot {
     display: inline-flex;
@@ -773,14 +756,14 @@
     font-size: 0.64rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: var(--tile-accent);
+    color: var(--accent);
 }
 
 .lp-paddock-live-dot i {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--tile-accent);
+    background: var(--accent);
     animation: paddockPulse 1.6s ease-in-out infinite;
 }
 
@@ -790,26 +773,26 @@
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.06em;
-    color: var(--tile-accent);
+    color: var(--text-on-light-muted);
     margin-bottom: 6px;
 }
 
-.lp-paddock-tile-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em; margin: 0 0 6px; color: var(--text-primary); }
-.lp-paddock-tile-copy { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; flex: 1; margin: 0; }
+.lp-paddock-tile-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.005em; margin: 0 0 6px; color: var(--text-on-light-primary); }
+.lp-paddock-tile-copy { font-size: 0.85rem; color: var(--text-on-light-secondary); line-height: 1.5; flex: 1; margin: 0; }
 
 .lp-paddock-tile-go {
     margin-top: var(--space-4);
     font-family: var(--font-mono);
     font-size: 0.66rem;
     letter-spacing: 0.06em;
-    color: var(--text-muted);
+    color: var(--text-on-light-muted);
     display: inline-flex;
     align-items: center;
     gap: 4px;
     transition: color var(--dur-fast) var(--ease), gap var(--dur-fast) var(--ease);
 }
 
-.lp-paddock-tile:hover .lp-paddock-tile-go { color: var(--tile-accent); gap: 8px; }
+.lp-paddock-tile:hover .lp-paddock-tile-go { color: var(--text-on-light-primary); gap: 8px; }
 
 /* ══════════════════════════════════════════════════════════════════
    FOOTER (dark) — .lp-footer-*

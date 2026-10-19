@@ -675,21 +675,20 @@ function PitWallRadio({ favs, footerRef }) {
 
 /* ══════════════════════════════════════════════════════════════════
  * EVERY ROAD IN — the site's directory, not a generic nav-card grid.
- * Six equal destination tiles in a 3×2 grid, alternating red and
- * white/cream accents over the shared black card surface — a
- * checkered-flag rhythm using only the site's red/white/black palette.
- * The live indicator on the Live tile reuses the exact liveSession
- * value the rest of the homepage already computes from the real
- * schedule — never a fabricated "on air" state.
+ * Six equal destination tiles in a 3×2 grid, each a clean white/cream
+ * card on the section's dark background. The live indicator on the
+ * Live tile reuses the exact liveSession value the rest of the
+ * homepage already computes from the real schedule — never a
+ * fabricated "on air" state.
  * ══════════════════════════════════════════════════════════════════ */
 
 const DESTINATIONS = [
-    { n: "01", to: "/live", label: "Live", copy: "The race as it happens", icon: Radio, accent: "red" },
-    { n: "02", to: "/predictor", label: "Predictor", copy: "Predict the grid", icon: Sparkles, accent: "white" },
-    { n: "03", to: "/grandprixdashboard", label: "Race Weekend", copy: "Every GP, session & result", icon: Flag, accent: "red" },
-    { n: "04", to: "/drivers", label: "Drivers", copy: "The full grid", icon: Users, accent: "white" },
-    { n: "05", to: "/teams", label: "Teams", copy: "Constructors", icon: Shield, accent: "red" },
-    { n: "06", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen, accent: "white" },
+    { n: "01", to: "/live", label: "Live", copy: "The race as it happens", icon: Radio },
+    { n: "02", to: "/predictor", label: "Predictor", copy: "Predict the grid", icon: Sparkles },
+    { n: "03", to: "/grandprixdashboard", label: "Race Weekend", copy: "Every GP, session & result", icon: Flag },
+    { n: "04", to: "/drivers", label: "Drivers", copy: "The full grid", icon: Users },
+    { n: "05", to: "/teams", label: "Teams", copy: "Constructors", icon: Shield },
+    { n: "06", to: "/dictionary", label: "F1 Dictionary", copy: "F1, explained", icon: BookOpen },
 ];
 
 function PaddockDirectory({ isLive }) {
@@ -705,7 +704,7 @@ function PaddockDirectory({ isLive }) {
                     const Icon = d.icon;
                     const live = d.to === "/live" && isLive;
                     return (
-                        <Link key={d.to} to={d.to} className="lp-paddock-tile" data-accent={d.accent}>
+                        <Link key={d.to} to={d.to} className="lp-paddock-tile">
                             <div className="lp-paddock-tile-head">
                                 <span className="lp-paddock-tile-icon" aria-hidden="true"><Icon size={20} /></span>
                                 {live && (
