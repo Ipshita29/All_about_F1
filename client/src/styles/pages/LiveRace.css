@@ -201,10 +201,14 @@
     padding: var(--space-4) var(--space-5) var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
 }
 
-.lr-grid { display: grid; gap: var(--space-4); align-items: start; }
+/* align-items: stretch (the default) so two panels sharing a row
+   always match height — a short panel next to a tall one used to
+   leave its own box short, exposing a blank gutter of page background
+   below it instead of a second card bottom lining up with the first. */
+.lr-grid { display: grid; gap: var(--space-3); }
 .lr-grid--primary { grid-template-columns: 8fr 4fr; }
 .lr-grid--6-6 { grid-template-columns: 1fr 1fr; }
 
@@ -219,7 +223,7 @@
     background: var(--lr-surface-card);
     border: 1px solid var(--lr-border);
     border-radius: 12px;
-    padding: 20px;
+    padding: var(--space-4);
 }
 
 .lr-panel--full { width: 100%; }
@@ -889,7 +893,7 @@
    NON-LIVE HUB (isLive === false)
    ═══════════════════════════════════════════════════════════════════ */
 
-.lr-hub { display: flex; flex-direction: column; gap: var(--space-5); }
+.lr-hub { display: flex; flex-direction: column; gap: var(--space-3); }
 
 .lr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
 .lr-panel--chalk .lr-hub-loading { color: var(--lr-light-text-3); }
@@ -984,12 +988,11 @@
 
 @media (max-width: 900px) {
     .lr-header { padding: var(--space-4); }
-    .lr-main { padding: var(--space-4) var(--space-4) var(--space-8); gap: var(--space-4); }
-    .lr-grid { gap: var(--space-4); }
+    .lr-main { padding: var(--space-4) var(--space-4) var(--space-8); gap: var(--space-3); }
+    .lr-grid { gap: var(--space-3); }
 }
 
 @media (max-width: 640px) {
-    .lr-panel { padding: 16px; }
     .lr-weather-donut { flex-direction: column; align-items: stretch; }
     .lr-weather-donut-legend { flex-direction: row; flex-wrap: wrap; gap: var(--space-3); }
     .lr-podium { flex-wrap: wrap; gap: var(--space-4); }
