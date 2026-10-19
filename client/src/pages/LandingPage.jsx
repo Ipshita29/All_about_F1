@@ -28,7 +28,6 @@ import {
     isFavouriteDriver,
     isFavouriteTeam,
     getLocalDriverPortrait,
-    getTeamColor,
     getTeamLogo,
 } from "../utils/landingHelpers";
 import { getWordOfTheDay } from "../utils/dictionaryHelpers";
@@ -385,13 +384,13 @@ function RaceIntelligence({ race }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
- * THE TITLE FIGHT — a cinematic top-3 leaderboard, not a standings
- * table. Near-black canvas, a glowing red/teal track-curve backdrop
- * with a moving light trail, three horizontal cards (driver portrait,
- * team, points) with a staggered entrance and an animated point
- * count-up, and a glowing P1 highlight. An accessible DRIVERS |
- * CONSTRUCTORS toggle switches which championship is shown; "View
- * Full Standings" hands off to the real roster page for the rest.
+ * THE TITLE FIGHT — a monochrome top-3 leaderboard, not a standings
+ * table. Black/grey/white canvas only — no accent colour anywhere in
+ * this section — with three horizontal cards (driver portrait, team,
+ * points), a staggered entrance, and an animated point count-up. An
+ * accessible DRIVERS | CONSTRUCTORS toggle switches which
+ * championship is shown; "View Full Standings" hands off to the real
+ * roster page for the rest.
  * ══════════════════════════════════════════════════════════════════ */
 
 const VIEWS = [
@@ -407,39 +406,6 @@ function initialsOf(text) {
         .join("")
         .slice(0, 2)
         .toUpperCase();
-}
-
-/* Decorative only: a pair of glowing track curves (racing red + a
-   subtle teal secondary line) with one bright segment animated along
-   the red curve via stroke-dashoffset — a moving "light trail", not a
-   literal motion-path, so it stays cheap and works in every browser. */
-function ChampTrackGlow() {
-    return (
-        <svg
-            className="champ-track"
-            viewBox="0 0 1200 500"
-            fill="none"
-            preserveAspectRatio="xMidYMid slice"
-            aria-hidden="true"
-        >
-            <path
-                className="champ-track-line champ-track-line--red"
-                d="M-60 420 C 180 420, 220 300, 340 260 C 460 220, 520 120, 700 110 C 880 100, 950 180, 1260 160"
-            />
-            <path
-                className="champ-track-line champ-track-line--teal"
-                d="M-60 480 C 220 480, 300 380, 440 340 C 600 300, 680 220, 900 210 C 1040 205, 1100 230, 1260 220"
-            />
-            <path
-                className="champ-track-line champ-track-line--white"
-                d="M-60 360 C 160 360, 240 260, 380 230 C 540 196, 600 140, 780 150 C 940 158, 1000 200, 1260 190"
-            />
-            <path
-                className="champ-track-trail"
-                d="M-60 420 C 180 420, 220 300, 340 260 C 460 220, 520 120, 700 110 C 880 100, 950 180, 1260 160"
-            />
-        </svg>
-    );
 }
 
 /* Counts up from its previous value to `value` whenever it changes —
@@ -503,7 +469,6 @@ function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
 
     return (
         <section className="champ" aria-label="Championship standings">
-            <ChampTrackGlow />
             <div className="champ-inner">
                 <div className="champ-head">
                     <SectionHeader eyebrow="WORLD CHAMPIONSHIP" title="The Title Fight" />
@@ -538,14 +503,13 @@ function ChampionshipSection({ driverStandings, constructorStandings, favs }) {
                             const isLeader = i === 0;
                             const name = isDrivers ? fullName(driver) : constructor.name;
                             const portrait = isDrivers ? getLocalDriverPortrait(name) : null;
-                            const teamColor = getTeamColor(constructor?.constructorId) || "var(--accent-text)";
                             const teamLogo = getTeamLogo(constructor?.constructorId);
 
                             return (
                                 <li
                                     key={isDrivers ? driver.driverId : constructor.constructorId}
                                     className={`champ-card${isLeader ? " champ-card--leader" : ""}`}
-                                    style={{ "--card-i": i, "--team-color": teamColor }}
+                                    style={{ "--card-i": i }}
                                 >
                                     <span className="champ-card-rank">P{s.position}</span>
 

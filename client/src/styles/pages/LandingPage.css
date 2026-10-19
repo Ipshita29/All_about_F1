@@ -416,47 +416,16 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   THE TITLE FIGHT (near-black, cinematic) — .champ-*
-   A glowing red/teal track backdrop with a moving light trail behind
-   three horizontal leaderboard cards. P1 gets a pulsing red glow;
-   P2/P3 carry a quieter teal accent. All motion is disabled under
-   prefers-reduced-motion (see RESPONSIVE/ACCESSIBILITY at the end).
+   THE TITLE FIGHT (monochrome) — .champ-*
+   Black/grey/white only — no accent colour, no decorative background
+   graphic, no glow — matching the site's overall monochrome theme.
    ══════════════════════════════════════════════════════════════════ */
 
 .champ {
-    --champ-teal: #2bd9c9;
     position: relative;
     overflow: hidden;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1a1414 0%, #0b0b0c 55%, #090909 100%);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, #1c1c1c 0%, #101010 55%, #090909 100%);
     max-width: 100%;
-}
-
-.champ-track {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-}
-
-.champ-track-line { stroke-width: 2; fill: none; opacity: 0.3; }
-.champ-track-line--red { stroke: var(--color-red-bright); filter: drop-shadow(0 0 8px rgba(229, 52, 45, 0.45)); }
-.champ-track-line--teal { stroke: var(--champ-teal); opacity: 0.16; filter: drop-shadow(0 0 6px rgba(43, 217, 201, 0.35)); }
-.champ-track-line--white { stroke: var(--color-cararra); opacity: 0.1; }
-
-.champ-track-trail {
-    stroke: #fff;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    fill: none;
-    opacity: 0.85;
-    stroke-dasharray: 50 900;
-    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 16px var(--color-red-bright));
-    animation: champTrailMove 5.5s linear infinite;
-}
-
-@keyframes champTrailMove {
-    to { stroke-dashoffset: -950; }
 }
 
 .champ-inner {
@@ -507,7 +476,7 @@
 }
 
 .champ-tab:hover { opacity: 1; color: var(--color-cararra); }
-.champ-tab.is-active { background: var(--color-red-bright); color: #fff; }
+.champ-tab.is-active { background: #fff; color: #000; }
 
 /* ── Three horizontal leaderboard cards ── */
 
@@ -550,29 +519,24 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--team-color, var(--champ-teal));
+    background: rgba(255, 255, 255, 0.35);
     opacity: 0.8;
 }
 
 .champ-card:hover {
     transform: translateY(-3px);
-    border-color: var(--team-color, var(--champ-teal));
+    border-color: rgba(255, 255, 255, 0.35);
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .champ-card--leader {
-    border-color: rgba(229, 52, 45, 0.5);
-    background: linear-gradient(120deg, rgba(229, 52, 45, 0.14), rgba(255, 255, 255, 0.02));
-    animation: champCardIn 560ms var(--ease) both, champLeaderGlow 2.4s ease-in-out infinite;
-    animation-delay: calc(var(--card-i, 0) * 120ms), 560ms;
+    border-color: rgba(255, 255, 255, 0.35);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
+    animation: champCardIn 560ms var(--ease) both;
+    animation-delay: calc(var(--card-i, 0) * 120ms);
 }
 
-@keyframes champLeaderGlow {
-    0%, 100% { box-shadow: 0 0 0 rgba(229, 52, 45, 0); }
-    50% { box-shadow: 0 0 32px rgba(229, 52, 45, 0.45); }
-}
-
-.champ-card--leader:hover { transform: translateY(-3px); border-color: var(--color-red-bright); }
+.champ-card--leader:hover { transform: translateY(-3px); border-color: rgba(255, 255, 255, 0.55); }
 
 .champ-card-rank {
     font-family: var(--font-mono);
@@ -583,7 +547,7 @@
     text-align: center;
 }
 
-.champ-card--leader .champ-card-rank { font-size: 1.5rem; color: var(--accent-text); }
+.champ-card--leader .champ-card-rank { font-size: 1.5rem; color: #fff; }
 
 .champ-card-portrait {
     display: flex;
@@ -594,12 +558,12 @@
     border-radius: 50%;
     overflow: hidden;
     background: var(--surface-2);
-    border: 2px solid var(--team-color, var(--champ-teal));
+    border: 2px solid rgba(255, 255, 255, 0.35);
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.07);
     flex-shrink: 0;
 }
 
-.champ-card--leader .champ-card-portrait { width: 68px; height: 68px; box-shadow: 0 0 18px rgba(229, 52, 45, 0.5); }
+.champ-card--leader .champ-card-portrait { width: 68px; height: 68px; border-color: rgba(255, 255, 255, 0.55); }
 
 .champ-card-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .champ-card-portrait-logo { object-fit: contain !important; padding: 8px; }
@@ -645,8 +609,8 @@
     font-size: 0.58rem;
     font-weight: 700;
     letter-spacing: 0.1em;
-    color: #fff;
-    background: var(--color-red-bright);
+    color: #000;
+    background: #fff;
     padding: 2px 8px;
     border-radius: var(--radius-full);
 }
@@ -655,8 +619,8 @@
     font-family: var(--font-mono);
     font-size: 0.56rem;
     letter-spacing: 0.06em;
-    color: var(--champ-teal);
-    border: 1px solid rgba(43, 217, 201, 0.4);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 1px 6px;
     border-radius: var(--radius-full);
 }
@@ -677,7 +641,7 @@
     color: var(--text-primary);
 }
 
-.champ-card--leader .champ-card-pts-value { font-size: 1.9rem; color: var(--accent-text); }
+.champ-card--leader .champ-card-pts-value { font-size: 1.9rem; color: #fff; }
 
 .champ-card-pts-label {
     font-family: var(--font-mono);
@@ -689,13 +653,11 @@
 .champ-more { margin-top: var(--space-2); }
 
 @media (prefers-reduced-motion: reduce) {
-    .champ-track-trail { animation: none; opacity: 0.5; }
     .champ-card {
         animation: none;
         opacity: 1;
         transform: none;
     }
-    .champ-card--leader { animation: none; box-shadow: 0 0 20px rgba(229, 52, 45, 0.35); }
 }
 
 /* ══════════════════════════════════════════════════════════════════
