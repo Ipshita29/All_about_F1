@@ -942,48 +942,6 @@
 .lr-gp-meta svg { flex-shrink: 0; opacity: 0.7; }
 .lr-gp-meta .lr-mono { margin-left: 4px; color: var(--text-faint); }
 
-/* Flex, not a 3-equal-column grid — a grid's 1fr columns stretched
-   every photo to fill whatever width the panel had (400px+ portraits
-   on a wide screen), which was the actual cause of the oversized
-   podium. Each step now sizes to its OWN fixed width instead, with P1
-   deliberately wider/taller than P2/P3; the whole thing lands at
-   roughly 128px (P1 photo) + ~6px gap + ~80px of text ≈ 215-260px tall,
-   comfortably inside a 250-350px podium. */
-.lr-podium { display: flex; justify-content: center; align-items: flex-end; gap: var(--space-5); }
-
-.lr-podium-step { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; flex: 0 0 96px; }
-.lr-podium-step--p1 { order: 2; flex-basis: 124px; }
-.lr-podium-step--p2 { order: 1; }
-.lr-podium-step--p3 { order: 3; }
-
-.lr-podium-photo {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 3 / 4;
-    border-radius: 8px;
-    overflow: hidden;
-    background: linear-gradient(180deg, var(--lr-surface-inner), var(--lr-surface-card));
-    border: 1px solid var(--lr-border);
-}
-
-.lr-podium-step--p1 .lr-podium-photo { border: 2px solid var(--accent); }
-.lr-podium-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-
-/* A thin team-colour strip under the photo — the "subtle team-color
-   accent" the brief asks for, kept small enough that it never
-   competes with the restrained red P1 highlight above. */
-.lr-podium-team-bar { display: block; width: 100%; height: 3px; border-radius: 2px; margin-top: -2px; }
-
-.lr-podium-pos { display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--lr-text-secondary); font-size: var(--text-micro); }
-.lr-podium-step--p1 .lr-podium-pos { color: var(--accent); font-weight: 700; font-size: var(--text-small); }
-
-.lr-podium-name { font-size: var(--text-micro); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.lr-podium-step--p1 .lr-podium-name { font-size: var(--text-small); }
-.lr-podium-team { font-size: 0.62rem; color: var(--lr-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-
-.lr-podium-line { font-size: 0.62rem; color: var(--text-primary); display: flex; flex-direction: column; gap: 1px; }
-.lr-podium-line small { font-family: var(--font-sans); font-size: 0.56rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
-
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
@@ -995,9 +953,4 @@
 @media (max-width: 640px) {
     .lr-weather-donut { flex-direction: column; align-items: stretch; }
     .lr-weather-donut-legend { flex-direction: row; flex-wrap: wrap; gap: var(--space-3); }
-    .lr-podium { flex-wrap: wrap; gap: var(--space-4); }
-    .lr-podium-step, .lr-podium-step--p1 { flex-basis: 108px; }
-    .lr-podium-step--p1 { order: 0; }
-    .lr-podium-step--p2 { order: 1; }
-    .lr-podium-step--p3 { order: 2; }
 }

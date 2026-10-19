@@ -551,51 +551,11 @@ function NextRaceWeatherForecast({ hub, race }) {
 }
 
 /* ── Recent Grand Prix Results — the most recently completed race
-   (Jolpica current/last, real results, never inferred/hardcoded), a
-   prominent top-3 podium followed by the COMPLETE classification —
-   replaces the old one-card-per-driver carousel. GP name/circuit/date
-   and every result row all come from the same `latest` fetch, so they
-   can never drift out of sync with each other. ─────────────────────── */
-
-function raceResultLine(result, isWinner) {
-    if (isWinner) return { value: result.Time?.time ?? "—", label: "RACE TIME" };
-    if (result.Time?.time) return { value: result.Time.time, label: "GAP" };
-    return { value: result.status || "—", label: "STATUS" };
-}
-
-// P2 · P1 · P3 plinth arrangement — same convention already used for
-// the podium on RaceWeekendDetails.jsx, not a new layout idea.
-const PODIUM_ORDER = [1, 0, 2];
-
-function ResultsPodium({ results }) {
-    return (
-        <div className="lr-podium">
-            {PODIUM_ORDER.map((idx) => {
-                const r = results[idx];
-                if (!r) return null;
-                const fullName = `${r.Driver.givenName} ${r.Driver.familyName}`;
-                const isWinner = r.position === "1";
-                const line = raceResultLine(r, isWinner);
-                return (
-                    <div className={`lr-podium-step lr-podium-step--p${r.position}`} key={r.Driver.driverId}>
-                        <DriverPortrait
-                            driverId={r.Driver.driverId}
-                            fullName={fullName}
-                            frameClassName="lr-podium-photo"
-                            fallbackClassName="lr-driver-card-photo-fallback"
-                            fallbackIcon={<UserRound size={24} aria-hidden="true" />}
-                        />
-                        <span className="lr-podium-team-bar" style={{ background: getTeamAccent(r.Constructor.constructorId) }} aria-hidden="true" />
-                        <span className="lr-mono lr-podium-pos">{isWinner && <Trophy size={12} aria-hidden="true" />}P{r.position}</span>
-                        <span className="lr-podium-name">{fullName}</span>
-                        <span className="lr-podium-team">{r.Constructor.name}</span>
-                        <span className="lr-mono lr-podium-line">{line.value}<small>{line.label}</small></span>
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
+   (Jolpica current/last, real results, never inferred/hardcoded), the
+   complete classification table only — replaces the old one-card-per-
+   driver carousel. GP name/circuit/date and every result row all come
+   from the same `latest` fetch, so they can never drift out of sync
+   with each other. ───────────────────────────────────────────────── */
 
 // "Finished" or a classified-but-lapped "+N Lap(s)" both count as a
 // real classification, not a DNF — only those two read as normal rows;
@@ -623,7 +583,7 @@ function ClassificationTable({ results }) {
                                 <td className="lr-mono lr-timing-pos">{r.positionText ?? r.position}</td>
                                 <td>
                                     <span className="lr-driver-chip">
-                                        <DriverAvatar code={r.Driver.code ?? r.Driver.driverId} color={getTeamAccent(r.Constructor.constructorId)} size="sm" />
+                                        <DriverAvatar code={r.Driver.code ?? r.Driver.driverId} size="sm" />
                                         {fullName}
                                     </span>
                                 </td>
@@ -646,8 +606,8 @@ function ClassificationTable({ results }) {
  * calendar now, not from whether results exist yet — see
  * grandprixController.js) — so Singapore's own identity shows here the
  * moment its race time has passed, even in the minutes/hours before
- * Jolpica has posted its classification. Only the podium/table below
- * swap to a "pending" state; the heading is never generic and never
+ * Jolpica has posted its classification. Only the table below swaps
+ * to a "pending" state; the heading is never generic and never
  * silently reverts to an older race.
  */
 function RaceResultsSection({ latest }) {
@@ -664,10 +624,7 @@ function RaceResultsSection({ latest }) {
                 </span>
             </div>
             {hasResults ? (
-                <>
-                    <ResultsPodium results={latest.Results} />
-                    <ClassificationTable results={latest.Results} />
-                </>
+                <ClassificationTable results={latest.Results} />
             ) : (
                 <div className="lr-compact-empty">
                     <Trophy size={18} aria-hidden="true" />
