@@ -1,23 +1,29 @@
 /*
- * RACE PREDICTOR — reads GET /api/predictor/upcoming for the next Grand
- * Prix (see server/services/predictorService.js for the actual prediction
- * engine: a weighted power-ranking converted to probabilities via a
- * Plackett-Luce Monte Carlo simulation), or GET /api/predictor/race/:season/
- * :round for a previously-predicted race picked from the selector below —
- * both return the identical podium/table/data-availability shape, so the
+ * RACE PREDICTOR — a cinematic, competition-style presentation of the
+ * model's own prediction. Reads GET /api/predictor/upcoming for the next
+ * Grand Prix (see server/services/predictorService.js for the actual
+ * prediction engine: a weighted power-ranking converted to probabilities
+ * via a Plackett-Luce Monte Carlo simulation), or GET /api/predictor/race/
+ * :season/:round for a previously-predicted race picked from the selector
+ * — both return the identical podium/table/data-availability shape, so the
  * whole page renders off one "active race" object regardless of which
  * endpoint it came from. A completed previous race additionally carries
  * actualPodium (the real top 3) and winnerCorrect — the predicted podium
- * is never replaced by it, both stay visible side by side. This page
- * only renders that response — no prediction math happens here. Every
- * number shown traces directly to a field in the real API response;
- * where the engine doesn't provide something, it's left out rather than
- * invented.
+ * is never replaced by it, both stay visible side by side.
+ *
+ * This is NOT a fantasy-pick game: there is no logged-in user and no
+ * submitted prediction anywhere in this system, only the model's own
+ * computed call. Every label on this page is written to say so plainly
+ * ("MODEL PICK", "THE FORECAST") rather than imply a user action that
+ * doesn't exist. This page only renders the API response — no prediction
+ * math happens here, and no number is ever invented; where the engine
+ * doesn't provide something, it's left out.
  */
-import { useEffect, useState } from "react";
-import { BarChart3, History } from "lucide-react";
-import { Button, EmptyState, LoadingSpinner } from "../components/UI";
+import { useEffect, useMemo, useState } from "react";
+import { BarChart3, ChevronDown, History } from "lucide-react";
+import { Button, EmptyState, LoadingSpinner, SearchInput } from "../components/UI";
 import { getTeamAccent } from "../config/driverAssets";
+import useCountdown from "../hooks/useCountdown";
 import "../styles/pages/Predictor.css";
 import { API_BASE_URL as API } from "../config/api";
 
@@ -55,10 +61,10 @@ function usePrediction() {
     return { ...state, retry };
 }
 
-/* Fetches Phase 14 evaluation data (performance summary + prediction
-   history). Independent of, and never blocking, the primary
-   upcoming-prediction fetch above; also supplies the list of previously-
-   completed races the selector offers. */
+/* Fetches the evaluation data (performance summary + prediction history).
+   Independent of, and never blocking, the primary upcoming-prediction
+   fetch above; also supplies the list of previously-completed races the
+   selector offers. */
 function useEvaluation() {
     const [state, setState] = useState({ loading: true, performance: null, races: [] });
 
@@ -113,11 +119,61 @@ function useRaceDetail(selectedKey) {
     };
 }
 
-/* ── Header + race selector + result indicator ───────────────────────
-   The selector sits beside the eyebrow, offering "Upcoming Race" plus
-   every previously-evaluated race; picking one updates the whole page.
-   The ✓/✕ result line only appears for a completed race, stays small,
-   and never replaces the prediction below it. ─────────────────────── */
+// The prediction response never carries a race's local start time, only
+// its date — a model prediction only ever needed the date. The header's
+// countdown borrows the one real `time` field from the public season
+// schedule every other page already reads (/grandprixdashboard/:year),
+// rather than guessing a kickoff hour. Returns null (no countdown shown)
+// until that one extra field has loaded.
+function useRaceTime(season, round) {
+    const [time, setTime] = useState(null);
+
+    useEffect(() => {
+        if (!season || !round) return undefined;
+        let cancelled = false;
+        fetch(`${API}/grandprixdashboard/${season}`)
+            .then((res) => (res.ok ? res.json() : []))
+            .then((races) => {
+                if (cancelled) return;
+                const match = Array.isArray(races) ? races.find((r) => String(r.round) === String(round)) : null;
+                setTime(match?.time ?? null);
+            })
+            .catch(() => {
+                if (!cancelled) setTime(null);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [season, round]);
+
+    return time;
+}
+
+/* ── Cinematic header ─────────────────────────────────────────────────
+   Eyebrow + headline + GP identity + countdown, with a monochrome
+   circuit map blended into the dark canvas on wide screens. The race
+   selector sits top-right exactly where it did before — same working
+   control, restyled. ───────────────────────────────────────────────── */
+
+// Local track-map PNGs already exist per circuit (client/public/circuits/
+// <circuitId>/map.png) for the Circuit Essentials page — reused here
+// rather than reaching for an external image, so the header never
+// depends on a remote URL. Desaturated + faded via CSS so it reads as a
+// background graphic, not a second photo competing with the copy.
+function TrackVisual({ circuitId }) {
+    const [failed, setFailed] = useState(false);
+    if (!circuitId || failed) return null;
+    return (
+        <img
+            className="pr-header-track"
+            src={`/circuits/${circuitId}/map.png`}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            onError={() => setFailed(true)}
+        />
+    );
+}
 
 function RaceSelector({ options, selectedKey, onChange }) {
     return (
@@ -135,16 +191,39 @@ function RaceSelector({ options, selectedKey, onChange }) {
     );
 }
 
-function PredictorHeader({ race, resultStatus, selectorProps }) {
+function CinematicHeader({ race, countdown, resultStatus, selectorProps }) {
+    const hasCountdown = countdown && countdown.total > 0;
     return (
         <header className="pr-header">
+            <TrackVisual key={race.circuitId} circuitId={race.circuitId} />
             <div className="pr-header-inner">
                 <div className="pr-header-top">
-                    <span className="pr-eyebrow">Race Predictor</span>
+                    <span className="pr-eyebrow pr-mono">PREDICTOR / ROUND {race.round}</span>
                     <RaceSelector {...selectorProps} />
                 </div>
-                <h1 className="pr-header-gp">{race.name}</h1>
-                <p className="pr-header-loc">{race.circuit} · {formatDate(race.date)}</p>
+
+                <h1 className="pr-header-headline">THE CALL.</h1>
+                <p className="pr-header-gp">{race.name}</p>
+                <p className="pr-header-loc pr-mono">
+                    {race.circuit}{race.country ? ` · ${race.country}` : ""}
+                </p>
+                <p className="pr-header-date pr-mono">{formatDate(race.date)}</p>
+
+                {hasCountdown && (
+                    <div
+                        className="pr-countdown"
+                        role="timer"
+                        aria-label={`${countdown.days} days ${countdown.hours} hours ${countdown.minutes} minutes to race start`}
+                    >
+                        {[[countdown.days, "D"], [countdown.hours, "H"], [countdown.minutes, "M"], [countdown.seconds, "S"]].map(([v, l]) => (
+                            <span className="pr-countdown-unit" key={l}>
+                                <b className="pr-mono">{String(v).padStart(2, "0")}</b>
+                                <small>{l}</small>
+                            </span>
+                        ))}
+                    </div>
+                )}
+
                 {resultStatus && (
                     <span className={`pr-result-badge pr-mono ${resultStatus.correct ? "pr-result-badge--correct" : "pr-result-badge--incorrect"}`}>
                         {resultStatus.correct ? "✓" : "✕"} Prediction Result · {resultStatus.correct ? "Correct" : "Incorrect"}
@@ -156,15 +235,15 @@ function PredictorHeader({ race, resultStatus, selectorProps }) {
 }
 
 /* ── Podium — an actual F1 podium presentation: no driver photos, the
-   racing number carries the visual weight instead. Each step is a card
-   sitting on its own riser block (P1 tallest, centered on the site's
-   light surface; P2/P3 shorter, either side on the dark surface) so the
-   podium reads as broadcast-style riser geometry rather than three equal
-   cards. A thin team-color line runs across every card top; Milano Red
-   only ever shows up as P1's fallback accent when a team has no mapped
-   color, never applied everywhere at once. ──────────────────────────── */
+   racing number carries the visual weight instead. P1 sits taller and
+   centered; P2/P3 shorter either side, each on its own riser block, so
+   the podium reads as broadcast riser geometry rather than three equal
+   cards. `showTags`/`showRoles` are on for the model's own predicted
+   podium (labelled "MODEL PICK" + WINNER/SECOND/THIRD so it's never
+   mistaken for a user selection) and off for the plain, unmarked actual-
+   result reference podium. ─────────────────────────────────────────── */
 
-function PodiumStep({ p, place, label }) {
+function PodiumStep({ p, place, posLabel, roleLabel, showTag }) {
     if (!p) return null;
     // exactPositionCorrect only exists once a race is completed and this
     // entry has been enriched with its real finishing position — an
@@ -174,8 +253,9 @@ function PodiumStep({ p, place, label }) {
     return (
         <div className={`pr-podium-step pr-podium-step--${place}`} style={{ "--pr-team-color": getTeamAccent(p.constructorId) }}>
             <div className="pr-podium-card">
-                <span className="pr-podium-place pr-mono">{label}</span>
-                <span className="pr-podium-number pr-mono">{p.driverNumber ?? "—"}</span>
+                {showTag && <span className="pr-podium-tag pr-mono">MODEL PICK</span>}
+                <span className="pr-podium-place pr-mono">{posLabel}{roleLabel ? ` — ${roleLabel}` : ""}</span>
+                <span className="pr-podium-number pr-mono">#{p.driverNumber ?? "—"}</span>
                 <span className="pr-podium-driver">{p.driverName}</span>
                 <span className="pr-podium-constructor">{p.constructorName}</span>
                 {graded && (
@@ -184,7 +264,7 @@ function PodiumStep({ p, place, label }) {
                     </span>
                 )}
             </div>
-            <div className="pr-podium-riser pr-mono" aria-hidden="true">{label}</div>
+            <div className="pr-podium-riser pr-mono" aria-hidden="true">{posLabel}</div>
         </div>
     );
 }
@@ -192,156 +272,281 @@ function PodiumStep({ p, place, label }) {
 // Renders any top-3 list as a podium — the predicted top 3 (sorted by
 // predictedPosition) or the actual top 3 finishers (sorted by real
 // finishing position); both arrive from the API already in P1→P3 order.
-function PodiumRow({ entries }) {
+function PodiumRow({ entries, showTags = false, showRoles = false }) {
     const [first, second, third] = entries;
     if (!first) return null;
     return (
         <div className="pr-podium">
-            <PodiumStep p={second} place="second" label="P2" />
-            <PodiumStep p={first} place="first" label="P1" />
-            <PodiumStep p={third} place="third" label="P3" />
+            <PodiumStep p={second} place="second" posLabel="P2" roleLabel={showRoles ? "SECOND" : null} showTag={showTags} />
+            <PodiumStep p={first} place="first" posLabel="P1" roleLabel={showRoles ? "WINNER" : null} showTag={showTags} />
+            <PodiumStep p={third} place="third" posLabel="P3" roleLabel={showRoles ? "THIRD" : null} showTag={showTags} />
         </div>
     );
 }
 
-/* ── Full classification table — gains a compact "Predicted → Actual"
-   column whenever viewing a completed race (each row already carries
-   actualPosition/exactPositionCorrect from getRacePrediction; an
-   upcoming-race prediction simply won't have that key, so the column
-   is omitted there entirely rather than showing empty cells). The
-   original predicted position/probabilities are never overwritten —
-   this is purely an added column. ────────────────────────────────── */
+/* ── Driver grid — search + constructor chips over the model's full
+   field, replacing the old single wide table with a denser two-column
+   card grid. Chips are derived from whichever constructors are actually
+   in this race's field, never a hardcoded list, so a grid change next
+   season needs no code change here. ──────────────────────────────────── */
 
-function ClassificationTable({ predictions }) {
-    const graded = predictions.some((p) => "exactPositionCorrect" in p);
+function DriverCard({ p, graded }) {
+    const actual = graded && "exactPositionCorrect" in p;
     return (
-        <div className="pr-timing-scroll">
-            <table className="pr-table">
-                <thead>
-                    <tr>
-                        <th>Pos</th>
-                        <th>Driver</th>
-                        <th>Team</th>
-                        {graded && <th>Predicted → Actual</th>}
-                        <th>Exp. Finish</th>
-                        <th>Win</th>
-                        <th>Podium</th>
-                        <th>Top 5</th>
-                        <th>Top 10</th>
-                        <th>Confidence</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {predictions.map((p) => (
-                        <tr key={p.driverId}>
-                            <td className="pr-mono pr-pos">{p.predictedPosition}</td>
-                            <td>
-                                <span className="pr-driver-chip">
-                                    <span className="pr-team-dot" style={{ background: getTeamAccent(p.constructorId) }} aria-hidden="true" />
-                                    <span className="pr-driver-code pr-mono">{p.driverCode ?? p.driverId}</span>
-                                    <span className="pr-driver-name">{p.driverName}</span>
-                                </span>
-                            </td>
-                            <td className="pr-team-cell">{p.constructorName}</td>
-                            {graded && (
-                                <td className={`pr-mono pr-predicted-actual${p.exactPositionCorrect ? " pr-predicted-actual--correct" : ""}`}>
-                                    P{p.predictedPosition} → {p.actualPosition ? `P${p.actualPosition}` : "—"}
-                                </td>
-                            )}
-                            <td className="pr-mono">{p.expectedFinish}</td>
-                            <td className="pr-mono">{pct(p.winProbability)}</td>
-                            <td className="pr-mono">{pct(p.podiumProbability)}</td>
-                            <td className="pr-mono">{pct(p.top5Probability)}</td>
-                            <td className="pr-mono">{pct(p.top10Probability)}</td>
-                            <td><span className={`pr-confidence pr-confidence--${p.confidence}`}>{p.confidence?.toUpperCase() ?? "—"}</span></td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div className="pr-driver-card" style={{ "--pr-team-color": getTeamAccent(p.constructorId) }}>
+            <span className="pr-mono pr-driver-card-pos">P{p.predictedPosition}</span>
+
+            <div className="pr-driver-card-id">
+                <span className="pr-driver-card-name">
+                    <span className="pr-mono pr-driver-card-code">{p.driverCode ?? p.driverId}</span>
+                    {p.driverName}
+                </span>
+                <span className="pr-driver-card-team">#{p.driverNumber ?? "—"} · {p.constructorName}</span>
+            </div>
+
+            <span className={`pr-confidence pr-confidence--${p.confidence}`}>{p.confidence?.toUpperCase() ?? "—"}</span>
+
+            <div className="pr-driver-card-stats pr-mono">
+                <span>WIN <b>{pct(p.winProbability)}</b></span>
+                <span>POD <b>{pct(p.podiumProbability)}</b></span>
+                <span>TOP5 <b>{pct(p.top5Probability)}</b></span>
+                <span>TOP10 <b>{pct(p.top10Probability)}</b></span>
+            </div>
+
+            {actual && (
+                <span className={`pr-driver-card-actual pr-mono ${p.exactPositionCorrect ? "pr-driver-card-actual--correct" : ""}`}>
+                    {p.exactPositionCorrect ? "✓" : "✕"} Actual {p.actualPosition ? `P${p.actualPosition}` : "—"}
+                </span>
+            )}
         </div>
     );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   MODEL PERFORMANCE / PREDICTION HISTORY / DATA USED. All from GET
+function DriverGridSection({ predictions, graded }) {
+    const [query, setQuery] = useState("");
+    const [team, setTeam] = useState("all");
+
+    const constructors = useMemo(() => {
+        const seen = new Map();
+        predictions.forEach((p) => {
+            if (!seen.has(p.constructorId)) seen.set(p.constructorId, p.constructorName);
+        });
+        return Array.from(seen, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    }, [predictions]);
+
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        return predictions.filter((p) => {
+            if (team !== "all" && p.constructorId !== team) return false;
+            if (!q) return true;
+            return (
+                p.driverName.toLowerCase().includes(q) ||
+                p.constructorName.toLowerCase().includes(q) ||
+                (p.driverCode ?? "").toLowerCase().includes(q)
+            );
+        });
+    }, [predictions, query, team]);
+
+    return (
+        <section className="pr-grid-section">
+            <div className="pr-grid-controls">
+                <SearchInput
+                    placeholder="Search drivers or teams…"
+                    aria-label="Search drivers or teams"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                />
+                <div className="pr-chip-row" role="group" aria-label="Filter by constructor">
+                    <button
+                        type="button"
+                        className={`pr-chip${team === "all" ? " pr-chip--active" : ""}`}
+                        onClick={() => setTeam("all")}
+                    >
+                        All
+                    </button>
+                    {constructors.map((c) => (
+                        <button
+                            key={c.id}
+                            type="button"
+                            className={`pr-chip${team === c.id ? " pr-chip--active" : ""}`}
+                            style={{ "--pr-chip-color": getTeamAccent(c.id) }}
+                            onClick={() => setTeam((t) => (t === c.id ? "all" : c.id))}
+                        >
+                            <span className="pr-chip-dot" aria-hidden="true" />
+                            {c.name}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {filtered.length === 0 ? (
+                <EmptyState title="No drivers match" description="Try a different search term or constructor filter." />
+            ) : (
+                <div className="pr-driver-grid">
+                    {filtered.map((p) => (
+                        <DriverCard key={p.driverId} p={p} graded={graded} />
+                    ))}
+                </div>
+            )}
+        </section>
+    );
+}
+
+/* ── The Forecast — sidebar summary of the model's own podium call, not
+   an editable "your call" panel (there's nothing for a user to submit).
+   States plainly, from the real `stage` field, whether this forecast is
+   still pre-qualifying (and so will change) or locked to the real
+   starting grid (and won't). ─────────────────────────────────────────── */
+
+function ForecastSidebar({ top3, stage, baseline }) {
+    const locked = stage === "post_qualifying";
+    return (
+        <aside className="pr-sidebar">
+            <Panel title="The Forecast" className="pr-panel--sidebar">
+                <span className={`pr-sidebar-stage pr-mono${locked ? " pr-sidebar-stage--locked" : ""}`}>
+                    {locked ? "LOCKED TO GRID" : "PRE-QUALIFYING"}
+                </span>
+
+                <ul className="pr-sidebar-picks">
+                    {[["P1", top3[0]], ["P2", top3[1]], ["P3", top3[2]]].map(([label, p]) => (
+                        <li className="pr-sidebar-pick" key={label}>
+                            <span className="pr-mono pr-sidebar-pick-pos">{label}</span>
+                            {p ? (
+                                <span className="pr-sidebar-pick-driver">
+                                    <span className="pr-sidebar-pick-dot" style={{ background: getTeamAccent(p.constructorId) }} aria-hidden="true" />
+                                    {p.driverName}
+                                </span>
+                            ) : (
+                                <span className="pr-sidebar-pick-empty">—</span>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+
+                {baseline && (
+                    <p className="pr-sidebar-note">
+                        Ranked by <strong>{baseline.label}</strong>.
+                    </p>
+                )}
+                <p className="pr-sidebar-note pr-sidebar-note--muted">
+                    {locked
+                        ? "This forecast is locked to the real starting grid and will not change again before the race."
+                        : "This forecast updates automatically once qualifying sets the real starting grid."}
+                </p>
+
+                <Button
+                    variant="secondary"
+                    className="pr-sidebar-cta"
+                    onClick={() => document.getElementById("pr-driver-grid")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                >
+                    View Full Grid Forecast
+                </Button>
+            </Panel>
+        </aside>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SEASON PERFORMANCE STRIP / METHODOLOGY. Both from GET
    /api/predictor/performance and /history (unaffected by which race the
-   selector shows above — these summarize every evaluated race) — no math
+   selector shows above — these summarize every evaluated race). No math
    happens here, only formatting. Never claims accuracy the data doesn't
    support: an empty/low race count gets an honest empty state.
-   ═══════════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════ */
 
-function ModelPerformanceSection({ performance, loading }) {
+function SeasonPerformanceStrip({ performance, races, loading }) {
+    const [expanded, setExpanded] = useState(false);
+
     if (loading) return <div className="pr-hub-loading">Loading model performance…</div>;
 
     if (!performance?.available) {
         return (
-            <div className="pr-compact-empty">
-                <BarChart3 size={18} aria-hidden="true" />
-                <div className="pr-compact-empty-body">
-                    <span className="pr-compact-empty-title">No evaluated races yet</span>
-                    <span className="pr-compact-empty-desc">Predictions will be scored automatically once their races are completed.</span>
+            <Panel title="Season Performance" className="pr-strip">
+                <div className="pr-compact-empty">
+                    <BarChart3 size={18} aria-hidden="true" />
+                    <div className="pr-compact-empty-body">
+                        <span className="pr-compact-empty-title">No evaluated races yet</span>
+                        <span className="pr-compact-empty-desc">The model's accuracy will appear automatically once races are completed and scored.</span>
+                    </div>
                 </div>
-            </div>
+            </Panel>
         );
     }
 
+    const eligible = races.filter((r) => r.eligible).slice().reverse();
     const stats = [
-        [performance.racesEvaluated, "Races Evaluated"],
+        [performance.racesEvaluated, "Races Scored"],
         [pct(performance.winnerAccuracy), "Winner Accuracy"],
-        [pct(performance.avgPodiumHitRate), "Podium Hit Rate"],
+        [pct(performance.avgPodiumHitRate), "Podium Accuracy"],
         [pct(performance.avgTop5HitRate), "Top 5 Hit Rate"],
         [pct(performance.avgTop10HitRate), "Top 10 Hit Rate"],
         [performance.meanPositionError ?? "—", "Mean Position Error"],
     ];
 
     return (
-        <div className="pr-perf-grid">
-            {stats.map(([value, label]) => (
-                <div className="pr-perf-stat" key={label}>
-                    <span className="pr-mono pr-perf-value">{value}</span>
-                    <span className="pr-perf-label">{label}</span>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function PredictionHistorySection({ races, loading }) {
-    if (loading) return <div className="pr-hub-loading">Loading prediction history…</div>;
-
-    const eligible = races.filter((r) => r.eligible);
-
-    if (eligible.length === 0) {
-        return (
-            <div className="pr-compact-empty">
-                <History size={18} aria-hidden="true" />
-                <div className="pr-compact-empty-body">
-                    <span className="pr-compact-empty-title">No evaluated predictions yet</span>
-                    <span className="pr-compact-empty-desc">Prediction history will populate automatically after predictions are saved and their races are completed.</span>
-                </div>
+        <Panel title="Season Performance" className="pr-strip">
+            <div className="pr-strip-stats">
+                {stats.map(([value, label]) => (
+                    <div className="pr-strip-stat" key={label}>
+                        <span className="pr-mono pr-strip-value">{value}</span>
+                        <span className="pr-strip-label">{label}</span>
+                    </div>
+                ))}
             </div>
-        );
-    }
 
-    return (
-        <ul className="pr-history">
-            {eligible.map((r) => (
-                <li className="pr-history-row" key={`${r.season}-${r.round}`}>
-                    <span className="pr-history-race">{r.raceName}</span>
-                    <span className={`pr-history-mark${r.metrics.winnerCorrect ? " pr-history-mark--correct" : " pr-history-mark--incorrect"}`}>
-                        {r.metrics.winnerCorrect ? "✓" : "✕"}
-                    </span>
-                </li>
-            ))}
-        </ul>
+            {eligible.length === 0 ? (
+                <div className="pr-compact-empty">
+                    <History size={18} aria-hidden="true" />
+                    <div className="pr-compact-empty-body">
+                        <span className="pr-compact-empty-title">No evaluated predictions yet</span>
+                        <span className="pr-compact-empty-desc">Prediction history will populate automatically once races are completed.</span>
+                    </div>
+                </div>
+            ) : expanded ? (
+                <>
+                    <ul className="pr-history">
+                        {eligible.map((r) => (
+                            <li className="pr-history-row" key={`${r.season}-${r.round}`}>
+                                <span className="pr-history-race">{r.raceName}</span>
+                                <span className={`pr-history-mark${r.metrics.winnerCorrect ? " pr-history-mark--correct" : " pr-history-mark--incorrect"}`}>
+                                    {r.metrics.winnerCorrect ? "✓" : "✕"}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                    <button type="button" className="pr-strip-toggle pr-mono" onClick={() => setExpanded(false)}>
+                        SHOW COMPACT VIEW
+                    </button>
+                </>
+            ) : (
+                <>
+                    <ul className="pr-strip-history-list">
+                        {eligible.slice(0, 10).map((r) => (
+                            <li
+                                key={`${r.season}-${r.round}`}
+                                className={`pr-strip-history-chip${r.metrics.winnerCorrect ? " pr-strip-history-chip--correct" : " pr-strip-history-chip--incorrect"}`}
+                                title={r.raceName}
+                            >
+                                {r.metrics.winnerCorrect ? "✓" : "✕"}
+                            </li>
+                        ))}
+                    </ul>
+                    <button type="button" className="pr-strip-toggle pr-mono" onClick={() => setExpanded(true)}>
+                        VIEW FULL HISTORY
+                    </button>
+                </>
+            )}
+        </Panel>
     );
 }
 
-/* ── Data Used — the four sources the engine always draws on, plus
+/* ── Data Used — the data sources the engine always draws on, plus
    qualifying/sprint shown honestly whenever that data doesn't exist yet
    for the selected race, instead of being silently dropped. Never a
    fabricated value — a "Pending"/"Not available" row states plainly
-   that the number isn't in the prediction, rather than omitting it. ── */
+   that the number isn't in the prediction, rather than omitting it.
+   Collapsed by default below the main workspace — secondary evidence,
+   not the main interaction. ─────────────────────────────────────────── */
 
 const DATA_USED_ROWS = [
     ["historicalStandings", "Current championship standings"],
@@ -356,9 +561,7 @@ const CONDITIONAL_ROWS = [
 
 // `baseline` identifies which single, multi-season-validated feature
 // actually drove the ranking for this race's stage (see predictorService.js
-// STAGE_BASELINES) — everything else below still lists what data the
-// engine has on hand, but this is the one line that explains "why this
-// order", per Phase 20.
+// STAGE_BASELINES) — this is the one line that explains "why this order".
 function BaselineNote({ baseline }) {
     if (!baseline) return null;
     return (
@@ -399,6 +602,28 @@ function DataUsedCard({ dataAvailability, baseline }) {
     );
 }
 
+function MethodologyDisclosure({ dataAvailability, baseline }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <Panel className="pr-methodology">
+            <button
+                type="button"
+                className="pr-methodology-toggle pr-mono"
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+            >
+                HOW THIS PREDICTION WAS MADE
+                <ChevronDown size={14} className={`pr-methodology-chevron${open ? " pr-methodology-chevron--open" : ""}`} aria-hidden="true" />
+            </button>
+            {open && (
+                <div className="pr-methodology-body">
+                    <DataUsedCard dataAvailability={dataAvailability} baseline={baseline} />
+                </div>
+            )}
+        </Panel>
+    );
+}
+
 /* ── Section shell ─────────────────────────────────────────────────── */
 
 function Panel({ title, className = "", children }) {
@@ -417,6 +642,21 @@ function Predictor() {
     const evaluation = useEvaluation();
     const [selectedKey, setSelectedKey] = useState(null);
     const raceDetail = useRaceDetail(selectedKey);
+
+    const viewingPast = Boolean(selectedKey);
+    const active = data?.available
+        ? (viewingPast
+            ? raceDetail.data
+            : { race: data.race, stage: data.stage, baseline: data.baseline, dataAvailability: data.dataAvailability, predictions: data.predictions, completed: false, winnerCorrect: null })
+        : null;
+
+    // Hooks must run unconditionally on every render — headerRace may be
+    // null while loading/erroring, so these two stay null-safe internally
+    // rather than being skipped by an early return above this point.
+    const headerRace = active?.race ?? data?.race ?? null;
+    const raceTime = useRaceTime(headerRace?.season, headerRace?.round);
+    const countdownTarget = headerRace?.date && raceTime ? new Date(`${headerRace.date}T${raceTime}`) : null;
+    const countdown = useCountdown(countdownTarget);
 
     if (loading) {
         return (
@@ -458,18 +698,12 @@ function Predictor() {
 
     const eligiblePastRaces = evaluation.races.filter((r) => r.eligible).slice().reverse();
     const selectorProps = { options: eligiblePastRaces, selectedKey, onChange: setSelectedKey };
-    const viewingPast = Boolean(selectedKey);
-
-    const active = viewingPast
-        ? raceDetail.data
-        : { race: data.race, baseline: data.baseline, dataAvailability: data.dataAvailability, predictions: data.predictions, completed: false, winnerCorrect: null };
-
-    const headerRace = active?.race ?? data.race;
     const resultStatus = active?.completed ? { correct: active.winnerCorrect } : null;
+    const graded = Boolean(active?.completed);
 
     return (
         <div className="pr">
-            <PredictorHeader race={headerRace} resultStatus={resultStatus} selectorProps={selectorProps} />
+            <CinematicHeader race={headerRace} countdown={countdown} resultStatus={resultStatus} selectorProps={selectorProps} />
             <main className="pr-main">
                 {viewingPast && raceDetail.loading && <div className="pr-hub-loading">Loading this race's prediction…</div>}
 
@@ -483,47 +717,42 @@ function Predictor() {
 
                 {active && (
                     <>
-                        <Panel title="Predicted Podium">
-                            {/* Per-driver, not a single verdict for the whole
-                               top 3: each predicted step above already shows
-                               its own actual position + ✓/✕ once graded, this
-                               is just the roll-up count. */}
-                            {active.completed && active.actualPodium?.length > 0 && (
-                                <p className="pr-podium-summary pr-mono">
-                                    {active.predictions.slice(0, 3).filter((p) => p.exactPositionCorrect).length}/3 EXACT PODIUM POSITIONS
-                                </p>
-                            )}
-                            <PodiumRow entries={active.predictions} />
-                        </Panel>
+                        <div className="pr-workspace">
+                            <div className="pr-workspace-main">
+                                <Panel title="Predicted Podium" className="pr-panel--podium">
+                                    {/* Per-driver, not a single verdict for the whole
+                                       top 3: each predicted step above already shows
+                                       its own actual position + ✓/✕ once graded, this
+                                       is just the roll-up count. */}
+                                    {active.completed && active.actualPodium?.length > 0 && (
+                                        <p className="pr-podium-summary pr-mono">
+                                            {active.predictions.slice(0, 3).filter((p) => p.exactPositionCorrect).length}/3 EXACT PODIUM POSITIONS
+                                        </p>
+                                    )}
+                                    <PodiumRow entries={active.predictions} showTags showRoles />
+                                </Panel>
 
-                        {/* Only for a completed previous race — the predicted
-                           podium above is never replaced, this is purely an
-                           addition showing what actually happened alongside
-                           it, for comparison. */}
-                        {active.completed && active.actualPodium?.length > 0 && (
-                            <Panel title="Actual Podium">
-                                <PodiumRow entries={active.actualPodium} />
-                            </Panel>
-                        )}
+                                {/* Only for a completed previous race — the predicted
+                                   podium above is never replaced, this is purely an
+                                   addition showing what actually happened alongside
+                                   it, for comparison. */}
+                                {active.completed && active.actualPodium?.length > 0 && (
+                                    <Panel title="Actual Podium" className="pr-panel--podium pr-panel--podium-actual">
+                                        <PodiumRow entries={active.actualPodium} />
+                                    </Panel>
+                                )}
 
-                        <Panel title="Predicted Race Order">
-                            <ClassificationTable predictions={active.predictions} />
-                        </Panel>
+                                <div id="pr-driver-grid">
+                                    <DriverGridSection predictions={active.predictions} graded={graded} />
+                                </div>
 
-                        {/* Data Used / Prediction History / Model Performance — three
-                           equal cards side by side, the page's only supporting
-                           evidence beyond the podium and the table. */}
-                        <div className="pr-grid pr-grid--three">
-                            <Panel title="Data Used">
-                                <DataUsedCard dataAvailability={active.dataAvailability} baseline={active.baseline} />
-                            </Panel>
-                            <Panel title="Prediction History">
-                                <PredictionHistorySection races={evaluation.races} loading={evaluation.loading} />
-                            </Panel>
-                            <Panel title="Model Performance">
-                                <ModelPerformanceSection performance={evaluation.performance} loading={evaluation.loading} />
-                            </Panel>
+                                <MethodologyDisclosure dataAvailability={active.dataAvailability} baseline={active.baseline} />
+                            </div>
+
+                            <ForecastSidebar top3={active.predictions.slice(0, 3)} stage={active.stage} baseline={active.baseline} />
                         </div>
+
+                        <SeasonPerformanceStrip performance={evaluation.performance} races={evaluation.races} loading={evaluation.loading} />
                     </>
                 )}
             </main>

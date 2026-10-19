@@ -1,28 +1,35 @@
 /*
- * RACE PREDICTOR — premium F1 editorial + data-visualization treatment,
- * self-contained (`.pr-` namespace + its own `.pr-mono` utility rather
- * than borrowing LiveRace.css). Dark canvas, layered surfaces, Milano
- * Red reserved for the winner/podium accent — never a betting-odds look.
+ * RACE PREDICTOR — a motorsport prediction arena, not an analytics
+ * dashboard: near-black canvas, condensed uppercase display type for
+ * headings, thin borders and hairline separators instead of boxed/
+ * rounded cards, Milano Red kept restrained (active states, the model's
+ * own podium accent) rather than spread across the page. Self-contained
+ * (`.pr-` namespace + its own `.pr-mono` utility rather than borrowing
+ * LiveRace.css).
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap');
+
 .pr-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-slate); }
+.pr-condensed { font-family: 'Oswald', var(--font-sans); text-transform: uppercase; }
 
 .pr {
-    --pr-surface-card: #202020;
-    --pr-surface-inner: #262626;
-    --pr-surface-header: #2c2c2c;
-    --pr-border: #383838;
+    --pr-surface-card: #1a1a1a;
+    --pr-surface-inner: #202020;
+    --pr-surface-header: #242424;
+    --pr-border: #333333;
     --pr-text-secondary: #a9a59f;
 
-    /* Light editorial surfaces — Carrara, for the major result cards
-       (Winner, Podium) so the page isn't entirely black; technical/data
-       panels (grid, factors, availability, history) stay on the dark
-       surfaces above. */
+    /* Light editorial surface — Carrara, reserved for the P1 podium card
+       only, so the page isn't entirely black; every technical/data panel
+       stays on the dark surfaces above. */
     --pr-light: var(--color-cararra);
     --pr-light-border: rgba(25, 25, 25, 0.12);
     --pr-light-text: var(--color-carbon);
     --pr-light-text-2: rgba(25, 25, 25, 0.64);
     --pr-light-text-3: rgba(25, 25, 25, 0.44);
+
+    background: var(--bg);
 }
 
 .pr-loading {
@@ -36,29 +43,50 @@
 
 .pr-loading-title { font-size: var(--text-small); color: var(--text-muted); letter-spacing: 0.02em; }
 
-/* ── Header ────────────────────────────────────────────────────────── */
+/* ── Cinematic header ──────────────────────────────────────────────────
+   A wide editorial banner: eyebrow, huge condensed headline, race
+   identity, countdown — with a monochrome circuit map bleeding in from
+   the right, faded to transparent so it reads as texture, not a second
+   photo competing with the copy. ───────────────────────────────────── */
 
 .pr-header {
-    padding: var(--space-6) var(--space-5);
-    background: var(--bg-elevated);
+    position: relative;
+    overflow: hidden;
+    padding: var(--space-7) var(--space-5) var(--space-6);
+    background: linear-gradient(180deg, var(--bg-elevated) 0%, #121212 100%);
     border-bottom: 1px solid var(--pr-border);
 }
 
-.pr-header-inner { max-width: 1180px; margin: 0 auto; }
+.pr-header-track {
+    position: absolute;
+    inset: 0;
+    left: auto;
+    width: 48%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+    filter: grayscale(1) brightness(1.5) contrast(1.05);
+    opacity: 0.28;
+    mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.9) 38%);
+    -webkit-mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.9) 38%);
+    pointer-events: none;
+}
+
+.pr-header-inner { position: relative; z-index: 1; max-width: 1320px; margin: 0 auto; }
 
 .pr-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .pr-eyebrow {
     font-family: var(--font-mono);
     font-size: var(--text-micro);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--accent-text);
 }
@@ -67,8 +95,8 @@
     background: var(--pr-surface-inner);
     border: 1px solid var(--pr-border);
     color: var(--pr-text-secondary);
-    border-radius: var(--radius-full);
-    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
     font-size: var(--text-micro);
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -79,14 +107,57 @@
 
 .pr-race-select:hover { border-color: var(--pr-light-border); color: var(--text-primary); }
 
-.pr-header-gp { font-size: var(--text-h2); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
-.pr-header-loc { font-size: var(--text-body); color: var(--pr-text-secondary); margin: 0; }
+.pr-header-headline {
+    font-family: 'Oswald', var(--font-sans);
+    font-size: clamp(2.6rem, 2vw + 2.2rem, 4.4rem);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
+    line-height: 0.95;
+    color: #ffffff;
+    margin: 0 0 var(--space-3);
+}
+
+.pr-header-gp {
+    font-family: 'Oswald', var(--font-sans);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    margin: 0 0 6px;
+}
+
+.pr-header-loc { font-size: var(--text-small); color: var(--pr-text-secondary); margin: 0; letter-spacing: 0.02em; }
+.pr-header-date { font-size: var(--text-small); color: var(--text-faint); margin: 2px 0 0; letter-spacing: 0.02em; }
+
+/* ── Countdown — a thin scoreboard clock, not a stat card ── */
+
+.pr-countdown {
+    display: flex;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+}
+
+.pr-countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-left: var(--space-4);
+    border-left: 1px solid var(--pr-border);
+}
+
+.pr-countdown-unit:first-child { padding-left: 0; border-left: none; }
+
+.pr-countdown-unit b { font-size: 1.9rem; font-weight: 700; color: #ffffff; line-height: 1; }
+.pr-countdown-unit small { font-size: 0.6rem; letter-spacing: 0.14em; color: var(--text-faint); }
 
 .pr-result-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
     font-size: var(--text-micro);
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -96,10 +167,22 @@
 .pr-result-badge--correct { color: var(--success); }
 .pr-result-badge--incorrect { color: var(--accent-text); }
 
+@media (max-width: 900px) {
+    .pr-header-track { display: none; }
+}
+
+@media (max-width: 640px) {
+    .pr-header { padding: var(--space-6) var(--space-4) var(--space-5); }
+    .pr-header-headline { font-size: 2.2rem; }
+    .pr-countdown { gap: var(--space-3); }
+    .pr-countdown-unit { padding-left: var(--space-3); }
+    .pr-countdown-unit b { font-size: 1.5rem; }
+}
+
 /* ── Layout ────────────────────────────────────────────────────────── */
 
 .pr-main {
-    max-width: 1180px;
+    max-width: 1320px;
     margin: 0 auto;
     padding: var(--space-5) var(--space-5) var(--space-9);
     display: flex;
@@ -107,74 +190,75 @@
     gap: var(--space-5);
 }
 
-.pr-grid { display: grid; gap: var(--space-4); }
-.pr-grid--three { grid-template-columns: repeat(3, 1fr); align-items: start; }
-
-@media (max-width: 900px) {
-    .pr-grid--three { gap: var(--space-3); }
+.pr-workspace {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: var(--space-5);
+    align-items: start;
 }
 
-@media (max-width: 700px) {
-    .pr-grid--three { grid-template-columns: 1fr; }
+.pr-workspace-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
 }
 
-/* ── Panel shell ───────────────────────────────────────────────────── */
+@media (max-width: 980px) {
+    .pr-workspace { grid-template-columns: 1fr; }
+}
+
+/* ── Panel shell — thin border, sharp-ish corners, no shadow; an
+   instrument panel, not a rounded card. ─────────────────────────────── */
 
 .pr-panel {
     background: var(--pr-surface-card);
     border: 1px solid var(--pr-border);
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 6px;
+    padding: var(--space-5);
 }
-
 
 .pr-panel-title {
     font-family: var(--font-mono);
     font-size: var(--text-micro);
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-muted);
-    margin: 0 0 var(--space-3);
-}
-
-/* ── Podium comparison — grading lives on the Predicted side (each step
-   shows its own actual position + ✓/✕ once graded, see .pr-podium-actual
-   below); Actual Podium stays a plain, unmarked reference panel. The
-   roll-up count sits right under the Predicted Podium title. ───────── */
-
-.pr-podium-summary {
-    text-align: center;
-    font-size: var(--text-micro);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--pr-text-secondary);
-    margin: 0 0 var(--space-2);
+    margin: 0 0 var(--space-4);
 }
 
 /* ── Podium — an actual F1 podium, not three equal cards. Each step is
    a result card sitting on its own riser block, shortest at P2/P3 on the
    dark surface either side, tallest at P1 — centered, on the site's
-   light surface, the same "major result gets a light card" treatment
-   used elsewhere. The riser heights are fixed, ordinal steps (never a
-   fabricated/measured value) — they exist purely to read as broadcast
-   podium geometry. No driver photos — the racing number carries the
-   visual weight instead. Milano Red only ever appears as P1's own
-   fallback accent when a team has no mapped color; every other accent
-   is that team's thin color line. ────────────────────────────────────── */
+   light surface. Riser heights are fixed, ordinal steps (never a
+   fabricated/measured value) — purely broadcast podium geometry. No
+   driver photos — the racing number carries the visual weight. Each
+   predicted step carries a small "MODEL PICK" tag so it is never read
+   as a user's own selection; the Actual Podium (shown only once a race
+   is complete) stays a plain, unmarked reference with no tag. ──────── */
+
+.pr-podium-summary {
+    text-align: center;
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--pr-text-secondary);
+    margin: 0 0 var(--space-3);
+}
 
 .pr-podium {
     display: flex;
     align-items: flex-end;
     justify-content: center;
     gap: var(--space-3);
-    padding-top: var(--space-6);
+    padding-top: var(--space-5);
 }
 
 .pr-podium-step {
     flex: 1 1 0;
     min-width: 0;
-    max-width: 200px;
+    max-width: 210px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -191,7 +275,7 @@
     background: var(--pr-surface-inner);
     border: 1px solid var(--pr-border);
     border-top: 3px solid var(--pr-team-color, var(--pr-border));
-    border-radius: 10px 10px 0 0;
+    border-radius: 4px 4px 0 0;
 }
 
 .pr-podium-step--first .pr-podium-card {
@@ -199,8 +283,23 @@
     background: var(--pr-light);
     border-color: var(--pr-light-border);
     border-top: 3px solid var(--pr-team-color, var(--accent));
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
+
+.pr-podium-tag {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    border: 1px solid var(--accent-border);
+    background: var(--accent-dim);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-bottom: 2px;
+}
+
+.pr-podium-step--first .pr-podium-tag { color: var(--accent); border-color: var(--accent-border); background: rgba(176, 8, 11, 0.08); }
 
 .pr-podium-riser {
     width: 100%;
@@ -210,7 +309,8 @@
     background: var(--pr-surface-header);
     border: 1px solid var(--pr-border);
     border-top: none;
-    border-radius: 0 0 4px 4px;
+    border-radius: 0 0 3px 3px;
+    font-family: var(--font-mono);
     font-weight: 700;
     letter-spacing: 0.1em;
     color: var(--text-faint);
@@ -220,11 +320,19 @@
 .pr-podium-step--third .pr-podium-riser { height: 22px; font-size: 0.78rem; }
 .pr-podium-step--first .pr-podium-riser { height: 52px; font-size: 1rem; border-top: 3px solid var(--pr-team-color, var(--accent)); border-color: var(--pr-light-border); color: var(--pr-light-text-3); }
 
-.pr-podium-place { font-size: var(--text-micro); font-weight: 700; letter-spacing: 0.1em; color: var(--text-faint); }
+.pr-podium-place {
+    font-family: 'Oswald', var(--font-sans);
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
 .pr-podium-step--first .pr-podium-place { color: var(--pr-light-text-3); }
 
-.pr-podium-number { font-size: 2.75rem; font-weight: 800; line-height: 1; color: var(--pr-team-color, var(--text-primary)); }
-.pr-podium-step--first .pr-podium-number { font-size: 4rem; color: var(--pr-team-color, var(--accent)); }
+.pr-podium-number { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--pr-team-color, var(--text-primary)); }
+.pr-podium-step--first .pr-podium-number { font-size: 3.8rem; color: var(--pr-team-color, var(--accent)); }
 
 .pr-podium-driver { font-size: var(--text-small); font-weight: 700; color: var(--text-primary); }
 .pr-podium-step--first .pr-podium-driver { font-size: var(--text-body); color: var(--pr-light-text); }
@@ -232,8 +340,6 @@
 .pr-podium-constructor { font-size: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--pr-text-secondary); }
 .pr-podium-step--first .pr-podium-constructor { color: var(--pr-light-text-3); }
 
-/* Per-driver grading — only present once a race is completed and this
-   step's driver has been matched against the real result. */
 .pr-podium-actual {
     font-size: var(--text-micro);
     font-weight: 700;
@@ -250,141 +356,297 @@
     .pr-podium-step--first { flex-basis: 100%; order: -1; margin-bottom: var(--space-3); }
 }
 
-/* ── Classification table ─────────────────────────────────────────── */
+/* ── Driver grid — search + constructor chips over the model's full
+   field, a compact two-column card grid rather than one wide table.
+   Chips are derived from whichever constructors are actually in this
+   race's field (see DriverGridSection), never a hardcoded list. ────── */
 
-.pr-timing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+.pr-grid-section { display: flex; flex-direction: column; gap: var(--space-4); }
 
-.pr-table { width: 100%; border-collapse: collapse; font-size: var(--text-small); }
+.pr-grid-controls { display: flex; flex-direction: column; gap: var(--space-3); }
 
-.pr-table thead th {
-    position: sticky;
-    top: 0;
-    background: var(--pr-surface-header);
-    text-align: left;
+.pr-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.pr-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--pr-border);
+    border-radius: var(--radius-full);
+    padding: 6px 12px;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 8px var(--space-2);
+    color: var(--pr-text-secondary);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.pr-chip:hover { border-color: var(--pr-light-border); color: var(--text-primary); }
+
+.pr-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pr-chip-color, var(--text-faint)); flex-shrink: 0; }
+
+.pr-chip--active {
+    border-color: var(--pr-chip-color, var(--accent));
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--pr-chip-color, var(--accent)) 14%, transparent);
+}
+
+.pr-driver-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+}
+
+@media (max-width: 700px) {
+    .pr-driver-grid { grid-template-columns: 1fr; }
+}
+
+.pr-driver-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-4);
+    background: var(--pr-surface-inner);
+    border: 1px solid var(--pr-border);
+    border-left: 3px solid var(--pr-team-color, var(--pr-border));
+    border-radius: 4px;
+}
+
+.pr-driver-card-pos { font-weight: 800; font-size: 1rem; color: var(--text-faint); }
+
+.pr-driver-card-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.pr-driver-card-name {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: var(--text-small);
+    font-weight: 700;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.pr-table tbody td { padding: 9px var(--space-2); border-top: 1px solid var(--pr-border); white-space: nowrap; }
+.pr-driver-card-code { font-size: 0.68rem; color: var(--pr-team-color, var(--text-faint)); }
 
-.pr-pos { font-weight: 700; font-size: var(--text-body); color: var(--text-primary); }
+.pr-driver-card-team { font-size: var(--text-micro); letter-spacing: 0.02em; color: var(--pr-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.pr-driver-chip { display: flex; align-items: center; gap: var(--space-2); }
-.pr-team-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.pr-driver-code { font-weight: 700; min-width: 3ch; color: var(--text-primary); }
-.pr-driver-name { color: var(--pr-text-secondary); font-size: var(--text-micro); }
-.pr-team-cell { color: var(--pr-text-secondary); font-size: var(--text-micro); }
+.pr-driver-card-stats {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: var(--space-4);
+    margin-top: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--pr-border);
+    font-size: 0.68rem;
+    color: var(--pr-text-secondary);
+}
 
-.pr-predicted-actual { color: var(--pr-text-secondary); }
-.pr-predicted-actual--correct { color: var(--success); }
+.pr-driver-card-stats b { color: var(--text-primary); font-weight: 700; margin-left: 3px; }
+
+.pr-driver-card-actual {
+    grid-column: 1 / -1;
+    font-size: var(--text-micro);
+    font-weight: 700;
+    color: var(--pr-text-secondary);
+}
+
+.pr-driver-card-actual--correct { color: var(--success); }
 
 .pr-confidence {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     padding: 3px 8px;
     border-radius: var(--radius-full);
     border: 1px solid var(--pr-border);
     color: var(--pr-text-secondary);
+    white-space: nowrap;
 }
 
 .pr-confidence--high { color: var(--success); border-color: rgba(47, 191, 106, 0.35); background: var(--success-dim); }
 .pr-confidence--medium { color: var(--warning); border-color: rgba(226, 166, 59, 0.35); background: var(--warning-dim); }
 .pr-confidence--low { color: var(--text-faint); }
 
+/* ── Sidebar — "The Forecast": the model's own podium call summarized,
+   not an editable submission panel. Sticky on desktop so it tracks the
+   main workspace while scrolling; stacks below it on narrower screens. */
+
+.pr-sidebar { min-width: 0; }
+
+@media (min-width: 981px) {
+    .pr-sidebar { position: sticky; top: var(--space-5); }
+}
+
+.pr-panel--sidebar { display: flex; flex-direction: column; }
+
+.pr-sidebar-stage {
+    display: inline-flex;
+    align-self: flex-start;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-text);
+    background: var(--accent-dim);
+    margin-bottom: var(--space-4);
+}
+
+.pr-sidebar-stage--locked { color: var(--pr-text-secondary); border-color: var(--pr-border); background: var(--pr-surface-inner); }
+
+.pr-sidebar-picks { display: flex; flex-direction: column; gap: 0; margin-bottom: var(--space-4); }
+
+.pr-sidebar-pick {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-top: 1px solid var(--pr-border);
+}
+
+.pr-sidebar-pick:first-child { border-top: none; padding-top: 0; }
+
+.pr-sidebar-pick-pos { font-size: 0.72rem; font-weight: 700; color: var(--text-faint); min-width: 1.6em; }
+
+.pr-sidebar-pick-driver { display: flex; align-items: center; gap: 8px; font-size: var(--text-small); font-weight: 600; color: var(--text-primary); }
+
+.pr-sidebar-pick-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.pr-sidebar-pick-empty { font-size: var(--text-small); color: var(--text-faint); }
+
+.pr-sidebar-note { font-size: var(--text-micro); line-height: 1.5; color: var(--text-primary); margin: 0 0 var(--space-3); }
+.pr-sidebar-note--muted { color: var(--pr-text-secondary); }
+
+.pr-sidebar-cta { width: 100%; justify-content: center; margin-top: var(--space-2); }
+
 /* ══════════════════════════════════════════════════════════════════
-   MODEL PERFORMANCE / PREDICTION HISTORY / DATA USED
+   SEASON PERFORMANCE STRIP / METHODOLOGY
    ══════════════════════════════════════════════════════════════════ */
 
 .pr-hub-loading { font-size: var(--text-small); color: var(--text-faint); padding: var(--space-2) 0; }
 
-/* ── Compact empty states — a small icon + heading + line, never a big
-   empty black box ── */
-
-.pr-compact-empty {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-2) 0;
-}
-
+.pr-compact-empty { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-2) 0; }
 .pr-compact-empty svg { flex-shrink: 0; margin-top: 2px; color: var(--text-faint); }
-
 .pr-compact-empty-body { display: flex; flex-direction: column; gap: 2px; }
-
-.pr-compact-empty-title {
-    font-family: var(--font-mono);
-    font-size: var(--text-micro);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
+.pr-compact-empty-title { font-family: var(--font-mono); font-size: var(--text-micro); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .pr-compact-empty-desc { font-size: var(--text-small); color: var(--text-faint); }
 
-/* ── Model performance — a compact 2-column stat grid, sized for a
-   third-of-the-width card rather than a full-width section. ─────────── */
+.pr-strip-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
 
-.pr-perf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
-
-.pr-perf-stat {
+.pr-strip-stat {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 12px;
+    padding: 12px 14px;
     background: var(--pr-surface-inner);
     border: 1px solid var(--pr-border);
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
-.pr-perf-value { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
-.pr-perf-label { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.pr-strip-value { font-size: var(--text-h3); font-weight: 700; color: var(--text-primary); }
+.pr-strip-label { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
 
-/* ── Prediction history — a compact list, one line per race: name, then
-   only a ✓/✕ for whether the predicted winner was correct. No expand,
-   no predicted/actual driver text, no per-race metrics. ─────────────── */
+.pr-strip-history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+}
 
-.pr-history { display: flex; flex-direction: column; }
+.pr-strip-history-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    background: var(--pr-surface-inner);
+    border: 1px solid var(--pr-border);
+    cursor: default;
+}
+
+.pr-strip-history-chip--correct { color: var(--success); border-color: rgba(47, 191, 106, 0.3); }
+.pr-strip-history-chip--incorrect { color: var(--accent-text); border-color: var(--accent-border); }
+
+.pr-strip-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    cursor: pointer;
+}
+
+.pr-strip-toggle:hover { text-decoration: underline; }
+
+/* ── Prediction history (expanded view) — a compact list, one line per
+   race: name, then a ✓/✕ for whether the predicted winner was correct. */
+
+.pr-history { display: flex; flex-direction: column; margin-bottom: var(--space-3); }
 
 .pr-history-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: 10px 0;
+    padding: 9px 0;
     border-top: 1px solid var(--pr-border);
 }
 .pr-history-row:first-child { border-top: none; }
 
-.pr-history-race {
-    font-size: var(--text-small);
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-}
+.pr-history-race { font-size: var(--text-small); color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
-.pr-history-mark {
-    flex-shrink: 0;
-    font-weight: 700;
-    font-size: var(--text-body);
-    color: var(--text-faint);
-}
-
+.pr-history-mark { flex-shrink: 0; font-weight: 700; font-size: var(--text-body); color: var(--text-faint); }
 .pr-history-mark--correct { color: var(--success); }
 .pr-history-mark--incorrect { color: var(--accent-text); }
 
-/* ── Data used — a plain, concise list of what the engine actually
-   used; qualifying/sprint rows additionally show Pending/Not available
-   rather than being silently hidden. ─────────────────────────────── */
+/* ── Methodology — collapsed by default, secondary evidence below the
+   main interaction rather than three cards competing with it. ──────── */
+
+.pr-methodology { padding: var(--space-4) var(--space-5); }
+
+.pr-methodology-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.pr-methodology-chevron { transition: transform var(--dur-fast) var(--ease); }
+.pr-methodology-chevron--open { transform: rotate(180deg); }
+
+.pr-methodology-body { margin-top: var(--space-4); }
 
 .pr-used-list {
     list-style: none;
@@ -393,17 +655,14 @@
     gap: 8px;
     font-size: var(--text-small);
     color: var(--text-primary);
+    margin: 0;
+    padding: 0;
 }
 
-.pr-used-list li {
-    padding: 9px 0;
-    border-top: 1px solid var(--pr-border);
-}
+.pr-used-list li { padding: 9px 0; border-top: 1px solid var(--pr-border); }
 .pr-used-list li:first-child { border-top: none; padding-top: 0; }
 
 .pr-used-list-pending { color: var(--pr-text-secondary); font-style: italic; }
-
-/* ── Prediction basis — which validated baseline drove the ranking. ── */
 
 .pr-used-baseline {
     margin: 0 0 12px;
@@ -413,14 +672,12 @@
     color: var(--text-primary);
 }
 
-.pr-used-baseline-reason {
-    color: var(--pr-text-secondary);
-}
+.pr-used-baseline-reason { color: var(--pr-text-secondary); }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-    .pr-header { padding: var(--space-5) var(--space-4); }
     .pr-main { padding: var(--space-4) var(--space-4) var(--space-8); }
     .pr-panel { padding: 16px; }
+    .pr-strip-stats { grid-template-columns: repeat(2, 1fr); }
 }
